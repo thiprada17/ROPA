@@ -18,14 +18,12 @@ export default function LoginPage() {
 
     if (!email.trim()) {
       newErrors.email = "Please enter the email";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Wrong useranme/email";
-    }
-
+    } 
+    
     if (!password) {
       newErrors.password = "Please enter the password";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
+    } else if (password.length < 10) {
+      newErrors.password = "Password must be at least 10 characters long";
     }
 
     return newErrors;
@@ -73,7 +71,7 @@ export default function LoginPage() {
               <div className={`flex items-center bg-white rounded-lg p-4 
                 ${errors.email ? "border border-[#D82D49]" : ""}`}>
                 <img  src="/person.svg" className='w-[24px] h-[24px] absolute'/>
-                <input type="email" id="username" title='Enter the Username/Email' 
+                <input type="text" id="username" title='Enter the Username/Email' 
                   value={email}
                   onChange={(e) => {
                       setEmail(e.target.value);
@@ -113,7 +111,7 @@ export default function LoginPage() {
               <div className="flex  mt-1">
                 <p className="text-[#D82D49] text-sm pl-2 min-h-[20px]">
                 {errors.password ?? ""}</p>
-                <Link href=""
+                <Link href="/login/send-email"
                   className="text-[16px] font-gabarito text-black ml-auto">
                   Forgot password?
                 </Link>
@@ -130,7 +128,7 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="bg-gradient-to-b from-[#6F757B] to-[#131415] text-[16px] font-gabarito text-white 
+          className="bg-gradient-to-b from-[#6F757B] to-[#131415] text-[16px] font-medium font-gabarito text-white 
           py-2 mb-4 w-full rounded-full transition 
           disabled:opacity-50 disabled:cursor-not-allowed"
         >
