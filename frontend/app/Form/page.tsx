@@ -1,17 +1,19 @@
+// app/form/page.tsx
 "use client";
 
 import { useState } from "react";
 import StepContent from "./components/StepContent";
 import ProgressBar from "./components/ProgressBar";
+import Sidebar from "../components/Sidebar";
 
 export default function FormPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
     "Activity Information",
-    "Type and Sources of Data",
-    "Legal Basis and Consent",
-    "Sending/Transferring Data Abroad",
+    "Type and Sources",
+    "Legal and Consent",
+    "Sending/Transferring Data",
     "Data Retention and Use/Disclosure",
     "Security",
   ];
@@ -20,36 +22,45 @@ export default function FormPage() {
   const prevStep = () => currentStep > 0 && setCurrentStep(currentStep - 1);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-6 bg-[#F2F4F7]">
+    <div className="flex min-h-screen bg-[#F2F4F7]">
+      <Sidebar />
 
-      {/* Progress Bar ตอนแรกจะเอาไว้หน้าแต่เลเอ้าพังมาก ขอแยกกันยุก่อน*/}
-      <ProgressBar steps={steps} currentStep={currentStep} />
+      {/* main */}
+      <div className="ml-16 flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
 
-      {/* ไอที่แสดงเป็นการ์ด */}
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6 transition-all duration-300">
-        <h2 className="text-BLUE font-gabarito font-bold text-xl text-center">{steps[currentStep]}</h2>
-        <StepContent step={currentStep} />
-      </div>
+        {/* progress Bar */}
+        <div className="w-full max-w-[1000px] mb-10 ">
+          <ProgressBar steps={steps} currentStep={currentStep} />
+        </div>
 
-      {/* ปุ่มปุ่ม */}
-      <div className="w-full max-w-2xl flex justify-between mt-6">
-        {currentStep > 0 ? (
+        {/* card */}
+        <div className="w-full max-w-[1100px] bg-white rounded-lg shadow-sm px-[160px] py-[60px]">
+          <h2 className="text-[#1a3a8f] font-bold text-[22px] text-center mb-6 font-gabarito">
+            {currentStep === 1 ? "Data type and Sources" : steps[currentStep]}
+          </h2>
+          <StepContent step={currentStep} />
+        </div>
+
+        {/* buttons */}
+        <div className="w-full max-w-[1100px] flex justify-between mt-6">
+          {currentStep > 0 ? (
+            <button
+              onClick={prevStep}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 text-sm"
+            >
+              ← Back
+            </button>
+          ) : (
+            <div />
+          )}
           <button
-            onClick={prevStep}
-            className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"
+            onClick={nextStep}
+            className="flex items-center gap-2 px-5 py-2 bg-[#1a3a8f] text-white rounded-full hover:opacity-90 text-sm ml-auto"
           >
-            Back
+            {currentStep === steps.length - 1 ? "เสร็จ" : "Next"} →
           </button>
-        ) : (
-          <div />
-        )}
+        </div>
 
-        <button
-          onClick={nextStep}
-          className="px-5 py-2 bg-BLUE text-white rounded-md hover:opacity-90"
-        >
-          {currentStep === steps.length - 1 ? "เสร็จ" : "Next"}
-        </button>
       </div>
     </div>
   );

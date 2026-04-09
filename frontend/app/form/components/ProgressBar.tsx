@@ -9,30 +9,39 @@ type ProgressBarProps = {
 
 export default function ProgressBar({ steps, currentStep }: ProgressBarProps) {
     return (
-        <div className="w-full max-w-4xl relative flex justify-between items-center mb-[50px]">
-            {/* เส้นยากๆ ทำไงเน้อ */}
-            <div className="absolute top-3.5 left-0 right-0 h-[2px] bg-gray-300 z-0"></div>
-            <div
-                className="absolute top-3.5 left-0 h-[2px] bg-BLUE z-0 transition-all duration-300"
-                style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-            />
-
-            {/* วงกลมกับ label */}
+        <div className="w-full relative flex justify-between items-start font-gabarito ">
             {steps.map((title, index) => {
                 const isActive = index === currentStep;
                 const isCompleted = index < currentStep;
+                const isLast = index === steps.length - 1;
+
                 return (
-                    <div key={index} className="flex flex-col items-center relative z-10 font-gabarito">
-                        <div
-                            className={`w-7 h-7 flex items-center justify-center rounded-full border-2 text-sm font-bold 
-                ${isActive || isCompleted ? "bg-BLUE text-white border-BLUE" : "bg-white text-gray-300 border-gray-300"}`}
+                    <div key={index} className="flex flex-col items-center relative flex-1">
+                        {/* เส้นซ้าย */}
+                        {index > 0 && (
+                            <div className="absolute top-3.5 right-1/2 left-0 h-[2px] -translate-y-1/2"
+                                style={{ backgroundColor: isCompleted || isActive ? "#1a3a8f" : "#d1d5db" }}
+                            />
+                        )}
+                        {/* เส้นขวา */}
+                        {!isLast && (
+                            <div className="absolute top-3.5 left-1/2 right-0 h-[2px] -translate-y-1/2"
+                                style={{ backgroundColor: isCompleted ? "#1a3a8f" : "#d1d5db" }}
+                            />
+                        )}
+
+                        {/* วงกลม */}
+                        <div className={`w-7 h-7 flex items-center font-gabarito justify-center rounded-full border-2 text-sm font-bold z-10 relative
+                            ${isActive || isCompleted
+                                ? "bg-[#1a3a8f] text-white border-[#1a3a8f]"
+                                : "bg-white text-gray-400 border-gray-300"}`}
                         >
                             {index + 1}
                         </div>
-                        <p
-                            className={`mt-2 text-[11px] text-center leading-tight w-24 font-gabarito
-                ${isActive || isCompleted ? "text-BLUE font-medium" : "text-gray-400"}`}
-                        >
+
+                        {/* Label */}
+                        <p className={`mt-2 text-[11px] text-center leading-tight px-1 
+                            ${isActive || isCompleted ? "text-[#1a3a8f] font-medium font-gabarito" : "text-gray-400 font-gabarito"}`}>
                             {title}
                         </p>
                     </div>
