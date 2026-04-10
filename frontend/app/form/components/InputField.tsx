@@ -1,18 +1,42 @@
-//app/form/components/InputField.tsx
 interface InputFieldProps {
   label: string;
   placeholder?: string;
-  type?: string;
+  id?: string; 
+  value?: string;
+  onChange?: (val: string) => void;
+  disabled?: boolean;        
+  className?: string;
+  required?: boolean; // เพิ่ม prop นี้
 }
 
-export default function InputField({ label, placeholder = "", type = "text" }: InputFieldProps) {
+export default function InputField({
+  label,
+  placeholder,
+  id,
+  value = "",
+  onChange,
+  disabled = false,
+  className = "",
+  required = true, 
+}: InputFieldProps) {
+  const inputId = id || label.replace(/\s+/g, "-").toLowerCase();
+
   return (
-    <div className="mt-4 mb-7">
-      <label className="block text-sm text-BLUE font-prompt mb-1 px-2">{label} <span className="text-red-500">*</span></label> 
+    <div className={`mt-4 mb-[24px]`}>
+      <label
+        htmlFor={inputId}
+        className="block text-[14px] text-BLUE font-prompt mb-1.5 px-2"
+      >
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
       <input
-        type={type}
+        id={inputId}
+        type="text"
         placeholder={placeholder}
-        className=" text-sm w-full border border-BLUE font-prompt rounded-lg py-3 px-4 text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        value={value}                      
+        onChange={(e) => onChange?.(e.target.value)} 
+        disabled={disabled}              
+        className={`${className} text-[14px] w-full border border-BLUE font-prompt h-[45px] rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-200 ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-blue-600"}`}
       />
     </div>
   );

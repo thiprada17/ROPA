@@ -35,7 +35,7 @@ export default function FormPage() {
 
         {/* card */}
         <div className="w-full max-w-[1100px] bg-white rounded-lg shadow-sm px-[160px] py-[60px]">
-          <h2 className="text-[#1a3a8f] font-bold text-[22px] text-center mb-6 font-gabarito">
+          <h2 className="text-[#1a3a8f] font-bold text-[22px] text-center mb-[28px] font-gabarito">
             {currentStep === 1 ? "Data type and Sources" : steps[currentStep]}
           </h2>
           <StepContent step={currentStep} />

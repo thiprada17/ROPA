@@ -1,4 +1,3 @@
-// components/MultiSelect.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -8,6 +7,7 @@ interface MultiSelectProps {
   selected: string[];
   onChange: (val: string[]) => void;
   placeholder?: string;
+  className?: string;
 }
 
 export default function MultiSelect({
@@ -15,6 +15,7 @@ export default function MultiSelect({
   selected,
   onChange,
   placeholder = "เลือก...",
+  className = "",
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -43,8 +44,7 @@ export default function MultiSelect({
       {/* Trigger box */}
       <div
         onClick={() => setOpen(!open)}
-        className="border border-gray-200 rounded-md px-3 py-2 flex items-center justify-between gap-2 cursor-pointer bg-white min-h-[42px]"
-      >
+        className={`border border-BLUE rounded-md px-3 py-2 flex items-center justify-between gap-2 cursor-pointer bg-white min-h-[45px] ${className}`}      >
         <div className="flex flex-wrap gap-1.5 flex-1">
           {selected.length === 0 ? (
             <span className="text-xs text-gray-400">{placeholder}</span>
@@ -52,7 +52,7 @@ export default function MultiSelect({
             selected.map((s) => (
               <span
                 key={s}
-                className="flex items-center gap-1 bg-[#e8edf8] text-[#1a3a8f] text-xs px-2 py-0.5 rounded-md"
+                className="flex items-center gap-1 bg-[#e8edf8] text-[#1a3a8f] text-[12px] px-2 py-0.5 rounded-md"
               >
                 {s}
                 <button
@@ -70,7 +70,7 @@ export default function MultiSelect({
           )}
         </div>
 
-        {/* Count badge + arrow */}
+        {/* ที่นับ + arrow ยังไม่ได้ทำกากบาทลบหมดนะคับ */}
         <div className="flex items-center gap-1.5 shrink-0">
           {selected.length > 0 && (
             <span className="bg-[#1a3a8f] text-white text-[11px] font-medium w-5 h-5 rounded flex items-center justify-center">
