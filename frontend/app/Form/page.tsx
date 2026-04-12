@@ -16,6 +16,7 @@ export default function FormPage() {
     "Sending/Transferring Data",
     "Data Retention and Use/Disclosure",
     "Security",
+    "Processor",
   ];
 
   const nextStep = () => currentStep < steps.length - 1 && setCurrentStep(currentStep + 1);
