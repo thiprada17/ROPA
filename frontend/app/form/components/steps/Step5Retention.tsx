@@ -14,9 +14,9 @@ const disclosurePurposes = ["การตลาด", "การวิเคร�
 export default function Step5Retention() {
   const [dataType, setDataType] = useState<string[]>([]);
   const [storageMethod, setStorageMethod] = useState<string[]>([]);
-  const [retentionDD, setRetentionDD] = useState("00");
-  const [retentionMM, setRetentionMM] = useState("00");
-  const [retentionYY, setRetentionYY] = useState("00");
+  const [retentionDD, setRetentionDD] = useState(() => "00");
+  const [retentionMM, setRetentionMM] = useState(() => "00");
+  const [retentionYY, setRetentionYY] = useState(() => "00");
   const [accessRight, setAccessRight] = useState<string[]>([]);
   const [destructionMethod, setDestructionMethod] = useState("");
   const [disclosureStatus, setDisclosureStatus] = useState("");

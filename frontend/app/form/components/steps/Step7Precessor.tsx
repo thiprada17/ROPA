@@ -134,32 +134,32 @@ export default function Step7Processor() {
   return (
     <div className="space-y-4 font-prompt">
 
-{/* ปุ่ม Add */}
-{(processors.length > 0 || draft) && (
-  <div className="flex justify-end">
-    <button
-      type="button"
-      onClick={handleAddNew}
-      className="flex items-center gap-1.5 bg-[#5E84DB] text-white text-xs px-4 py-2 rounded-full hover:bg-[#1a3a8f] transition"
-    >
-      <PlusCircle size={14} /> Add New Processor
-    </button>
-  </div>
-)}
+      {/* ปุ่ม Add */}
+      {(processors.length > 0 || draft) && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="flex items-center gap-1.5 bg-[#5E84DB] text-white text-xs px-4 py-2 rounded-full hover:bg-[#1a3a8f] transition"
+          >
+            <PlusCircle size={14} /> Add New Processor
+          </button>
+        </div>
+      )}
 
-{/* Empty processor ปุ่มใหญ่กลางจอ */}
-{processors.length === 0 && !draft && (
-  <div className="flex flex-col items-center justify-center py-24 gap-4">
-    <button
-      type="button"
-      onClick={handleAddNew}
-      className="flex items-center gap-2 bg-[#5E84DB] text-white text-base px-8 py-4 rounded-full hover:bg-[#1a3a8f] transition shadow-md"
-    >
-      <PlusCircle size={22} /> Add New Processor
-    </button>
-    <p className="text-gray-400 text-sm">ยังไม่มีผู้ประมวลผล</p>
-  </div>
-)}
+      {/* Empty processor ปุ่มใหญ่กลางจอ */}
+      {processors.length === 0 && !draft && (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="flex items-center gap-2 bg-[#5E84DB] text-white text-base px-8 py-4 rounded-full hover:bg-[#1a3a8f] transition shadow-md"
+          >
+            <PlusCircle size={22} /> Add New Processor
+          </button>
+          <p className="text-gray-400 text-sm">ยังไม่มีผู้ประมวลผล</p>
+        </div>
+      )}
 
       {/* Draft card */}
       {draft && (
@@ -216,9 +216,9 @@ export default function Step7Processor() {
       {processors.map((p) => {
         const isOpen = expandedId === p.id;
         return (
-          <div key={p.id} className="border border-BLUE rounded-xl overflow-hidden">
+          <div key={p.id} className="border border-BLUE rounded-xl overflow-hidden shadow-md">
             <div
-              className="flex items-center justify-between px-5 py-3 bg-[#ECF0F9]  cursor-pointer hover:bg-[#f8f9ff]"
+              className="flex items-center justify-between px-5 py-3 bg-[#ECF0F9] cursor-pointer hover:bg-[#f8f9ff]"
               onClick={() => handleToggleExpand(p)}
             >
               <span className="text-sm font-medium text-[#1a3a8f]">{p.name}</span>
