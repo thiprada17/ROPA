@@ -1,52 +1,21 @@
 // app/form/components/StepContent.tsx
-import InputField from "./InputField";
+import Step1Activity from "./steps/Step1Activity";
+import Step2DataType from "./steps/Step2DataType";
+import Step3LegalBasis from "./steps/Step3LegalBasis";
+import Step4Transfer from "./steps/Step4Transfer";
+import Step5Retention from "./steps/Step5Retention";
+import Step6Security from "./steps/Step6Security";
+import Step7Processor from "./steps/Step7Precessor";
 
-interface StepContentProps {
-  step: number;
-}
-
-export default function StepContent({ step }: StepContentProps) {
+export default function StepContent({ step }: { step: number }) {
   switch (step) {
-    case 0: // Stage แรก
-      return (
-        <div>
-          <InputField label="ข้อมูลเกี่ยวกับผู้ควบคุมข้อมูลส่วนบุคคล" placeholder="บริษัท A" />
-          <InputField label="กิจกรรมประมวลผล" placeholder="ชื่อกิจกรรม เช่น การเก็บข้อมูลลูกค้า, การสื่อสารการตลาด" />
-          <InputField label="วัตถุประสงค์ของการประมวลผล" placeholder="เช่น การตลาด, การวิเคราะห์ข้อมูล" />
-        </div>
-      );
-    case 1: // Stage 2
-      return (
-        <div>
-          <InputField label="ข้อมูลส่วนบุคคลที่จัดเก็บ" placeholder="ชื่อ, เบอร์โทร, อีเมล ฯลฯ" />
-  
-        </div>
-      );
-    case 2: // Stage 3
-      return (
-        <div>
-          <InputField label="ฐานในการประมวลผล สัญฐาบลาๆๆ" />
-        </div>
-      ); 
-    case 3: // Stage 4
-      return (
-        <div>
-          <InputField label="เทส" />
-        </div>
-      );
-    case 4: // Stage 5
-      return (
-       <div>
-          <InputField label="เทส" />
-        </div>
-      );
-    case 5: // Stage 6
-      return (
-        <div>
-          <InputField label="เทส" />
-        </div>
-      );
-    default:
-      return null;
+    case 0: return <Step1Activity />;
+    case 1: return <Step2DataType />;
+    case 2: return <Step3LegalBasis />;
+    case 3: return <Step4Transfer />;
+    case 4: return <Step5Retention />;
+    case 5: return <Step6Security />;
+    case 6: return <Step7Processor />;
+    default: return null;
   }
 }
