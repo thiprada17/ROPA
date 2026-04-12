@@ -195,7 +195,7 @@ export default function RopaPage() {
     }, [search]);
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-gray-100 font-prompt">
             {/* ================= Sidebar ================= */}
             <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
@@ -259,7 +259,7 @@ export default function RopaPage() {
                                             setStartDate("");
                                             setEndDate("");
                                         }}
-                                        className="text-xs text-blue-600 hover:underline"
+                                        className="text-xs text-blue-600 font-gabarito hover:underline"
                                     >
                                         Clear all
                                     </button>
@@ -292,7 +292,7 @@ export default function RopaPage() {
                                 <div className="flex justify-end mt-4">
                                     <button
                                         onClick={() => setOpen(false)}
-                                        className="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700"
+                                        className="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 font-gabarito"
                                     >
                                         Apply
                                     </button>
@@ -323,7 +323,8 @@ export default function RopaPage() {
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="flex items-center justify-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative"
                             >
-                                <Filter size={16} /> Filter
+                                <Filter size={16} />
+                                <span className="font-gabarito">Filter</span>
 
                                 {filterCount > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
@@ -393,7 +394,7 @@ export default function RopaPage() {
 
                                     <div className="flex-1 flex items-center gap-1">
                                         <ChevronsUp size={14} className="text-red-500" />
-                                        <span>{item.risk}</span>
+                                        <span className="font-gabarito">{item.risk}</span>
                                     </div>
 
                                     <div className="flex-1 text-right">
@@ -425,7 +426,7 @@ export default function RopaPage() {
                             onClick={() => page > 1 && setPage(page - 1)}
                         />
 
-                        <span>Page</span>
+                        <span className="font-gabarito">Page</span>
 
                         <input
                             type="number"
@@ -439,7 +440,7 @@ export default function RopaPage() {
                             className="w-12 border rounded px-2 py-1"
                         />
 
-                        <span>of {totalPages}</span>
+                        <span className="font-gabarito">of {totalPages}</span>
 
                         <ChevronRight
                             className={`cursor-pointer ${page === totalPages ? "opacity-30 cursor-not-allowed" : ""}`}
