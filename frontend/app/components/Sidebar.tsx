@@ -1,16 +1,17 @@
 // app/components/Sidebar.tsx
 "use client";
 
-import { LayoutDashboard, Shield, Scale, Settings, LogOut, User, Briefcase, Users } from "lucide-react";
+import { LayoutDashboard, Scale, Settings, LogOut, User, UserLock, ShieldAlert, ShieldPlus , BriefcaseBusiness} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard" },
-  { icon: Shield, href: "/shield" },
-  { icon: Scale, href: "/scale" },
-  { icon: Briefcase, href: "/form" },
-  { icon: Users, href: "/users" },
+  { icon: ShieldPlus, href: "/form" },
+  { icon: ShieldAlert, href: "/ropa" },
+  { icon: Scale, href: "/legal" },
+  { icon: BriefcaseBusiness, href: "/information" },
+  { icon: UserLock, href: "/auditlog" },
   { icon: Settings, href: "/settings" },
 ];
 
@@ -41,7 +42,7 @@ export default function Sidebar() {
           );
         })}
         <button className="text-gray-400 hover:text-white transition-colors mt-auto">
-          <LogOut size={20} />
+          <LogOut size={20} className="rotate-180"/>
         </button>
       </nav>
 
