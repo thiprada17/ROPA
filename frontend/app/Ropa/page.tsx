@@ -12,6 +12,7 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    Ellipsis,
 } from "lucide-react";
 
 const data = [
@@ -180,7 +181,7 @@ export default function RopaPage() {
     });
 
     // ================= PAGINATION =================
-    const itemsPerPage = 5;
+    const itemsPerPage = 10;
     const totalItems = filteredData.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
@@ -194,8 +195,19 @@ export default function RopaPage() {
         setPage(1);
     }, [search]);
 
+    const col = {
+        activity: "w-[220px]",
+        type: "w-[160px]",
+        owner: "w-[180px]",
+        dept: "w-[120px]",
+        receiver: "w-[180px]",
+        retention: "w-[120px]",
+        risk: "w-[150px]",
+        action: "w-[60px]",
+    };
+
     return (
-        <div className="flex min-h-screen bg-gray-100 font-prompt">
+        <div className="flex min-h-screen bg-gray-100 font-prompt text-[12px]">
             {/* ================= Sidebar ================= */}
             <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
@@ -212,7 +224,7 @@ export default function RopaPage() {
             </aside>
 
             {/* ================= Main ================= */}
-            <main className="flex-1 px-[120px] py-6">
+            <main className="flex-1 px-[120px] py-6 max-w-[1440px] mx-auto">
                 <div className="flex flex-col md:flex-row md:justify-between gap-4">
 
                     {/* ================= DATE FILTER ================= */}
@@ -348,70 +360,82 @@ export default function RopaPage() {
                 </div>
 
                 {/* ================= TABLE ================= */}
-                <div className="mt-6 bg-white rounded-xl shadow p-3">
-
-                    {/* HEADER */}
-                    <div className="flex text-sm mb-2 gap-2">
-                        {[
-                            "กิจกรรม",
-                            "ประเภท",
-                            "เจ้าของ",
-                            "หน่วยงาน",
-                            "ผู้รับ",
-                            "ระยะเวลา",
-                            "ความเสี่ยง",
-                            "",
-                        ].map((h, i) => (
-                            <div
-                                key={i}
-                                className="flex-1 bg-blue-700 text-white px-4 py-3 rounded-lg"
-                            >
-                                {h}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* BODY */}
-                    <div className="flex flex-col gap-2">
-                        {paginatedData.length > 0 ? (
-                            paginatedData.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg"
-                                >
-                                    <div className="flex-1">{item.activity}</div>
-
-                                    <div className="flex-1">
-                                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
-                                            {item.type}
-                                        </span>
+                <div className="mt-6">
+                    <div className="bg-white rounded-xl shadow p-3">
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[1100px]">
+                                {/* HEADER */}
+                                <div className="flex text-[12px] mb-2 px-4 gap-2">
+                                    <div className={`${col.activity} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        กิจกรรม
                                     </div>
-
-                                    <div className="flex-1">{item.owner}</div>
-                                    <div className="flex-1">{item.department}</div>
-                                    <div className="flex-1">{item.receiver}</div>
-                                    <div className="flex-1">{item.retention}</div>
-
-                                    <div className="flex-1 flex items-center gap-1">
-                                        <ChevronsUp size={14} className="text-red-500" />
-                                        <span className="font-gabarito">{item.risk}</span>
+                                    <div className={`${col.type} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        ประเภท
                                     </div>
-
-                                    <div className="flex-1 text-right">
-                                        <button
-                                            onClick={() => console.log("go to detail", item.id)}
-                                            className="p-1 hover:bg-gray-200 rounded"
-                                        >
-                                            <MoreVertical size={16} />
-                                        </button>
+                                    <div className={`${col.owner} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        เจ้าของ
                                     </div>
+                                    <div className={`${col.dept} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        หน่วยงาน
+                                    </div>
+                                    <div className={`${col.receiver} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        ผู้รับ
+                                    </div>
+                                    <div className={`${col.retention} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        ระยะเวลา
+                                    </div>
+                                    <div className={`${col.risk} px-2 bg-blue-700 text-white px-4 py-3 rounded-lg`}>
+                                        ความเสี่ยง
+                                    </div>
+                                    <div className={`${col.action} px-4 py-3`} />
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center text-gray-400 py-6">
-                                ไม่พบข้อมูล
+
+                                {/* BODY */}
+                                <div className="flex flex-col gap-2">
+                                    {paginatedData.length > 0 ? (
+                                        paginatedData.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex items-center px-4 py-3 border-b hover:bg-gray-50 transition"
+                                            >
+                                                <div className={`${col.activity} px-2 truncate`}>
+                                                    {item.activity}
+                                                </div>
+
+                                                <div className={`${col.type} px-2`}>
+                                                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                                                        {item.type}
+                                                    </span>
+                                                </div>
+
+                                                <div className={`${col.owner} px-2`}>{item.owner}</div>
+
+                                                <div className={`${col.dept} px-2`}>{item.department}</div>
+
+                                                <div className={`${col.receiver} px-2`}>{item.receiver}</div>
+
+                                                <div className={`${col.retention} px-6`}>{item.retention}</div>
+
+                                                <div className={`${col.risk} px-8 flex items-center gap-1`}>
+                                                    <ChevronsUp size={14} className="text-red-500" />
+                                                    <span className="font-gabarito">{item.risk}</span>
+                                                </div>
+
+                                                <div className={`${col.action} text-right`}>
+                                                    <button className="p-1 hover:bg-gray-200 rounded">
+                                                        <Ellipsis size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-gray-400 py-6">
+                                            ไม่พบข้อมูล
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
 
