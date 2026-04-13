@@ -25,7 +25,8 @@ export default function FormPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F2F4F7]">
-      <Sidebar />
+      {/* Sidebar */}
+      <Sidebar userName="test" userEmail="test@example.com" />
 
       {/* main */}
       <div className="ml-16 flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
@@ -36,7 +37,7 @@ export default function FormPage() {
         </div>
 
         {/* card */}
-        <div className="w-full max-w-[1100px] bg-white rounded-lg shadow-sm px-[160px] py-[60px]">
+        <div className="w-full max-w-[1100px] bg-white rounded-lg shadow-sm px-[150px] py-[60px]">
           <h2 className="text-[#1a3a8f] font-bold text-[22px] text-center mb-[28px] font-gabarito">
             {currentStep === 1 ? "Data type and Sources" : steps[currentStep]}
           </h2>
