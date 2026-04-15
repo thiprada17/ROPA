@@ -1,9 +1,11 @@
 {
   "dependencies": {
-    "@supabase/supabase-js": "^2.103.0",
+    "@supabase/supabase-js": "^2.103.2",
     "body-parser": "^2.2.2",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
