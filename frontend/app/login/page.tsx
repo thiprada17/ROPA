@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
 
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // errors เก็บ object ของ error message แต่ละ field เช่น { email: "...", password: "..." }
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -22,7 +24,8 @@ export default function LoginPage() {
     
     if (!password) {
       newErrors.password = "Please enter the password";
-    } else if (password.length < 10) {
+    }
+    else if (password.length < 10) {
       newErrors.password = "Password must be at least 10 characters long";
     }
 
@@ -31,7 +34,7 @@ export default function LoginPage() {
 
 
   {/* handleLogin function เรียกใช้ตอนกด login button */}
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // เรียก validate() เพื่อเช็ค error ก่อน
     const validationErrors = validate();
 
@@ -45,10 +48,37 @@ export default function LoginPage() {
     setErrors({});
     setLoading(true);
 
-    // TODO: ใส่ login logic ตรงนี้ เช่น เรียก API
-    console.log("Logging in with:", email, password);
-  };
+    try {
+    const res = await fetch("http://localhost:8000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        identifier: email,
+        password: password,
+      }),
+    });
 
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
+
+    localStorage.setItem("token", data.token);
+
+    router.push("/Ropa");
+
+  } catch (err) {
+    console.error(err);
+    setErrors({
+      password: err.message,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center 
