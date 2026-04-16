@@ -3,21 +3,28 @@
 import InputField from "../InputField";
 import SingleSelect from "../../../components/SingleSelect";
 
-const dataTypes = ["ชื่อ-นามสกุล", "เลขบัตรประชาชน", "เบอร์โทรศัพท์", "อีเมล"];
+const processingActivities = [
+  "การจัดการลูกค้า",
+  "การบริหารทรัพยากรบุคคล",
+  "การตลาดและโฆษณา",
+  "การวิเคราะห์ข้อมูล",
+  "การปรับปรุงบริการ",
+  "การปฏิบัติตามกฎหมาย",
+];
 
 // Validation สำหรับ Step1
 export function validateStep1({
   dataOwner,
-  dataType,
+  processActivity,
   processingPurpose,
 }: {
   dataOwner: string;
-  dataType: string;
+  processActivity: string;
   processingPurpose: string;
 }) {
   return {
     dataOwner: !dataOwner.trim(), // true = error
-    dataType: !dataType,         
+    processActivity: !processActivity.trim(),
     processingPurpose: !processingPurpose.trim(), 
   };
 }
@@ -25,12 +32,12 @@ export function validateStep1({
 interface StepProps {
   formData: {
     dataOwner: string;
-    dataType: string;
+    processActivity: string;
     processingPurpose: string;
   };
   errors: {
     dataOwner?: boolean;
-    dataType?: boolean;
+    processActivity?: boolean;
     processingPurpose?: boolean;
   };
   updateField: (field: string, value: any) => void;
@@ -50,14 +57,14 @@ export default function Step1Activity({ formData, errors, updateField }: StepPro
 
       <div>
         <label className="text-[14px] text-BLUE block mb-[5px] px-2">
-          ประเภทของข้อมูลส่วนบุคคลที่จัดเก็บ <span className="text-red-500">*</span>
+          กิจกรรมการประมวลผล <span className="text-red-500">*</span>
         </label>
         <SingleSelect
-          options={dataTypes}
-          value={formData.dataType}
-          onChange={(v) => updateField("dataType", v)}
-          placeholder="เลือกประเภทข้อมูล..."
-          error={errors.dataType}
+          options={processingActivities}
+          value={formData.processActivity}
+          onChange={(v) => updateField("processActivity", v)}
+          placeholder="เลือกกิจกรรมการประมวลผล..."
+          error={errors.processActivity}
           required
         />
       </div>

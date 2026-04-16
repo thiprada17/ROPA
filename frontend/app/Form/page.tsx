@@ -67,7 +67,7 @@ export default function FormPage() {
   };
 
   interface FormData {
-    step1: { dataOwner: string; dataType: string; processingPurpose: string };
+    step1: { dataOwner: string; processActivity: string; processingPurpose: string };
     step2: { dataClass: string; otherText: string; categories: string[]; dataType: string; methods: string[]; dataSource: string };
     step3: { primaryBases: string[]; supplementaryBases: string[]; minorConsent: { under10: string; age10to20: string } };
     step4: { hasTransferAbroad: string; transferCountry: string; isToSubsidiary: string; subsidiaryName: string; transferMethod: string; dataProtectionStandard: string[]; legalExemption: string[] };
@@ -77,7 +77,7 @@ export default function FormPage() {
   }
 
   const [formData, setFormData] = useState<FormData>({
-    step1: { dataOwner: "", dataType: "", processingPurpose: "" },
+    step1: { dataOwner: "", processActivity: "", processingPurpose: "" },
     step2: { dataClass: "", otherText: "", categories: [], dataType: "", methods: [], dataSource: "" },
     step3: { primaryBases: [], supplementaryBases: [], minorConsent: { under10: "", age10to20: "" } },
     step4: { hasTransferAbroad: "", transferCountry: "", isToSubsidiary: "", subsidiaryName: "", transferMethod: "", dataProtectionStandard: [], legalExemption: [] },
