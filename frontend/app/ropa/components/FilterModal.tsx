@@ -9,10 +9,13 @@ import {
     ChevronsDown,
     Check,
 } from "lucide-react";
+import MultiSelect from "@/app/components/MultiSelect";
 
 export default function FilterModal({
     open,
     onClose,
+    selected,      
+    setSelected, 
     selectedStatus,
     setSelectedStatus,
     selectedRisks,
@@ -92,7 +95,19 @@ export default function FilterModal({
 
                 <hr className="my-3 border-[#1C1B1F]" />
 
-                
+                {/* ---------- PARTIES ---------- */}
+                <div className="mb-4">
+                    <p className="text-xs font-medium mb-2 text-[#1C1B1F]">
+                        ฝ่ายที่เกี่ยวข้อง
+                    </p>
+                    <MultiSelect
+                        options={["HR", "IT", "Marketing", "Sales", "Training", "Finance"]}
+                        selected={selected}
+                        onChange={setSelected}
+                        placeholder="เลือกแผนก..."
+                    />
+                </div>
+
 
                 {/* ================= RETENTION FILTER ================= */}
                 <div className="mb-4">
@@ -422,6 +437,7 @@ export default function FilterModal({
                     {/* CLEAR ALL */}
                     <button
                         onClick={() => {
+                            setSelected([]);
                             setSelectedStatus([]);
                             setSelectedRisks([]);
                             setRetention({

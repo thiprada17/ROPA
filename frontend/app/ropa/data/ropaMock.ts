@@ -3,7 +3,7 @@ export const ropaMock = [
     {
         id: 1,
         activity: "รายชื่อผู้ผ่านเข้ารอบการสัมภาษณ์งานประจำปี 2569",
-        parties: ["HR", "การเงินและบัญชี"],
+        parties: ["HR", "Finance"],
         purpose: "เก็บรายชื่อผู้ผ่านเข้ารอบการสัมภาษณ์งาน",
         legal: ["ฐานกฎหมาย1", "ฐานกฎหมาย2"],
         retention: "2 เดือน",
@@ -13,7 +13,7 @@ export const ropaMock = [
     {
         id: 2,
         activity: "รายได้ของฝ่ายการตลาดประจำปี 2569",
-        parties: ["HR", "การตลาด"],
+        parties: ["HR", "Marketing"],
         purpose: "เพื่อแจกแจงรายได้ของฝ่ายการตลาด",
         legal: ["ฐานกฎหมาย1", "ฐานกฎหมาย2"],
         retention: "1 ปี",
@@ -63,7 +63,7 @@ export const ropaMock = [
     {
         id: 7,
         activity: "ข้อมูลลูกค้าประจำปี 2568",
-        parties: ["ฝ่ายขาย", "การตลาด"],
+        parties: ["Sales", "Marketing"],
         purpose: "วิเคราะห์พฤติกรรมลูกค้า",
         legal: ["ฐานกฎหมาย1", "ฐานกฎหมาย3"],
         retention: "2 ปี",
@@ -73,7 +73,7 @@ export const ropaMock = [
     {
         id: 8,
         activity: "ข้อมูลการชำระเงินลูกค้า",
-        parties: ["การเงินและบัญชี"],
+        parties: ["Finance"],
         purpose: "ตรวจสอบธุรกรรมการเงิน",
         legal: ["ฐานกฎหมาย2"],
         retention: "1 ปี",
@@ -83,7 +83,7 @@ export const ropaMock = [
     {
         id: 9,
         activity: "แบบสอบถามความพึงพอใจลูกค้า",
-        parties: ["การตลาด"],
+        parties: ["Marketing"],
         purpose: "ปรับปรุงบริการ",
         legal: ["ฐานกฎหมาย3"],
         retention: "6 เดือน",

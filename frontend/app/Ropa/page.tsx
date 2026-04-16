@@ -53,6 +53,9 @@ export default function RopaPage() {
         start: { year: "", month: "", day: "" },
         end: { year: "", month: "", day: "" },
     });
+    // filter: parties
+    const [selectedParties, setSelectedParties] = useState<string[]>([]);
+
     // ================= FILTER COUNT (badge บนปุ่ม filter) =================
     const filterCount =
         selectedStatus.length +
@@ -104,7 +107,7 @@ export default function RopaPage() {
         const matchSearch =
             normalize(item.activity).includes(keyword)
 
-        // filter type
+        // filter status
         const matchStatus =
             selectedStatus.length === 0 ||
             selectedStatus.includes(item.status);
@@ -113,6 +116,11 @@ export default function RopaPage() {
         const matchRisk =
             selectedRisks.length === 0 ||
             selectedRisks.includes(item.risk);
+
+            // filter parties
+        const matchParties =
+            selectedParties.length === 0 ||
+            item.parties.some((p) => selectedParties.includes(p));
 
         // ================= RETENTION =================
         const hasRetentionFilter =
@@ -175,7 +183,7 @@ export default function RopaPage() {
             }
         }
 
-        return matchSearch && matchStatus && matchRisk && matchRetention;
+        return matchSearch && matchStatus && matchRisk && matchRetention && matchParties;
     });
 
     // ================= PAGINATION =================
@@ -408,6 +416,8 @@ export default function RopaPage() {
                                     <FilterModal
                                         open={openFilter}
                                         onClose={() => setOpenFilter(false)}
+                                        selected={selectedParties}
+                                        setSelected={setSelectedParties}
                                         selectedStatus={selectedStatus}
                                         setSelectedStatus={setSelectedStatus}
                                         selectedRisks={selectedRisks}
@@ -510,16 +520,16 @@ export default function RopaPage() {
 
                                                     {/* risk */}
                                                     <div className="flex justify-center">
-                                                        <span className={`${badgeBase} ${riskMap[item.risk]?.color}`}>
-                                                            {riskMap[item.risk]?.icon}
+                                                        <span className={`${badgeBase} ${riskMap[item.risk as keyof typeof riskMap]?.color}`}>
+                                                            {riskMap[item.risk as keyof typeof riskMap]?.icon}
                                                             {item.risk}
                                                         </span>
                                                     </div>
 
                                                     {/* status */}
                                                     <div className="flex justify-center">
-                                                        <span className={`${badgeBase} ${statusMap[item.status]?.color}`}>
-                                                            {statusMap[item.status]?.icon}
+                                                        <span className={`${badgeBase} ${statusMap[item.status as keyof typeof statusMap]?.color}`}>
+                                                            {statusMap[item.status as keyof typeof statusMap]?.icon}
                                                             {item.status}
                                                         </span>
                                                     </div>
