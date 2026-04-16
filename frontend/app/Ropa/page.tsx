@@ -46,7 +46,7 @@ export default function RopaPage() {
     // filter modal
     const [openFilter, setOpenFilter] = useState(false);
     // filter: type + risk
-    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
     const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
     // filter: retention (ช่วงเวลา)
     const [retention, setRetention] = useState({
@@ -55,7 +55,7 @@ export default function RopaPage() {
     });
     // ================= FILTER COUNT (badge บนปุ่ม filter) =================
     const filterCount =
-        selectedTypes.length +
+        selectedStatus.length +
         selectedRisks.length +
         (retention.start.year ||
             retention.start.month ||
@@ -105,9 +105,9 @@ export default function RopaPage() {
             normalize(item.activity).includes(keyword)
 
         // filter type
-        const matchType =
-            selectedTypes.length === 0 ||
-            selectedTypes.includes(item.type);
+        const matchStatus =
+            selectedStatus.length === 0 ||
+            selectedStatus.includes(item.status);
 
         // filter risk
         const matchRisk =
@@ -175,7 +175,7 @@ export default function RopaPage() {
             }
         }
 
-        return matchSearch && matchType && matchRisk && matchRetention;
+        return matchSearch && matchStatus && matchRisk && matchRetention;
     });
 
     // ================= PAGINATION =================
@@ -211,7 +211,7 @@ export default function RopaPage() {
 
     // ================= STYLE MAP =================
     const riskMap = {
-        Critical: {
+        "Critical": {
             color: "bg-[#F0AFBE] text-[#BD263F]",
             icon: <ChevronsUp size={14} />,
         },
@@ -219,11 +219,11 @@ export default function RopaPage() {
             color: "bg-[#F3E3AE] text-[#A37D00]",
             icon: <ChevronUp size={14} />,
         },
-        Stable: {
+        "Stable": {
             color: "bg-[#D1E7F0] text-[#0078A3]",
             icon: <ChevronsDown size={14} />,
         },
-        Safe: {
+        "Safe": {
             color: "bg-[#B5DDD8] text-[#228679]",
             icon: <ChevronDown size={14} />,
         },
@@ -292,14 +292,14 @@ export default function RopaPage() {
                                     onClick={() => setOpen(!open)}
                                     className="flex items-center justify-between gap-2 bg-white border rounded-lg px-4 h-[40px] w-[274px] shadow-sm hover:border-gray-400 transition"
                                 >
-                                    <span className="text-sm flex items-center gap-2 text-gray-700">
+                                    <span className="text-sm flex items-center gap-2 text-[#1C1B1F]">
                                         <Calendar size={16} className="shrink-0" />
                                         <span className="truncate">
                                             {startDate && endDate ? (
                                                 isSameDay ? (
                                                     <>
                                                         {formatDate(startDate)}
-                                                        {isToday && <span className="text-blue-600">(today)</span>}
+                                                        {isToday && <span className="text-[#03369D]">(today)</span>}
                                                     </>
                                                 ) : (
                                                     <>
@@ -309,12 +309,12 @@ export default function RopaPage() {
                                                     </>
                                                 )
                                             ) : (
-                                                <span className="text-gray-400">เลือกช่วงวันที่</span>
+                                                <span className="text-[#1C1B1F]">เลือกช่วงวันที่</span>
                                             )}
                                         </span>
                                     </span>
 
-                                    <ChevronDown size={16} className="text-gray-500" />
+                                    <ChevronDown size={16} className="text-[#A6A6A6]" />
                                 </button>
 
                                 {open && (
@@ -322,7 +322,7 @@ export default function RopaPage() {
 
                                         {/* header */}
                                         <div className="flex justify-between items-center mb-3">
-                                            <div className="text-sm font-semibold text-gray-800">
+                                            <div className="text-sm font-semibold text-[#1C1B1F]">
                                                 เลือกช่วงวันที่
                                             </div>
 
@@ -331,7 +331,7 @@ export default function RopaPage() {
                                                     setStartDate("");
                                                     setEndDate("");
                                                 }}
-                                                className="text-xs text-blue-600 font-gabarito hover:underline"
+                                                className="text-xs text-[#03369D] font-gabarito hover:underline"
                                             >
                                                 Clear all
                                             </button>
@@ -340,22 +340,22 @@ export default function RopaPage() {
                                         {/* form */}
                                         <div className="flex flex-col gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-xs text-gray-500">วันเริ่มต้น</label>
+                                                <label className="text-xs text-[#1C1B1F]">วันเริ่มต้น</label>
                                                 <input
                                                     type="date"
                                                     value={startDate}
                                                     onChange={(e) => setStartDate(e.target.value)}
-                                                    className="border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
 
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-xs text-gray-500">วันสิ้นสุด</label>
+                                                <label className="text-xs text-[#1C1B1F]">วันสิ้นสุด</label>
                                                 <input
                                                     type="date"
                                                     value={endDate}
                                                     onChange={(e) => setEndDate(e.target.value)}
-                                                    className="border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
@@ -364,7 +364,7 @@ export default function RopaPage() {
                                         <div className="flex justify-end mt-4">
                                             <button
                                                 onClick={() => setOpen(false)}
-                                                className="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 font-gabarito"
+                                                className="text-sm bg-[#03369D] text-white px-4 py-1.5 rounded-md hover:bg-[#012a7c] font-gabarito"
                                             >
                                                 Apply
                                             </button>
@@ -375,31 +375,31 @@ export default function RopaPage() {
 
                             {/* ================= ACTIONS ================= */}
                             <div className="flex gap-4 items-center">
-                                <button className="flex items-center justify-center gap-2 w-[128px] h-[40px] bg-[#03369D] text-white rounded-lg">
+                                <button className="flex items-center justify-center gap-2 w-[128px] h-[40px] bg-[#03369D] hover:bg-[#012a7c] text-white rounded-lg">
                                     <Plus size={16} /> เพิ่มกิจกรรม
                                 </button>
 
                                 <div className="flex items-center gap-2 border rounded-lg px-3 w-[304px] h-[40px] bg-white">
-                                    <Search size={16} />
+                                    <Search size={16} className="text-[#A6A6A6]" />
                                     <input
                                         type="text"
                                         placeholder="ค้นหาชื่อกิจกรรม"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full outline-none text-sm"
+                                        className="w-full outline-none text-sm placeholder-[#D8D8D8] text-[#1C1B1F]"
                                     />
                                 </div>
 
                                 <div className="relative">
                                     <button
                                         onClick={() => setOpenFilter(!openFilter)}
-                                        className="flex items-center justify-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative"
+                                        className="flex items-center justify-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[#1C1B1F]"
                                     >
                                         <Filter size={16} />
                                         <span className="font-gabarito text-[14px]">Filter</span>
 
                                         {filterCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                                            <span className="absolute -top-2 -right-2 bg-[#03369D] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
                                                 {filterCount}
                                             </span>
                                         )}
@@ -408,8 +408,8 @@ export default function RopaPage() {
                                     <FilterModal
                                         open={openFilter}
                                         onClose={() => setOpenFilter(false)}
-                                        selectedTypes={selectedTypes}
-                                        setSelectedTypes={setSelectedTypes}
+                                        selectedStatus={selectedStatus}
+                                        setSelectedStatus={setSelectedStatus}
                                         selectedRisks={selectedRisks}
                                         setSelectedRisks={setSelectedRisks}
                                         retention={retention}
@@ -462,7 +462,7 @@ export default function RopaPage() {
                                                     style={{ gridTemplateColumns: col }}
                                                 >
                                                     {/* activity */}
-                                                    <div className="px-2 truncate">
+                                                    <div className="px-2 truncate text-[#1C1B1F]">
                                                         {item.activity}
                                                     </div>
 
@@ -471,7 +471,7 @@ export default function RopaPage() {
                                                         {item.parties.map((p, i) => (
                                                             <span
                                                                 key={i}
-                                                                className={`bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[11px]
+                                                                className={`bg-[#DFE9FF] text-[#03369D] px-2 py-1 rounded-md text-[11px]
                                                                     ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
                                                         `}
                                                                 title={p}
@@ -482,7 +482,7 @@ export default function RopaPage() {
                                                     </div>
 
                                                     {/* purpose */}
-                                                    <div className="px-2 truncate text-gray-700">
+                                                    <div className="px-2 truncate text-[#1C1B1F]">
                                                         {item.purpose}
                                                     </div>
 
@@ -491,7 +491,7 @@ export default function RopaPage() {
                                                         {item.legal.map((l, i) => (
                                                             <span
                                                                 key={i}
-                                                                className={`bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[11px]
+                                                                className={`bg-[#DFE9FF] text-[#03369D] px-2 py-1 rounded-md text-[11px]
                                                                     ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
                                                         `}
                                                                 title={l}
@@ -503,7 +503,7 @@ export default function RopaPage() {
 
                                                     {/* retention */}
                                                     <div>
-                                                        <span className="px-4">
+                                                        <span className="px-4 text-[#1C1B1F]">
                                                             {item.retention}
                                                         </span>
                                                     </div>
@@ -525,7 +525,7 @@ export default function RopaPage() {
                                                     </div>
 
                                                     {/* action */}
-                                                    <div className=" flex justify-end w-full">
+                                                    <div className=" flex justify-end w-full text-[#1C1B1F]">
                                                         <button className="p-1 hover:bg-gray-200 rounded">
                                                             <EllipsisVertical size={16} />
                                                         </button>
@@ -544,9 +544,9 @@ export default function RopaPage() {
 
                         {/* ================= FOOTER ================= */}
                         <div className="mt-4 flex justify-between items-center text-sm">
-                            <span className="text-gray-500">{totalItems} items</span>
+                            <span className="text-[#1C1B1F]">{totalItems} items</span>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-[#1C1B1F]">
                                 <ChevronLeft
                                     className={`cursor-pointer ${page === 1 ? "opacity-30 pointer-events-none" : ""
                                         }`}

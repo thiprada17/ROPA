@@ -13,8 +13,8 @@ import {
 export default function FilterModal({
     open,
     onClose,
-    selectedTypes,
-    setSelectedTypes,
+    selectedStatus,
+    setSelectedStatus,
     selectedRisks,
     setSelectedRisks,
     retention,
@@ -85,81 +85,18 @@ export default function FilterModal({
                 className="bg-white w-[410px] text-[12px] rounded-lg p-4 shadow-md border max-h-[64vh] overflow-y-auto"
             >
                 {/* ================= HEADER ================= */}
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center text-[#1C1B1F]">
                     <h2 className="text-sm font-semibold">Filters</h2>
                     <X size={16} className="cursor-pointer" onClick={onClose} />
                 </div>
 
-                <hr className="my-3" />
+                <hr className="my-3 border-[#1C1B1F]" />
 
-                {/* ================= TYPE FILTER ================= */}
-                <div className="mb-4">
-                    <p className="text-xs font-medium mb-2">
-                        ประเภทข้อมูลส่วนบุคคล
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                        {[
-                            "ข้อมูลผู้สมัครงาน",
-                            "ข้อมูลบุคลากรใหม่",
-                            "ข้อมูลบุคลากร",
-                            "อื่น ๆ",
-                        ].map((item, i) => {
-                            const active = selectedTypes.includes(item);
-
-                            return (
-                                <button
-                                    key={i}
-                                    onClick={() => {
-                                        if (active) {
-                                            // เอาออก
-                                            setSelectedTypes(
-                                                selectedTypes.filter(
-                                                    (t: string) => t !== item
-                                                )
-                                            );
-                                        } else {
-                                            // เพิ่มเข้าไป
-                                            setSelectedTypes([
-                                                ...selectedTypes,
-                                                item,
-                                            ]);
-                                        }
-                                    }}
-                                    className={`px-3 py-1.5 border rounded-full flex items-center gap-2 text-xs
-                                    ${
-                                        active
-                                            ? "border-blue-600 bg-blue-50"
-                                            : "hover:bg-gray-50"
-                                    }`}
-                                >
-                                    {/* checkbox circle */}
-                                    <div
-                                        className={`w-4 h-4 rounded-full border flex items-center justify-center
-                                        ${
-                                            active
-                                                ? "bg-blue-600 border-blue-600"
-                                                : "border-gray-400"
-                                        }`}
-                                    >
-                                        {active && (
-                                            <Check
-                                                size={10}
-                                                className="text-white"
-                                            />
-                                        )}
-                                    </div>
-
-                                    {item}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+                
 
                 {/* ================= RETENTION FILTER ================= */}
                 <div className="mb-4">
-                    <p className="text-xs font-medium mb-2">
+                    <p className="text-xs font-medium mb-2 text-[#1C1B1F] ">
                         ระยะเวลาในการจัดเก็บข้อมูล
                         {retentionError && (
                             <span className="text-red-500 ml-2">
@@ -168,7 +105,7 @@ export default function FilterModal({
                         )}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1 text-[#1C1B1F]">
                         {/* ---------- START ---------- */}
                         <input
                             value={retention.start.year}
@@ -182,7 +119,7 @@ export default function FilterModal({
                                     },
                                 })
                             }
-                            className={`w-8 h-8 border rounded text-xs text-center
+                            className={`w-8 h-8 border rounded text-xs text-center 
                             ${
                                 retentionError
                                     ? "border-red-500 bg-red-50"
@@ -205,7 +142,7 @@ export default function FilterModal({
                                     },
                                 })
                             }
-                            className={`w-8 h-8 border rounded text-xs text-center
+                            className={`w-8 h-8 border rounded text-xs text-center 
                             ${
                                 retentionError
                                     ? "border-red-500 bg-red-50"
@@ -314,7 +251,7 @@ export default function FilterModal({
                 </div>
 
                 {/* ================= RISK FILTER ================= */}
-                <div className="mb-4">
+                <div className="mb-4 text-[#1C1B1F]">
                     <p className="text-xs font-medium mb-2">
                         ระดับความเสี่ยง
                     </p>
@@ -322,38 +259,38 @@ export default function FilterModal({
                     <div className="grid grid-cols-2 gap-3">
                         {[
                             {
-                                label: "Very High",
+                                label: "Critical",
                                 icon: (
                                     <ChevronsUp
                                         size={14}
-                                        className="text-red-500"
+                                        className="text-[#D82D49]"
                                     />
                                 ),
                             },
                             {
-                                label: "High",
+                                label: "At Risk",
                                 icon: (
                                     <ChevronUp
                                         size={14}
-                                        className="text-red-400"
+                                        className="text-[#D82D49]"
                                     />
                                 ),
                             },
                             {
-                                label: "Very Low",
+                                label: "Stable",
                                 icon: (
                                     <ChevronsDown
                                         size={14}
-                                        className="text-green-400"
+                                        className="text-[#2EB2A1]"
                                     />
                                 ),
                             },
                             {
-                                label: "Low",
+                                label: "Safe",
                                 icon: (
                                     <ChevronDown
                                         size={14}
-                                        className="text-green-600"
+                                        className="text-[#2EB2A1]"
                                     />
                                 ),
                             },
@@ -414,6 +351,70 @@ export default function FilterModal({
                     </div>
                 </div>
 
+                {/* ================= STATUS FILTER ================= */}
+                <div className="mb-4">
+                    <p className="text-xs font-medium mb-2 text-[#1C1B1F]">
+                        ประเภทข้อมูลส่วนบุคคล
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 text-[#1C1B1F]">
+                        {[
+                            "Pending",
+                            "Revision",
+                            "Complete",
+                        ].map((item, i) => {
+                            const active = selectedStatus.includes(item);
+
+                            return (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        if (active) {
+                                            // เอาออก
+                                            setSelectedStatus(
+                                                selectedStatus.filter(
+                                                    (t: string) => t !== item
+                                                )
+                                            );
+                                        } else {
+                                            // เพิ่มเข้าไป
+                                            setSelectedStatus([
+                                                ...selectedStatus,
+                                                item,
+                                            ]);
+                                        }
+                                    }}
+                                    className={`px-3 py-1.5 border rounded-full flex items-center gap-2 text-xs
+                                    ${
+                                        active
+                                            ? "border-blue-500 bg-blue-50"
+                                            : "hover:bg-gray-50"
+                                    }`}
+                                >
+                                    {/* checkbox circle */}
+                                    <div
+                                        className={`w-4 h-4 rounded-full border flex items-center justify-center
+                                        ${
+                                            active
+                                                ? "bg-blue-600 border-blue-600"
+                                                : "border-gray-400"
+                                        }`}
+                                    >
+                                        {active && (
+                                            <Check
+                                                size={10}
+                                                className="text-white"
+                                            />
+                                        )}
+                                    </div>
+
+                                    {item}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 <hr className="my-3" />
 
                 {/* ================= FOOTER ================= */}
@@ -421,14 +422,14 @@ export default function FilterModal({
                     {/* CLEAR ALL */}
                     <button
                         onClick={() => {
-                            setSelectedTypes([]);
+                            setSelectedStatus([]);
                             setSelectedRisks([]);
                             setRetention({
                                 start: { year: "", month: "", day: "" },
                                 end: { year: "", month: "", day: "" },
                             });
                         }}
-                        className="bg-red-500 font-gabarito text-white px-3 py-1 text-xs rounded-md"
+                        className="bg-[#D82D49] font-gabarito text-white px-3 py-1 text-xs rounded-full"
                     >
                         Clear All
                     </button>
@@ -437,7 +438,7 @@ export default function FilterModal({
                     <div className="flex gap-2">
                         <button
                             onClick={onClose}
-                            className="bg-gray-200 px-3 py-1 text-xs rounded-md font-gabarito"
+                            className="bg-gray-200 px-3 py-1 text-xs rounded-full font-gabarito text-[#1C1B1F]"
                         >
                             Cancel
                         </button>
@@ -460,7 +461,7 @@ export default function FilterModal({
                                 setRetentionError(false);
                                 onClose();
                             }}
-                            className="bg-blue-700 font-gabarito text-white px-3 py-1 text-xs rounded-md"
+                            className="bg-[#03369D] font-gabarito text-white px-3 py-1 text-xs rounded-full"
                         >
                             Apply
                         </button>
