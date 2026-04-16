@@ -229,7 +229,10 @@ export default function RopaPage() {
         },
     };
 
-    const statusMap = {
+    const statusMap: Record<"Pending" | "Complete" | "Revision", {
+        color: string;
+        icon: React.ReactElement;
+    }> = {
         Pending: {
             color: "border border-gray-300 text-[#03369D] bg-transparent",
             icon: <ClockFading size={14} />,
