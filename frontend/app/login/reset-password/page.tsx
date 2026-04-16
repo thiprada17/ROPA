@@ -2,9 +2,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation'
 
 export default function ResetPassword() {
-
+  const router = useRouter();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -33,22 +34,59 @@ export default function ResetPassword() {
     return newErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    setErrors({});
-    setIsSuccess(true);   // เมื่อกดสำเร็จแบบไม่มี error จะคืนค่า true
+
+    try {
+      const email = sessionStorage.getItem("reset_email")
+      const otp = sessionStorage.getItem("reset_otp")
+
+      if (!email || !otp) {
+        alert("Session หมดอายุ")
+        return;
+      }
+
+      const res = await fetch("http://localhost:8000/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          otp,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      console.log("STATUS:", res.status)
+      console.log("DATA:", data)
+
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+
+      setIsSuccess(true)
+      sessionStorage.removeItem("reset_email")
+      sessionStorage.removeItem("reset_otp")
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาด");
+    }
   };
 
-  return(
+  return (
     <div className="w-full min-h-screen flex bg-[#F2F4F7] px-[120px] py-[64px]">
       <Link href="/login/send-email">
-        <ChevronLeft className="text-[#1C1B1F] h-[24px] w-[24px]"/>
+        <ChevronLeft className="text-[#1C1B1F] h-[24px] w-[24px]" />
       </Link>
-      
+
       <div className="flex flex-col w-full items-center justify-center">
         <p className="text-[#131415] font-gabarito text-[40px] text-center font-medium mt-[10px]">
           Reset your password
@@ -62,7 +100,7 @@ export default function ResetPassword() {
           <p className="text-[#616872] font-gabarito text-[16px] font-medium mb-[16px]">New Password</p>
           <div className={`flex items-center bg-white rounded-lg p-4 
             ${errors.newPassword ? "border border-[#D82D49]" : ""}`}>
-            <img src="/lock.svg" className='w-[24px] h-[24px] absolute'/>
+            <img src="/lock.svg" className='w-[24px] h-[24px] absolute' />
             <input
               type={showNewPassword ? "text" : "password"}
               placeholder="New Password"
@@ -89,7 +127,7 @@ export default function ResetPassword() {
           <p className="text-[#616872] font-gabarito text-[16px] font-medium mb-[16px]">Confirm Password</p>
           <div className={`flex items-center bg-white rounded-lg p-4 
             ${errors.confirmPassword ? "border border-[#D82D49]" : ""}`}>
-            <img src="/lock.svg" className='w-[24px] h-[24px] absolute'/>
+            <img src="/lock.svg" className='w-[24px] h-[24px] absolute' />
             <input
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm Password"
@@ -116,14 +154,14 @@ export default function ResetPassword() {
             href="/login"
             className="border border-black text-[#616872] text-[16px] font-gabarito font-bold
             py-2 my-4 w-full max-w-[390px] rounded-full text-center block">
-              BACK TO LOGIN
+            BACK TO LOGIN
           </Link>
         ) : (
           <button
             className="bg-gradient-to-r from-[#03369D] via-[#414548] to-[#6F757B] text-[16px] font-gabarito font-bold text-white 
             py-2 my-4 w-full max-w-[390px] rounded-full"
             onClick={handleSubmit}>
-              CONFIRM PASSWORD
+            CONFIRM PASSWORD
           </button>
         )}
 
