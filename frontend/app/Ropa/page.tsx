@@ -281,27 +281,17 @@ export default function RopaPage() {
 
             {/* ================= Main ================= */}
             {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
-            <main className="flex-1 flex overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden">
                 {/* ฝั่งซ้ายโรป้า */}
-                  <div
-    className="flex-1 overflow-y-auto py-6 transition-all duration-300"
-    style={{ paddingLeft: selectedItem ? "40px" : "120px", paddingRight: selectedItem ? "40px" : "120px" }}
-  >
-                <div className="max-w-[1440px] mx-auto">
-                    {/* HEADER WRAPPER */}
-                    <div className="mb-4">
-
-                        {/* ROW 1: BREADCRUMB */}
-                        <div className="mb-3">
+      {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
+                <div className="px-10 pt-6 pb-4 shrink-0">
+<div className="mb-3">
                             <Breadcrumb items={breadcrumbItems} />
                         </div>
-
                         {/* LINE DIVIDER */}
                         <div className="border-b border-gray-200 mb-4" />
-
                         <br />
-
-                        {/* ROW 2: FILTER + ACTIONS */}
+                                                {/* FILTER + ACTIONS */}
                         <div className="flex flex-col md:flex-row md:justify-between gap-4 items-start md:items-center">
                             {/* ================= DATE FILTER ================= */}
                             <div className="relative" ref={ref}>
@@ -437,12 +427,13 @@ export default function RopaPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* ================= TABLE ================= */}
-                        <div className="mt-6">
-                            <div className="bg-white rounded-xl shadow p-3">
-                                <div className="w-full flex flex-col">
-                                    {/* HEADER */}
+                </div>
+                 {/* Body table + detail card */}
+      <div className="flex flex-1 overflow-hidden px-10 pb-6 gap-4">
+{/* ตาราง  flex-1 หดตัวเมื่อ card เปิด */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
+{/* header */}
                                     <div
                                         className="grid gap-2 mb-2 pl-4 pr-2 text-center"
                                         style={{ gridTemplateColumns: col }}
@@ -471,17 +462,18 @@ export default function RopaPage() {
                                         <div />
                                     </div>
 
-                                    {/* BODY */}
+                                {/* table body */}
                                     <div className="flex flex-col gap-2">
                                         {paginatedData.length > 0 ? (
                                             paginatedData.map((item) => (
                                                 <div
                                                     key={item.id}
                                                         onClick={() => setSelectedItem(item)}
-                                                    className={`grid items-center pl-4 pr-1 py-3 border-b hover:bg-gray-50 transition
-                                                    ${selectedItem?.id === item.id ? "bg-gray-100" : "cursor-pointer"}`}
-                                                    style={{ gridTemplateColumns: col }}
-                                                >
+                                                   className={`grid items-center pl-4 pr-1 py-3 border-b cursor-pointer transition ${
+                    selectedItem?.id === item.id ? "bg-[#EEF3FF]" : "hover:bg-gray-50"
+                  }`}
+                  style={{ gridTemplateColumns: col }}
+                >
                                                     {/* activity */}
                                                     <div className="px-2 truncate text-[#1C1B1F]">
                                                         {item.activity}
@@ -546,13 +538,13 @@ export default function RopaPage() {
                                                     </div>
 
                                                     {/* action */}
-                                                    <div className=" flex justify-end w-full text-[#1C1B1F]">
-                                                        <button className="p-1 hover:bg-gray-200 rounded"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedItem(item);}}>
-                                                            <EllipsisVertical size={16} />
-                                                        </button>
+                                                    <div className="flex justify-end w-full">
+                    <button
+                      className="p-1 hover:bg-gray-200 rounded"
+                      onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
+                    >
+                      <EllipsisVertical size={16} />
+                    </button>
                                                     </div>
                                                 </div>
                                             ))
@@ -562,12 +554,10 @@ export default function RopaPage() {
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            </div>
-                        </div>
+          </div>
 
                         {/* ================= FOOTER ================= */}
-                        <div className="mt-4 flex justify-between items-center text-sm">
+                        <div className="mt-4 flex justify-between items-center text-sm shrink-0">
                             <span className="text-[#1C1B1F]">{totalItems} items</span>
 
                             <div className="flex items-center gap-2 text-[#1C1B1F]">
@@ -602,10 +592,32 @@ export default function RopaPage() {
                                 />
                             </div>
                         </div>
+
+        </div>
+         {selectedItem && (
+          <div className="w-[400px] shrink-0 rounded-xl overflow-hidden shadow">
+            <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+          </div>
+        )}
+
+      </div>
+
+                  {/* <div
+    className="flex-1 overflow-y-auto py-6 transition-all duration-300"
+    style={{ paddingLeft: selectedItem ? "40px" : "120px", paddingRight: selectedItem ? "40px" : "120px" }}
+  >
+                <div className="max-w-[1440px] mx-auto">
+                    <div className="mb-4">
+                        <div className="mt-6">
+                            <div className="bg-white rounded-xl shadow p-3">
+                                <div className="w-full flex flex-col">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </div>
-                  <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+                  <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} /> */}
             </main>
         </div>
     );
