@@ -261,6 +261,30 @@ export default function RopaPage() {
     const badgeBase =
         "flex items-center justify-center gap-1 px-3 py-[4px] rounded-full text-[11px] font-medium min-w-[100px]";
 
+        const [tableWidth, setTableWidth] = useState<number | string>("auto");
+const [detailWidth, setDetailWidth] = useState<number>(400);
+
+const initResize = (e: React.MouseEvent) => {
+  const startX = e.clientX;
+  const startDetailWidth = detailWidth;
+
+  const onMouseMove = (e: MouseEvent) => {
+    const dx = startX - e.clientX;
+    let newWidth = startDetailWidth + dx;
+    if (newWidth < 300) newWidth = 300;      
+    if (newWidth > 800) newWidth = 800;      
+    setDetailWidth(newWidth);
+  };
+
+  const onMouseUp = () => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  };
+
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
+};
+
 
     return (
         <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
@@ -429,9 +453,10 @@ export default function RopaPage() {
                         </div>
                 </div>
                  {/* Body table + detail card */}
-      <div className="flex flex-1 overflow-hidden px-10 pb-6 gap-4">
+      <div className="flex flex-1 overflow-hidden px-10 pb-6 gap-0">
 {/* ตาราง  flex-1 หดตัวเมื่อ card เปิด */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]"
+          style={{ width: tableWidth }}>
           <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
 {/* header */}
                                     <div
@@ -501,18 +526,22 @@ export default function RopaPage() {
 
                                                     {/* legal */}
                                                     <div className="px-1 flex items-center gap-1 overflow-hidden min-w-0">
-                                                        {item.legal.map((l, i) => (
+                                                        {item.legal?.basis?.length ? (
+                                                            item.legal.basis.map((l, i) => (
                                                             <span
                                                                 key={i}
                                                                 className={`bg-[#DFE9FF] text-[#03369D] px-2 py-1 rounded-md text-[11px]
-                                                                    ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
-                                                        `}
+                                                                ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
+                                                                `}
                                                                 title={l}
                                                             >
                                                                 {l}
                                                             </span>
-                                                        ))}
-                                                    </div>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-[#A6A6A6] text-[11px]">ไม่มีข้อมูล</span>
+                                                        )}
+                                                        </div>
 
                                                     {/* retention */}
                                                     <div>
@@ -594,13 +623,24 @@ export default function RopaPage() {
                         </div>
 
         </div>
-         {selectedItem && (
-          <div className="w-[400px] shrink-0 rounded-xl overflow-hidden shadow">
-            <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
-          </div>
-        )}
+        {/* เส้นกั้นสองตาราง */}
+        {selectedItem && (
+    <div
+      className="w-1 cursor-col-resize bg-gray-200"
+      onMouseDown={(e) => initResize(e)}
+    />
+  )}
 
-      </div>
+          {/* DetailCard */}
+  {selectedItem && (
+    <div
+      className="flex-shrink-0 rounded-xl overflow-hidden shadow"
+      style={{ width: detailWidth }}
+    >
+      <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+    </div>
+  )}
+</div>
 
                   {/* <div
     className="flex-1 overflow-y-auto py-6 transition-all duration-300"
