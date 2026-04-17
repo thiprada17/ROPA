@@ -23,11 +23,14 @@ import {
     Shield,
     ShieldAlert,
 } from "lucide-react";
+import DetailCard, {RopaItem} from "./components/DetailCard";
+
 
 // ================= MOCK DATA =================
 const data = ropaMock;
 
 export default function RopaPage() {
+    const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
     // ================= BREADCRUMB ================
     const breadcrumbItems = [
         { label: <ShieldAlert size={16} />, href: "/" },
@@ -277,7 +280,13 @@ export default function RopaPage() {
             </aside>
 
             {/* ================= Main ================= */}
-            <main className="flex-1 overflow-y-auto px-[120px] py-6">
+            {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
+            <main className="flex-1 flex overflow-hidden">
+                {/* ฝั่งซ้ายโรป้า */}
+                  <div
+    className="flex-1 overflow-y-auto py-6 transition-all duration-300"
+    style={{ paddingLeft: selectedItem ? "40px" : "120px", paddingRight: selectedItem ? "40px" : "120px" }}
+  >
                 <div className="max-w-[1440px] mx-auto">
                     {/* HEADER WRAPPER */}
                     <div className="mb-4">
@@ -468,7 +477,9 @@ export default function RopaPage() {
                                             paginatedData.map((item) => (
                                                 <div
                                                     key={item.id}
-                                                    className="grid items-center pl-4 pr-1 py-3 border-b hover:bg-gray-50 transition"
+                                                        onClick={() => setSelectedItem(item)}
+                                                    className={`grid items-center pl-4 pr-1 py-3 border-b hover:bg-gray-50 transition
+                                                    ${selectedItem?.id === item.id ? "bg-gray-100" : "cursor-pointer"}`}
                                                     style={{ gridTemplateColumns: col }}
                                                 >
                                                     {/* activity */}
@@ -536,7 +547,10 @@ export default function RopaPage() {
 
                                                     {/* action */}
                                                     <div className=" flex justify-end w-full text-[#1C1B1F]">
-                                                        <button className="p-1 hover:bg-gray-200 rounded">
+                                                        <button className="p-1 hover:bg-gray-200 rounded"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedItem(item);}}>
                                                             <EllipsisVertical size={16} />
                                                         </button>
                                                     </div>
@@ -590,6 +604,8 @@ export default function RopaPage() {
                         </div>
                     </div>
                 </div>
+                </div>
+                  <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
             </main>
         </div>
     );
