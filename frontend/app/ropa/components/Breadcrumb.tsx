@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Home, ChevronRight } from "lucide-react";
+import React from "react";
 
 type BreadcrumbItem = {
-    label: string;
+    label: string | React.ReactNode; 
     href?: string;
 };
 
