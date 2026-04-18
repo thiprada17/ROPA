@@ -162,7 +162,7 @@ export default function RopaPage() {
                 return 0;
             };
 
-            const itemDays = convertToDays(item.retention);
+            const itemDays = convertToDays(item.retention.retentionPeriod);
 
             const startDays =
                 (Number(retention.start.year || 0) * 365) +
@@ -546,7 +546,7 @@ const initResize = (e: React.MouseEvent) => {
                                                     {/* retention */}
                                                     <div>
                                                         <span className="px-4 text-[#1C1B1F]">
-                                                            {item.retention}
+                                                            {item.retention.retentionPeriod}
                                                         </span>
                                                     </div>
 

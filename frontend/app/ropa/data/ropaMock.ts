@@ -1,3 +1,6 @@
+import { trace } from "console";
+import { access } from "fs";
+
 // data/ropaMock.ts
 export const ropaMock = [
   {
@@ -6,16 +9,25 @@ export const ropaMock = [
     parties: ["HR", "Finance"],
     purpose: "เก็บรายชื่อผู้ผ่านเข้ารอบการสัมภาษณ์งาน",
     purposeDetail: "ใช้สำหรับดำเนินกระบวนการคัดเลือกผู้สมัครและจัดทำรายชื่อผู้มีสิทธิสัมภาษณ์",
-legal: {
-  basis: ["สัญญา", "ประโยชน์โดยชอบด้วยกฎหมาย"],
-  secondaryCategory: ["ข้อมูลประกอบการพิจารณา"],
+    legal: {
+      basis: ["สัญญา", "ประโยชน์โดยชอบด้วยกฎหมาย"],
+      secondaryCategory: ["ข้อมูลประกอบการพิจารณา"],
 
-  minorConsent: {
-    under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
-    age10to20: "ต้องได้รับความยินยอมร่วม",
-  },
-},
-    retention: "2 เดือน",
+      minorConsent: {
+        under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
+        age10to20: "ต้องได้รับความยินยอมร่วม",
+      },
+    },
+    // retention: "2 เดือน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "2 เดือน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Critical",
     status: "Pending",
     dataOwner: "ผู้สมัครงาน",
@@ -31,21 +43,49 @@ legal: {
       organizational: "กำหนดสิทธิ์เฉพาะ HR",
       technical: "เข้ารหัสไฟล์ Resume",
       physical: "เก็บใน Server ภายใน",
+      accessType: "อ่านและจัดเก็บ",
+      responsibility_def: "บริษัทระบบ ATS ทำหน้าที่เป็นผู้ประมวลผลข้อมูลเท่านั้น โดยดำเนินการตามคำสั่งของฝ่าย HR และไม่มีสิทธิ์ในการใช้ข้อมูลเพื่อวัตถุประสงค์อื่นใด",
+      audit_trail: "มีการบันทึกการเข้าถึงและกิจกรรมที่เกี่ยวข้องกับข้อมูลผู้สมัครงานทั้งหมด เพื่อให้สามารถตรวจสอบย้อนหลังได้ในกรณีที่มีข้อสงสัยหรือเหตุการณ์ที่ไม่คาดคิดเกิดขึ้น",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
     },
 
     processors: [
       {
         name: "บริษัทระบบ ATS",
-        accessType: "อ่านและจัดเก็บ",
-        note: "ใช้สำหรับจัดการใบสมัคร",
+        address: "123 ถนนเทคโนโลยี กรุงเทพฯ",
+        security: {
+          organizational: "จำกัดสิทธิ์เฉพาะทีม HR",
+          technical: "เข้ารหัสข้อมูลและการควบคุมการเข้าถึง",
+          physical: "ศูนย์ข้อมูลที่มีการรักษาความปลอดภัยสูง",
+          accessType: "อ่านและจัดเก็บ",
+          responsibility_def: "บริษัทระบบ ATS ทำหน้าที่เป็นผู้ประมวลผลข้อมูลเท่านั้น โดยดำเนินการตามคำสั่งของฝ่าย HR และไม่มีสิทธิ์ในการใช้ข้อมูลเพื่อวัตถุประสงค์อื่นใด",
+          audit_trail: "มีการบันทึกการเข้าถึงและกิจกรรมที่เกี่ยวข้องกับข้อมูลผู้สมัครงานทั้งหมด เพื่อให้สามารถตรวจสอบย้อนหลังได้ในกรณีที่มีข้อสงสัยหรือเหตุการณ์ที่ไม่คาดคิดเกิดขึ้น",
+        },
       },
     ],
 
-    history: ["สร้างรายการเมื่อ 01/01/2569"],
+   history: [
+  {
+    action: "edit" as const,
+    by: "นายแก้ ข้อมูล",
+    date: "15/04/2026",
+    time: "1:36 AM",
+  },
+  {
+    action: "create" as const,
+    by: "นายแก้ ข้อมูล",
+    date: "14/04/2026",
+    time: "1:36 AM",
+  },
+],
   },
 
   {
@@ -56,13 +96,21 @@ legal: {
     purposeDetail: "ใช้สำหรับจัดทำรายงานวิเคราะห์ผลประกอบการ",
     legal: {
       basis: ["หน้าที่ตามกฎหมาย"],
-        secondaryCategory: ["ข้อมูลพนักงาน"],
-        minorConsent: {
-            under10: "ไม่ต้องได้รับความยินยอม",
-            age10to20: "ไม่ต้องได้รับความยินยอม",
-        },
+      secondaryCategory: ["ข้อมูลพนักงาน"],
+      minorConsent: {
+        under10: "ไม่ต้องได้รับความยินยอม",
+        age10to20: "ไม่ต้องได้รับความยินยอม",
+      },
     },
-    retention: "1 ปี",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "1 ปี",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "At Risk",
     status: "Complete",
     dataOwner: "พนักงาน",
@@ -78,14 +126,22 @@ legal: {
       organizational: "จำกัดสิทธิ์เฉพาะผู้บริหาร",
       technical: "Role-based access",
       physical: "Server ภายใน",
+      accessType: "อ่านอย่างเดียว",
+      responsibility_def: "ข้อมูลรายได้ของพนักงานถูกจัดเก็บและประมวลผลโดยฝ่ายการเงินเท่านั้น โดยมีการจำกัดสิทธิ์การเข้าถึงข้อมูลนี้เฉพาะผู้บริหารระดับสูงที่มีความจำเป็นต้องใช้ข้อมูลเพื่อวัตถุประสงค์ในการวิเคราะห์ผลประกอบการและการตัดสินใจทางธุรกิจเท่านั้น",
+      audit_trail: "มีการบันทึกการเข้าถึงและกิจกรรมที่เกี่ยวข้องกับข้อมูลรายได้ของพนักงานทั้งหมด เพื่อให้สามารถตรวจสอบย้อนหลังได้ในกรณีที่มีข้อสงสัยหรือเหตุการณ์ที่ไม่คาดคิดเกิดขึ้น",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
     },
 
     processors: [],
-    history: ["อนุมัติแล้ว 05/01/2569"],
+    history: [],
   },
 
   {
@@ -96,13 +152,21 @@ legal: {
     purposeDetail: "ใช้สำหรับจัดการจำนวนผู้เข้าร่วมและอาหาร",
     legal: {
       basis: ["ความยินยอม"],
-        secondaryCategory: ["ข้อมูลทั่วไป"],
-        minorConsent: {
-            under10: "ไม่ต้องได้รับความยินยอม",
-            age10to20: "ไม่ต้องได้รับความยินยอม",
-        },
+      secondaryCategory: ["ข้อมูลทั่วไป"],
+      minorConsent: {
+        under10: "ไม่ต้องได้รับความยินยอม",
+        age10to20: "ไม่ต้องได้รับความยินยอม",
+      },
     },
-    retention: "10 วัน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "10 วัน",
+      department: ["HR"],
+      deletionMethod: "",
+      usage_purpose: null,
+      denialNote: "ไม่รู้จ้าา",
+    },
     risk: "Stable",
     status: "Revision",
     dataOwner: "พนักงาน",
@@ -118,14 +182,29 @@ legal: {
       organizational: "HR เข้าถึงได้",
       technical: "Google Workspace Access",
       physical: "Cloud",
+      accessType: "อ่านและจัดเก็บ",
+      responsibility_def: "ข้อมูลรายชื่อผู้เข้าร่วมกิจกรรม outing ถูกจัดเก็บและประมวลผลโดยฝ่าย HR เท่านั้น โดยมีการจำกัดสิทธิ์การเข้าถึงข้อมูลนี้เฉพาะทีม HR ที่รับผิดชอบในการจัดการกิจกรรมเท่านั้น และไม่มีการใช้ข้อมูลนี้เพื่อวัตถุประสงค์อื่นใดนอกเหนือจากการจัดการกิจกรรม outing",
+      audit_trail: "มีการบันทึกการเข้าถึงและกิจกรรมที่เกี่ยวข้องกับข้อมูลรายชื่อผู้เข้าร่วมกิจกรรม outing ทั้งหมดในระบบ Google Workspace เพื่อให้สามารถตรวจสอบย้อนหลังได้ในกรณีที่มีข้อสงสัยหรือเหตุการณ์ที่ไม่คาดคิดเกิดขึ้น",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "มี",
+      destination_country: "สหรัฐอเมริกา",
+      affiliated_company: "บริษัทระบบจัดการกิจกรรม",
+      transfer_method: "API integration",
+      protection_standards: "มาตรฐานความปลอดภัยข้อมูลสากล (เช่น ISO 27001)",
+      exceptions: "ไม่มีการโอนข้อมูลที่มีความละเอียดอ่อนหรือข้อมูลส่วนบุคคลที่ไม่จำเป็นต้องใช้สำหรับการจัดการกิจกรรม outing",
     },
 
     processors: [],
-    history: ["รอแก้ไขข้อมูล"],
+    history: [
+  {
+    action: "create" as const,
+    by: "นายสร้าง ข้อมูล",
+    date: "15/04/2026",
+    time: "1:36 AM",
+  },
+],
   },
 
   {
@@ -136,13 +215,21 @@ legal: {
     purposeDetail: "ใช้ในการ onboarding และสร้างบัญชีผู้ใช้ระบบ",
     legal: {
       basis: ["สัญญา"],
-        secondaryCategory: ["ข้อมูลส่วนบุคคลทั่วไป"],
-        minorConsent: {
-            under10: "ไม่ต้องได้รับความยินยอม",
-            age10to20: "ไม่ต้องได้รับความยินยอม",
-        },
+      secondaryCategory: ["ข้อมูลส่วนบุคคลทั่วไป"],
+      minorConsent: {
+        under10: "ไม่ต้องได้รับความยินยอม",
+        age10to20: "ไม่ต้องได้รับความยินยอม",
+      },
     },
-    retention: "6 เดือน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "6 เดือน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Safe",
     status: "Complete",
     dataOwner: "พนักงาน",
@@ -158,14 +245,22 @@ legal: {
       organizational: "HR และ IT",
       technical: "SSO + Access Control",
       physical: "Server ภายใน",
+      accessType: "อ่านและจัดเก็บ",
+      responsibility_def: "ข้อมูลพนักงานใหม่ถูกจัดเก็บและประมวลผลโดยฝ่าย HR และ IT ร่วมกัน โดยฝ่าย HR รับผิดชอบในการจัดการข้อมูลส่วนบุคคลและเอกสาร onboarding ในขณะที่ฝ่าย IT รับผิดชอบในการสร้างบัญชีผู้ใช้ระบบและการจัดการสิทธิ์การเข้าถึงข้อมูลนี้ โดยทั้งสองฝ่ายจะดำเนินการตามคำสั่งของฝ่ายบริหารและไม่มีสิทธิ์ในการใช้ข้อมูลนี้เพื่อวัตถุประสงค์อื่นใดนอกเหนือจากการ onboarding พนักงานใหม่และการจัดการบัญชีผู้ใช้ระบบเท่านั้น",
+      audit_trail: "มีการบันทึกการเข้าถึงและกิจกรรมที่เกี่ยวข้องกับข้อมูลพนักงานใหม่ทั้งหมดในระบบ HR และ IT เพื่อให้สามารถตรวจสอบย้อนหลังได้ในกรณีที่มีข้อสงสัยหรือเหตุการณ์ที่ไม่คาดคิดเกิดขึ้น",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
     },
 
     processors: [],
-    history: ["เสร็จสิ้น"],
+    history: [],
   },
 
   {
@@ -176,14 +271,21 @@ legal: {
     purposeDetail: "ใช้สำหรับวิเคราะห์สุขภาพและ attendance",
     legal: {
       basis: ["หน้าที่ตามกฎหมาย"],
-        secondaryCategory: ["ข้อมูลพนักงาน"],
-        minorConsent: {
-            under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
-            age10to20: "ต้องได้รับความยินยอมร่วม",
-        },
+      secondaryCategory: ["ข้อมูลพนักงาน"],
+      minorConsent: {
+        under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
+        age10to20: "ต้องได้รับความยินยอมร่วม",
+      },
     },
-
-    retention: "3 เดือน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "6 เดือน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "At Risk",
     status: "Pending",
     dataOwner: "พนักงาน",
@@ -199,10 +301,18 @@ legal: {
       organizational: "เฉพาะ HR",
       technical: "restricted access",
       physical: "locked file storage",
+      accessType: "อ่านและจัดเก็บ",
+      responsibility_def: "",
+      audit_trail: "",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
     },
 
     processors: [],
@@ -223,7 +333,15 @@ legal: {
         age10to20: "ไม่ต้องได้รับความยินยอม",
       },
     },
-    retention: "2 เดือน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "2 เดือน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Critical",
     status: "Revision",
     dataOwner: "ผู้สมัครงาน",
@@ -239,21 +357,36 @@ legal: {
       organizational: "HR + IT",
       technical: "resume encryption",
       physical: "cloud",
+      accessType: "อ่านและจัดเก็บ",
+      responsibility_def: "",
+      audit_trail: "",
     },
 
     transfer: {
-      international: "ไม่มี",
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
     },
 
     processors: [
       {
         name: "LinkedIn Talent",
-        accessType: "คัดกรอง",
-        note: "ตรวจสอบ profile",
+        address: "",
+        security: {
+          organizational: "",
+          technical: "",
+          physical: "",
+          accessType: "คัดกรอง",
+          responsibility_def: "",
+          audit_trail: "",
+        },
       },
     ],
 
-    history: ["แก้ไขเมื่อ 02/01/2569"],
+    history: [],
   },
 
   {
@@ -264,14 +397,21 @@ legal: {
     purposeDetail: "ใช้ทำ segmentation และ campaign",
     legal: {
       basis: ["ความยินยอม", "ประโยชน์โดยชอบ"],
-        secondaryCategory: ["ข้อมูลทั่วไป"],
-        minorConsent: {
-            under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
-            age10to20: "ต้องได้รับความยินยอมร่วม",
-        },
-    
+      secondaryCategory: ["ข้อมูลทั่วไป"],
+      minorConsent: {
+        under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
+        age10to20: "ต้องได้รับความยินยอมร่วม",
+      },
     },
-    retention: "2 ปี",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "2 ปี",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Stable",
     status: "Complete",
     dataOwner: "ลูกค้า",
@@ -282,6 +422,27 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["CRM System"],
     dataSources: ["Sales Team"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    processors: [],
+    history: [],
   },
 
   {
@@ -298,7 +459,15 @@ legal: {
         age10to20: "ไม่ต้องได้รับความยินยอม",
       },
     },
-    retention: "1 ปี",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "1 ปี",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Critical",
     status: "Pending",
     dataOwner: "ลูกค้า",
@@ -309,6 +478,26 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["payment gateway"],
     dataSources: ["ระบบชำระเงิน"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    history: [],
   },
 
   {
@@ -325,7 +514,15 @@ legal: {
         age10to20: "ต้องได้รับความยินยอมร่วม",
       },
     },
-    retention: "6 เดือน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "6 เดือน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Safe",
     status: "Complete",
     dataOwner: "ลูกค้า",
@@ -336,6 +533,27 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["survey form"],
     dataSources: ["ลูกค้า"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    processors: [],
+    history: [],
   },
 
   {
@@ -352,7 +570,15 @@ legal: {
         age10to20: "ไม่ต้องได้รับความยินยอม",
       },
     },
-    retention: "1 ปี",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "1 ปี",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Stable",
     status: "Revision",
     dataOwner: "พนักงาน",
@@ -363,6 +589,27 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["LMS"],
     dataSources: ["ฝ่าย Training"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    processors: [],
+    history: [],
   },
 
   {
@@ -373,13 +620,21 @@ legal: {
     purposeDetail: "ใช้ audit และ security monitoring",
     legal: {
       basis: ["ประโยชน์โดยชอบ"],
-        secondaryCategory: ["ข้อมูลพนักงาน"],
-        minorConsent: {
-            under10: "ไม่ต้องได้รับความยินยอม",
-            age10to20: "ไม่ต้องได้รับความยินยอม",
-        }
-        },
-    retention: "30 วัน",
+      secondaryCategory: ["ข้อมูลพนักงาน"],
+      minorConsent: {
+        under10: "ไม่ต้องได้รับความยินยอม",
+        age10to20: "ไม่ต้องได้รับความยินยอม",
+      }
+    },
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "30 วัน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "Critical",
     status: "Complete",
     dataOwner: "ผู้ใช้งานระบบ",
@@ -390,6 +645,27 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["system log"],
     dataSources: ["application server"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    processors: [],
+    history: [],
   },
 
   {
@@ -399,14 +675,22 @@ legal: {
     purpose: "จัดการกิจกรรมสัมมนา",
     purposeDetail: "ใช้สำหรับเช็คชื่อและติดตามผล",
     legal: {
-        basis: ["ความยินยอม"],
-        secondaryCategory: ["ข้อมูลทั่วไป"],
-        minorConsent: {
-            under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
-            age10to20: "ต้องได้รับความยินยอมร่วม",
-        },
+      basis: ["ความยินยอม"],
+      secondaryCategory: ["ข้อมูลทั่วไป"],
+      minorConsent: {
+        under10: "ต้องได้รับความยินยอมจากผู้ปกครอง",
+        age10to20: "ต้องได้รับความยินยอมร่วม",
+      },
     },
-    retention: "15 วัน",
+    retention: {
+      storageType: [],
+      storageMethod: [],
+      retentionPeriod: "15 วัน",
+      department: ["HR", "IT"],
+      deletionMethod: "",
+      usage_purpose: ["การตลาด"],
+      denialNote: null,
+    },
     risk: "At Risk",
     status: "Pending",
     dataOwner: "ผู้เข้าร่วม",
@@ -417,5 +701,26 @@ legal: {
     dataTypes: ["ข้อมูลอิเล็กทรอนิกส์"],
     acquisitionMethods: ["registration form"],
     dataSources: ["ผู้เข้าร่วม"],
+
+    security: {
+      organizational: "",
+      technical: "",
+      physical: "",
+      accessType: "",
+      responsibility_def: "",
+      audit_trail: "",
+    },
+
+    transfer: {
+      is_transfer: "ไม่มี",
+      destination_country: null,
+      affiliated_company: null,
+      transfer_method: null,
+      protection_standards: null,
+      exceptions: null,
+    },
+
+    processors: [],
+    history: [],
   },
 ];
