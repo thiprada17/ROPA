@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import FilterModal from "./components/FilterModal";
 import Breadcrumb from "./components/Breadcrumb";
+import RopaTable from "./components/RopaTable";
 import { ropaMock } from "./data/ropaMock";
 import {
     Search,
@@ -23,7 +24,9 @@ import {
     Shield,
     ShieldAlert,
 } from "lucide-react";
-import DetailCard, {RopaItem} from "./components/DetailCard";
+import DetailCard, { RopaItem } from "./components/DetailCard";
+import Sidebar from "../components/Sidebar";
+import Link from "next/link";
 
 
 // ================= MOCK DATA =================
@@ -120,7 +123,7 @@ export default function RopaPage() {
             selectedRisks.length === 0 ||
             selectedRisks.includes(item.risk);
 
-            // filter parties
+        // filter parties
         const matchParties =
             selectedParties.length === 0 ||
             item.parties.some((p) => selectedParties.includes(p));
@@ -261,329 +264,202 @@ export default function RopaPage() {
     const badgeBase =
         "flex items-center justify-center gap-1 px-3 py-[4px] rounded-full text-[11px] font-medium min-w-[100px]";
 
-        const [tableWidth, setTableWidth] = useState<number | string>("auto");
-const [detailWidth, setDetailWidth] = useState<number>(400);
+    const [tableWidth, setTableWidth] = useState<number | string>("auto");
+    const [detailWidth, setDetailWidth] = useState<number>(400);
 
-const initResize = (e: React.MouseEvent) => {
-  const startX = e.clientX;
-  const startDetailWidth = detailWidth;
+    const initResize = (e: React.MouseEvent) => {
+        const startX = e.clientX;
+        const startDetailWidth = detailWidth;
 
-  const onMouseMove = (e: MouseEvent) => {
-    const dx = startX - e.clientX;
-    let newWidth = startDetailWidth + dx;
-    if (newWidth < 300) newWidth = 300;      
-    if (newWidth > 800) newWidth = 800;      
-    setDetailWidth(newWidth);
-  };
+        const onMouseMove = (e: MouseEvent) => {
+            const dx = startX - e.clientX;
+            let newWidth = startDetailWidth + dx;
+            if (newWidth < 300) newWidth = 300;
+            if (newWidth > 800) newWidth = 800;
+            setDetailWidth(newWidth);
+        };
 
-  const onMouseUp = () => {
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
-  };
+        const onMouseUp = () => {
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+        };
 
-  document.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseup", onMouseUp);
-};
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    };
 
 
     return (
-        <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
-            {/* ================= Sidebar ================= */}
-            <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4 flex-shrink-0">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
-                    LOGO
-                </div>
-
-                <div className="flex flex-col gap-6 mt-4">
-                    <div className="w-6 h-6 bg-gray-500 rounded"></div>
-                    <div className="w-6 h-6 bg-gray-500 rounded"></div>
-                    <div className="w-6 h-6 bg-gray-500 rounded"></div>
-                </div>
-
-                <div className="mt-auto w-10 h-10 bg-gray-300 rounded-full"></div>
-            </aside>
-
+        <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
+            <Sidebar userName="test" userEmail="test@example.com" />
             {/* ================= Main ================= */}
             {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="ml-16 flex-1 flex flex-col overflow-hidden">
                 {/* ฝั่งซ้ายโรป้า */}
-      {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
+                {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
                 <div className="px-10 pt-6 pb-4 shrink-0">
-<div className="mb-3">
-                            <Breadcrumb items={breadcrumbItems} />
-                        </div>
-                        {/* LINE DIVIDER */}
-                        <div className="border-b border-gray-200 mb-4" />
-                        <br />
-                                                {/* FILTER + ACTIONS */}
-                        <div className="flex flex-col md:flex-row md:justify-between gap-4 items-start md:items-center">
-                            {/* ================= DATE FILTER ================= */}
-                            <div className="relative" ref={ref}>
-                                <button
-                                    onClick={() => setOpen(!open)}
-                                    className="flex items-center justify-between gap-2 bg-white border rounded-lg px-4 h-[40px] w-[274px] shadow-sm hover:border-gray-400 transition"
-                                >
-                                    <span className="text-sm flex items-center gap-2 text-[#1C1B1F]">
-                                        <Calendar size={16} className="shrink-0" />
-                                        <span className="truncate">
-                                            {startDate && endDate ? (
-                                                isSameDay ? (
-                                                    <>
-                                                        {formatDate(startDate)}
-                                                        {isToday && <span className="text-[#03369D]">(today)</span>}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        {formatDate(startDate)}
-                                                        <span className="text-gray-400 mx-1">-</span>
-                                                        {formatDate(endDate)}
-                                                    </>
-                                                )
+                    <div className="mb-3">
+                        <Breadcrumb items={breadcrumbItems} />
+                    </div>
+                    {/* LINE DIVIDER */}
+                    <div className="border-b border-gray-200 mb-4" />
+                    <br />
+                    {/* FILTER + ACTIONS */}
+                    <div className="flex flex-col md:flex-row md:justify-between gap-4 items-start md:items-center">
+                        {/* ================= DATE FILTER ================= */}
+                        <div className="relative" ref={ref}>
+                            <button
+                                onClick={() => setOpen(!open)}
+                                className="flex items-center justify-between gap-2 bg-white border rounded-lg px-4 h-[40px] w-[274px] shadow-sm hover:border-gray-400 transition"
+                            >
+                                <span className="text-sm flex items-center gap-2 text-[#1C1B1F]">
+                                    <Calendar size={16} className="shrink-0" />
+                                    <span className="truncate">
+                                        {startDate && endDate ? (
+                                            isSameDay ? (
+                                                <>
+                                                    {formatDate(startDate)}
+                                                    {isToday && <span className="text-[#03369D]">(today)</span>}
+                                                </>
                                             ) : (
-                                                <span className="text-[#1C1B1F]">เลือกช่วงวันที่</span>
-                                            )}
-                                        </span>
+                                                <>
+                                                    {formatDate(startDate)}
+                                                    <span className="text-gray-400 mx-1">-</span>
+                                                    {formatDate(endDate)}
+                                                </>
+                                            )
+                                        ) : (
+                                            <span className="text-[#616872] text-[12px]">เลือกช่วงวันที่</span>
+                                        )}
                                     </span>
+                                </span>
 
-                                    <ChevronDown size={16} className="text-[#A6A6A6]" />
-                                </button>
+                                <ChevronDown size={16} className="text-[#A6A6A6]" />
+                            </button>
 
-                                {open && (
-                                    <div className="absolute mt-2 w-[264px] bg-white border rounded-xl shadow-lg p-4 z-20">
+                            {open && (
+                                <div className="absolute mt-2 w-[264px] bg-white border rounded-xl shadow-lg p-4 z-20">
 
-                                        {/* header */}
-                                        <div className="flex justify-between items-center mb-3">
-                                            <div className="text-sm font-semibold text-[#1C1B1F]">
-                                                เลือกช่วงวันที่
-                                            </div>
-
-                                            <button
-                                                onClick={() => {
-                                                    setStartDate("");
-                                                    setEndDate("");
-                                                }}
-                                                className="text-xs text-[#03369D] font-gabarito hover:underline"
-                                            >
-                                                Clear all
-                                            </button>
+                                    {/* header */}
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="text-sm font-semibold text-[#1C1B1F]">
+                                            เลือกช่วงวันที่
                                         </div>
 
-                                        {/* form */}
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-xs text-[#1C1B1F]">วันเริ่มต้น</label>
-                                                <input
-                                                    type="date"
-                                                    value={startDate}
-                                                    onChange={(e) => setStartDate(e.target.value)}
-                                                    className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                />
-                                            </div>
+                                        <button
+                                            onClick={() => {
+                                                setStartDate("");
+                                                setEndDate("");
+                                            }}
+                                            className="text-xs text-[#03369D] font-gabarito hover:underline"
+                                        >
+                                            Clear all
+                                        </button>
+                                    </div>
 
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-xs text-[#1C1B1F]">วันสิ้นสุด</label>
-                                                <input
-                                                    type="date"
-                                                    value={endDate}
-                                                    onChange={(e) => setEndDate(e.target.value)}
-                                                    className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                />
-                                            </div>
+                                    {/* form */}
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-xs text-[#1C1B1F]">วันเริ่มต้น</label>
+                                            <input
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
                                         </div>
 
-                                        {/* footer action (optional แต่ช่วยให้ดูโปร) */}
-                                        <div className="flex justify-end mt-4">
-                                            <button
-                                                onClick={() => setOpen(false)}
-                                                className="text-sm bg-[#03369D] text-white px-4 py-1.5 rounded-md hover:bg-[#012a7c] font-gabarito"
-                                            >
-                                                Apply
-                                            </button>
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-xs text-[#1C1B1F]">วันสิ้นสุด</label>
+                                            <input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                                className="border rounded-md px-2 py-1.5 text-sm text-[#1C1B1F] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
                                         </div>
                                     </div>
-                                )}
-                            </div>
 
-                            {/* ================= ACTIONS ================= */}
-                            <div className="flex gap-4 items-center">
+                                    {/* footer action */}
+                                    <div className="flex justify-end mt-4">
+                                        <button
+                                            onClick={() => setOpen(false)}
+                                            className="text-sm bg-[#03369D] text-white px-4 py-1.5 rounded-md hover:bg-[#012a7c] font-gabarito"
+                                        >
+                                            Apply
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ================= ACTIONS ================= */}
+                        <div className="flex gap-4 items-center text-[12px]">
+                            <Link href="/form">
                                 <button className="flex items-center justify-center gap-2 w-[128px] h-[40px] bg-[#03369D] hover:bg-[#012a7c] text-white rounded-lg">
                                     <Plus size={16} /> เพิ่มกิจกรรม
                                 </button>
+                            </Link>
 
-                                <div className="flex items-center gap-2 border rounded-lg px-3 w-[304px] h-[40px] bg-white">
-                                    <Search size={16} className="text-[#A6A6A6]" />
-                                    <input
-                                        type="text"
-                                        placeholder="ค้นหาชื่อกิจกรรม"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full outline-none text-sm placeholder-[#D8D8D8] text-[#1C1B1F]"
-                                    />
-                                </div>
+                            <div className="flex items-center gap-2 border rounded-lg px-3 w-[304px] h-[40px] bg-white">
+                                <Search size={16} className="text-[#A6A6A6]" />
+                                <input
+                                    type="text"
+                                    placeholder="ค้นหาชื่อกิจกรรม"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full outline-none text-sm placeholder-[#D8D8D8] text-[#1C1B1F]"
+                                />
+                            </div>
 
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setOpenFilter(!openFilter)}
-                                        className="flex items-center justify-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[#1C1B1F]"
-                                    >
-                                        <Filter size={16} />
-                                        <span className="font-gabarito text-[14px]">Filter</span>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setOpenFilter(!openFilter)}
+                                    className="flex items-center justify-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[#1C1B1F]"
+                                >
+                                    <Filter size={16} />
+                                    <span className="font-gabarito text-[14px]">Filter</span>
 
-                                        {filterCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 bg-[#03369D] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
-                                                {filterCount}
-                                            </span>
-                                        )}
-                                    </button>
+                                    {filterCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 bg-[#03369D] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                                            {filterCount}
+                                        </span>
+                                    )}
+                                </button>
 
-                                    <FilterModal
-                                        open={openFilter}
-                                        onClose={() => setOpenFilter(false)}
-                                        selected={selectedParties}
-                                        setSelected={setSelectedParties}
-                                        selectedStatus={selectedStatus}
-                                        setSelectedStatus={setSelectedStatus}
-                                        selectedRisks={selectedRisks}
-                                        setSelectedRisks={setSelectedRisks}
-                                        retention={retention}
-                                        setRetention={setRetention}
-                                    />
-                                </div>
+                                <FilterModal
+                                    open={openFilter}
+                                    onClose={() => setOpenFilter(false)}
+                                    selected={selectedParties}
+                                    setSelected={setSelectedParties}
+                                    selectedStatus={selectedStatus}
+                                    setSelectedStatus={setSelectedStatus}
+                                    selectedRisks={selectedRisks}
+                                    setSelectedRisks={setSelectedRisks}
+                                    retention={retention}
+                                    setRetention={setRetention}
+                                />
                             </div>
                         </div>
+                    </div>
                 </div>
-                 {/* Body table + detail card */}
-      <div className="flex flex-1 overflow-hidden px-10 pb-6 gap-0">
-{/* ตาราง  flex-1 หดตัวเมื่อ card เปิด */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]"
-          style={{ width: tableWidth }}>
-          <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
-{/* header */}
-                                    <div
-                                        className="grid gap-2 mb-2 pl-4 pr-2 text-center"
-                                        style={{ gridTemplateColumns: col }}
-                                    >
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            กิจกรรมประมวลผล
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            ฝ่ายที่เกี่ยวข้อง
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            วัตถุประสงค์
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            ฐานกฎหมาย
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            ระยะเวลาการเก็บรักษา
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            ความเสี่ยง
-                                        </div>
-                                        <div className="bg-[#03369D] text-white px-4 py-3 rounded-lg">
-                                            สถานะ
-                                        </div>
-                                        <div />
-                                    </div>
+                {/* Body table + detail card */}
+                <div className="flex flex-1 overflow-hidden text-[12px] px-10 pb-6 gap-0">
+                    {/* ตาราง  flex-1 หดตัวเมื่อ card เปิด */}
+                    <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]"
+                        style={{ width: tableWidth }}>
+                        <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
+                            <RopaTable
+                                data={paginatedData}
+                                selectedItem={selectedItem}
+                                onRowClick={(item) => setSelectedItem(item)}
+                                col={col}
+                                riskMap={riskMap}
+                                statusMap={statusMap}
+                                badgeBase={badgeBase}
+                            />
 
-                                {/* table body */}
-                                    <div className="flex flex-col gap-2">
-                                        {paginatedData.length > 0 ? (
-                                            paginatedData.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                        onClick={() => setSelectedItem(item)}
-                                                   className={`grid items-center pl-4 pr-1 py-3 border-b cursor-pointer transition ${
-                    selectedItem?.id === item.id ? "bg-[#EEF3FF]" : "hover:bg-gray-50"
-                  }`}
-                  style={{ gridTemplateColumns: col }}
-                >
-                                                    {/* activity */}
-                                                    <div className="px-2 truncate text-[#1C1B1F]">
-                                                        {item.activity}
-                                                    </div>
-
-                                                    {/* parties */}
-                                                    <div className="px-1 flex items-center gap-1 overflow-hidden min-w-0">
-                                                        {item.parties.map((p, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className={`bg-[#DFE9FF] text-[#03369D] px-2 py-1 rounded-md text-[11px]
-                                                                    ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
-                                                        `}
-                                                                title={p}
-                                                            >
-                                                                {p}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-
-                                                    {/* purpose */}
-                                                    <div className="px-2 truncate text-[#1C1B1F]">
-                                                        {item.purpose}
-                                                    </div>
-
-                                                    {/* legal */}
-                                                    <div className="px-1 flex items-center gap-1 overflow-hidden min-w-0">
-                                                        {item.legal?.basis?.length ? (
-                                                            item.legal.basis.map((l, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className={`bg-[#DFE9FF] text-[#03369D] px-2 py-1 rounded-md text-[11px]
-                                                                ${i === 0 ? "whitespace-nowrap shrink-0" : "truncate min-w-0"}
-                                                                `}
-                                                                title={l}
-                                                            >
-                                                                {l}
-                                                            </span>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-[#A6A6A6] text-[11px]">ไม่มีข้อมูล</span>
-                                                        )}
-                                                        </div>
-
-                                                    {/* retention */}
-                                                    <div>
-                                                        <span className="px-4 text-[#1C1B1F]">
-                                                            {item.retention.retentionPeriod}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* risk */}
-                                                    <div className="flex justify-center">
-                                                        <span className={`${badgeBase} ${riskMap[item.risk as keyof typeof riskMap]?.color}`}>
-                                                            {riskMap[item.risk as keyof typeof riskMap]?.icon}
-                                                            {item.risk}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* status */}
-                                                    <div className="flex justify-center">
-                                                        <span className={`${badgeBase} ${statusMap[item.status as keyof typeof statusMap]?.color}`}>
-                                                            {statusMap[item.status as keyof typeof statusMap]?.icon}
-                                                            {item.status}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* action */}
-                                                    <div className="flex justify-end w-full">
-                    <button
-                      className="p-1 hover:bg-gray-200 rounded"
-                      onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
-                    >
-                      <EllipsisVertical size={16} />
-                    </button>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center text-gray-400 py-6">
-                                                ไม่พบข้อมูล
-                                            </div>
-                                        )}
-                                    </div>
-          </div>
+                        </div>
 
                         {/* ================= FOOTER ================= */}
                         <div className="mt-4 flex justify-between items-center text-sm shrink-0">
@@ -622,27 +498,27 @@ const initResize = (e: React.MouseEvent) => {
                             </div>
                         </div>
 
-        </div>
-        {/* เส้นกั้นสองตาราง */}
-        {selectedItem && (
-    <div
-      className="w-1 cursor-col-resize bg-gray-200"
-      onMouseDown={(e) => initResize(e)}
-    />
-  )}
+                    </div>
+                    {/* เส้นกั้นสองตาราง */}
+                    {selectedItem && (
+                        <div
+                            className="w-1 cursor-col-resize bg-gray-200"
+                            onMouseDown={(e) => initResize(e)}
+                        />
+                    )}
 
-          {/* DetailCard */}
-  {selectedItem && (
-    <div
-      className="flex-shrink-0 rounded-xl overflow-hidden shadow"
-      style={{ width: detailWidth }}
-    >
-      <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
-    </div>
-  )}
-</div>
+                    {/* DetailCard */}
+                    {selectedItem && (
+                        <div
+                            className="flex-shrink-0 rounded-xl overflow-hidden shadow"
+                            style={{ width: detailWidth }}
+                        >
+                            <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+                        </div>
+                    )}
+                </div>
 
-                  {/* <div
+                {/* <div
     className="flex-1 overflow-y-auto py-6 transition-all duration-300"
     style={{ paddingLeft: selectedItem ? "40px" : "120px", paddingRight: selectedItem ? "40px" : "120px" }}
   >

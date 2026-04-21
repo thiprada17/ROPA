@@ -13,6 +13,7 @@ import TabSecurity from "./tabs/TabSecurity";
 import TabTransfer from "./tabs/TabTransfer";
 import TabProcessor from "./tabs/TabProcessor";
 import TabHistory from "./tabs/TabHistory";
+import Link from "next/link";
 
 export interface RopaItem {
     id: number;
@@ -281,7 +282,9 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                                     setShowMenu(false);
                                 }}
                             >
+                                <Link href="/form">
                                 <div className="flex flex-col-2 gap-2"><Pencil size={14} /> แก้ไขกิจกรรม</div>
+                                </Link>
                             </button>
 
                             <button
