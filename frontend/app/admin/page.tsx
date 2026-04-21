@@ -5,6 +5,7 @@ import { userMock, UserData, UserRole, UserStatus, LockStatus } from "./data/use
 import UserTable from "./components/UserTable";
 import UserFormModal from "./components/UserFormModal";
 import AdminFilterModal from "./components/AdminFilterModal";
+import Sidebar from "../components/Sidebar";
 
 export default function AdminPage() {
     const [users, setUsers] = useState<UserData[]>(userMock);
@@ -60,7 +61,8 @@ export default function AdminPage() {
     return (
         <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
             {/* Sidebar placeholder */}
-            <aside className="w-20 bg-gray-700 flex-shrink-0" />
+            <aside className="w-16 bg-gray-700 flex-shrink-0" />
+            < Sidebar userName="txt" userEmail="testt@mail.com"/>
 
             {/* Main */}
             <main className="flex-1 overflow-y-auto px-4 md:px-[40px] xl:px-[80px] py-6">
@@ -138,7 +140,7 @@ export default function AdminPage() {
                                 <div className="relative">
                                     <button
                                         onClick={() => setOpenFilter(!openFilter)}
-                                        className="flex items-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[12px] justify-center">
+                                        className="flex items-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[12px] justify-center hover:bg-gray-100">
                                         <Filter size={15} />
                                         <span>Filters</span>
                                         {filterCount > 0 && (
