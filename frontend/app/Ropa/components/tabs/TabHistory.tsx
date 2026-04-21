@@ -1,6 +1,7 @@
 // app/Ropa/components/tabs/TabHistory.tsx
 "use client";
-import { RopaItem, display } from "../DetailCard";
+import { display } from "../DetailCard";
+import { RopaItem } from "../../types/ropa";
 import { Pencil, Plus , Calendar, Clock} from "lucide-react";
 
 export default function TabHistory({

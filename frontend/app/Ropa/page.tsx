@@ -23,7 +23,8 @@ import {
     Shield,
     ShieldAlert,
 } from "lucide-react";
-import DetailCard, {RopaItem} from "./components/DetailCard";
+import DetailCard, {display} from "./components/DetailCard";
+import { RopaItem } from "./types/ropa";
 
 
 // ================= MOCK DATA =================

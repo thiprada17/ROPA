@@ -1,6 +1,7 @@
 // app/Ropa/components/tabs/TabDataDetails.tsx
 "use client";
-import { RopaItem, display } from "../DetailCard";
+import { display } from "../DetailCard";
+import { RopaItem } from "../../types/ropa";
 
 export default function TabDataDetails({
     item,

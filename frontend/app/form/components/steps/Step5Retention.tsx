@@ -64,7 +64,8 @@ export function validateStep5(formData: any) {
     retention: !hasRetention, // error เดียวแทนสามช่อง นา
     accessRight: formData.accessRight.length === 0,
     usageStatus: !formData.usageStatus,
-    usagePurpose: !formData.usagePurpose,
+    usagePurpose:
+      formData.usageStatus === "มีการใช้" && !formData.usagePurpose,
   };
 }
 
@@ -169,12 +170,12 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
             <span className="text-red-500">*</span>
           </p>
           <div className={`flex items-center border rounded-lg overflow-hidden h-[45px] ${(errors.usageStatus || errors.usagePurpose)
-              ? "border-red-400"
-              : "border-BLUE"
+            ? "border-red-400"
+            : "border-BLUE"
             }`}>
             <div className={`border-r px-2 h-full flex items-center shrink-0 ${(errors.usageStatus || errors.usagePurpose)
-                ? "border-red-400"
-                : "border-BLUE"
+              ? "border-red-400"
+              : "border-BLUE"
               }`}>
               <select
                 value={formData.usageStatus}
@@ -191,6 +192,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
             <div className="flex-1 px-3 h-full flex items-center">
               <select
                 value={formData.usagePurpose}
+                  disabled={formData.usageStatus !== "มีการใช้"}
                 onChange={(e) => updateField("usagePurpose", e.target.value)}
                 className="w-full text-sm text-gray-500 outline-none bg-transparent cursor-pointer"
               >
@@ -202,7 +204,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
             </div>
           </div>
 
-      {/* แยก error message ถ้าเค้าำม่เลือกทั้งสอง */}
+          {/* แยก error message ถ้าเค้าำม่เลือกทั้งสอง */}
           <div className="h-4 mt-1">
             {errors.usageStatus && !formData.usageStatus && (
               <p className="text-red-500 text-[10px]">กรุณาเลือกสถานะการใช้งาน</p>
