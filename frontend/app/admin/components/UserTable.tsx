@@ -46,7 +46,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                         style={{ gridTemplateColumns: col }}
                     >
                         {headers.map((h, i) => (
-                            <div key={i} className={`px-2 py-[20px] rounded-[6px] ${h ? "bg-[#03369D] text-white" : ""}`}>
+                            <div key={i} className={`px-2 py-[11px] rounded-[6px] ${h ? "bg-[#03369D] text-white" : ""}`}>
                                 {h}
                             </div>
                         ))}
