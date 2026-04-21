@@ -1,6 +1,5 @@
 // app/form/components/steps/Step3LegalBasis
 "use client";
-import { useState } from "react";
 import MultiSelect from "../../../components/MultiSelect";
 
 const legalBases = [
@@ -14,14 +13,32 @@ const legalBases = [
 
 const dataCategories = ["ข้อมูลระบุตัวตน", "ข้อมูลการติดต่อ", "ข้อมูลทางการเงิน", "ข้อมูลสุขภาพ", "ข้อมูลการศึกษา"];
 
-export default function Step3LegalBasis() {
-  const [primaryBases, setPrimaryBases] = useState<string[]>([]);
-  const [supplementaryBases, setSupplementaryBases] = useState<string[]>([]);
-  const [minorConsent, setMinorConsent] = useState<{ under10: string; age10to20: string }>({
-    under10: "",
-    age10to20: "",
-  });
+// Validation สำหรับ Step3
+export function validateStep3({
+  primaryBases,
+  minorConsent,
+}: {
+  primaryBases: string[];
+  minorConsent: { under10: string; age10to20: string };
+}) {
+  return {
+    primaryBases: primaryBases.length === 0,
+    minorConsentUnder10: !minorConsent.under10,
+    minorConsent10to20: !minorConsent.age10to20,
+  };
+}
 
+interface StepProps {
+  formData: {
+    primaryBases: string[];
+    supplementaryBases: string[];
+    minorConsent: { under10: string; age10to20: string };
+  };
+  errors: Record<string, boolean>;
+  updateField: (field: string, value: any) => void;
+}
+
+export default function Step3LegalBasis({ formData, errors, updateField }: StepProps) {
   return (
     <div className="space-y-6 font-prompt">
 
@@ -30,25 +47,23 @@ export default function Step3LegalBasis() {
 
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-[#1a3a8f] block mb-1">
-              หมวดหมู่หลัก <span className="text-red-500">*</span>
-            </label>
             <MultiSelect
+              label="หมวดหมู่หลัก"
               options={legalBases}
-              selected={primaryBases}
-              onChange={setPrimaryBases}
+              selected={formData.primaryBases}
+              onChange={(v) => updateField("primaryBases", v)}
               placeholder="เลือกฐานหลัก..."
+              error={errors.primaryBases}
+              required
             />
           </div>
 
           <div>
-            <label className="text-sm text-[#1a3a8f] block mb-1">
-              หมวดหมู่เสริม (ถ้ามี)
-            </label>
             <MultiSelect
+              label="หมวดหมู่เสริม (ถ้ามี)"
               options={dataCategories}
-              selected={supplementaryBases}
-              onChange={setSupplementaryBases}
+              selected={formData.supplementaryBases}
+              onChange={(v) => updateField("supplementaryBases", v)}
               placeholder="เลือกประเภทเสริม..."
             />
           </div>
@@ -56,7 +71,7 @@ export default function Step3LegalBasis() {
       </div>
 
       <div>
-        <p className="text-[14px] font-medium text-BLUE mb-[10px]">การขอความยินยอมของผู้เยาว์</p>
+        <p className="text-[14px] font-medium text-BLUE mb-[10px]">การขอความยินยอมของผู้เยาว์ <span className="text-red-500">*</span></p>
 
         <div className="space-y-3 ml-4">
           {[
@@ -71,15 +86,17 @@ export default function Step3LegalBasis() {
                     type="radio"
                     name={key}
                     value={opt}
-                    checked={minorConsent[key as keyof typeof minorConsent] === opt}
-                    onChange={() => setMinorConsent((prev) => ({ ...prev, [key]: opt }))}
+                    checked={formData.minorConsent[key as keyof typeof formData.minorConsent] === opt}
+                    onChange={() => updateField("minorConsent", { ...formData.minorConsent, [key]: opt })}
                     className="accent-[#1a3a8f]"
                   />
-                  <span className={minorConsent[key as keyof typeof minorConsent] === opt ? "text-[#1a3a8f] font-medium" : "text-gray-600"}>
+                  <span className={formData.minorConsent[key as keyof typeof formData.minorConsent] === opt ? "text-[#1a3a8f] font-medium" : "text-gray-600"}>
                     {opt}
                   </span>
                 </label>
               ))}
+              {key === "under10" && errors.minorConsentUnder10 && <p className="text-red-500 text-sm mt-1">กรุณาเลือกตัวเลือก</p>}
+              {key === "age10to20" && errors.minorConsent10to20 && <p className="text-red-500 text-sm mt-1">กรุณาเลือกตัวเลือก</p>}
             </div>
           ))}
         </div>
