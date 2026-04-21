@@ -5,6 +5,7 @@ import { CircleArrowLeft } from "lucide-react"
 import StepContent from "./components/StepContent";
 import ProgressBar from "./components/ProgressBar";
 import Sidebar from "../components/Sidebar";
+import { mapFormToPayload } from "./utils/mapToPayload";
 
 // import validate function ของแต่ละ step
 import { validateStep1 } from "./components/steps/Step1Activity";
@@ -27,6 +28,25 @@ export default function FormPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [nextAction, setNextAction] = useState<"prev" | "next" | null>(null);
 
+  const handleSubmit = async () => {
+  try {
+    const payload = mapFormToPayload(formData);
+
+    const res = await fetch("/api/ropa/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("SUCCESS:", data);
+  } catch (err) {
+    console.error("ERROR:", err);
+  }
+};
+
   const handleBackClick = () => {
     if (isEditingProcessor) {
       setNextAction("prev");
@@ -42,7 +62,8 @@ export default function FormPage() {
       setShowConfirm(true);
     } else {
       if (currentStep === steps.length - 1) {
-        console.log("Submit form:", formData);
+        // console.log("Submit form:", formData);
+        handleSubmit();
       } else {
         nextStep();
       }

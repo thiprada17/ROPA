@@ -1,7 +1,8 @@
 // app/Ropa/components/tabs/TabSecurity.tsx
 "use client";
 import { Shield } from "lucide-react";
-import { RopaItem, display } from "../DetailCard";
+import { display } from "../DetailCard";
+import { RopaItem } from "../../types/ropa";
 
 // tab: security
 

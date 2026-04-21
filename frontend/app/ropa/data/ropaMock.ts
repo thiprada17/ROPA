@@ -192,8 +192,8 @@ export const ropaMock = [
       destination_country: "สหรัฐอเมริกา",
       affiliated_company: "บริษัทระบบจัดการกิจกรรม",
       transfer_method: "API integration",
-      protection_standards: "มาตรฐานความปลอดภัยข้อมูลสากล (เช่น ISO 27001)",
-      exceptions: "ไม่มีการโอนข้อมูลที่มีความละเอียดอ่อนหรือข้อมูลส่วนบุคคลที่ไม่จำเป็นต้องใช้สำหรับการจัดการกิจกรรม outing",
+      protection_standards: ["มาตรฐานความปลอดภัยข้อมูลสากล (เช่น ISO 27001)"],
+      exceptions:["ไม่มีการโอนข้อมูลที่มีความละเอียดอ่อนหรือข้อมูลส่วนบุคคลที่ไม่จำเป็นต้องใช้สำหรับการจัดการกิจกรรม outing"],
     },
 
     processors: [],

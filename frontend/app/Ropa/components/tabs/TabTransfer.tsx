@@ -1,6 +1,7 @@
 // app/Ropa/components/tabs/TabTransfer.tsx
 "use client";
-import { RopaItem } from "../DetailCard";
+import { display } from "../DetailCard";
+import { RopaItem } from "../../types/ropa";
 
 export default function TabTransfer({
     item,
