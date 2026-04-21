@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Search, Filter, Plus, Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, Plus, Calendar, ChevronDown, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
 import { userMock, UserData, UserRole, UserStatus, LockStatus } from "./data/userMock";
 import UserTable from "./components/UserTable";
 import UserFormModal from "./components/UserFormModal";
@@ -68,9 +68,9 @@ export default function AdminPage() {
 
                     {/* Breadcrumb */}
                     <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-3">
-                        <span>⬡</span>
-                        <span>/</span>
-                        <span className="text-gray-700 font-medium">ADMIN</span>
+                        <span><ShieldAlert size={18}/></span>
+                        <span><ChevronRight size={15}/> </span>
+                        <span className="text-gray-700 font-gabarito text-[12px]">ADMIN</span>
                     </div>
 
                     <div className="border-b border-gray-200 mb-5" />

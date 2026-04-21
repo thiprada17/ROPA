@@ -42,7 +42,7 @@ export default function UserTable({ data, onRowClick }: Props) {
 
                     {/* Header */}
                     <div
-                        className="grid gap-2 mb-2 pl-3 pr-2 text-center text-[11px]"
+                        className="grid gap-2 mb-2 pl-3 pr-1 text-center text-[11px]"
                         style={{ gridTemplateColumns: col }}
                     >
                         {headers.map((h, i) => (
@@ -112,14 +112,14 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     </div>
 
                                     {/* Action */}
-                                    <div className="flex justify-end">
+                                    {/* <div className="flex justify-end">
                                         <button
                                             className="p-1 hover:bg-gray-200 rounded"
                                             onClick={(e) => { e.stopPropagation(); onRowClick(item); }}
                                         >
                                             <EllipsisVertical size={15} />
                                         </button>
-                                    </div>
+                                    </div> */}
                                 </div>
                             ))
                         )}
