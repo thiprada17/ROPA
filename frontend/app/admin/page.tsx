@@ -140,7 +140,7 @@ export default function AdminPage() {
                                 <div className="relative">
                                     <button
                                         onClick={() => setOpenFilter(!openFilter)}
-                                        className="flex items-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[12px] justify-center">
+                                        className="flex items-center gap-2 w-[88px] h-[40px] border bg-white rounded-lg relative text-[12px] justify-center hover:bg-gray-100">
                                         <Filter size={15} />
                                         <span>Filters</span>
                                         {filterCount > 0 && (

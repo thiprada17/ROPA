@@ -44,7 +44,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
 
     return (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full sm:w-[640px] max-h-[90vh] overflow-y-auto my-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full sm:w-[75vw] max-h-[90vh] overflow-y-auto my-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-[14px] font-semibold text-gray-800">
