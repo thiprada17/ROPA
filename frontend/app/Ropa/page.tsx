@@ -306,7 +306,7 @@ export default function RopaPage() {
                     <br />
                     {/* FILTER + ACTIONS */}
                     <div className="flex flex-col md:flex-row md:justify-between gap-4 items-start md:items-center">
-                        {/* ================= DATE FILTER ================= */}
+                        {/* ฟิลเตอร์เลือกวันที่ */}
                         <div className="relative" ref={ref}>
                             <button
                                 onClick={() => setOpen(!open)}
@@ -393,14 +393,16 @@ export default function RopaPage() {
                             )}
                         </div>
 
-                        {/* ================= ACTIONS ================= */}
+                        {/* แถบเครื่องมือ เพิ่ม ค้นหา ฟิลเตอร์ */}
                         <div className="flex gap-4 items-center text-[12px]">
+                            {/* ปุ่มเพิ่มกิจกรรม */}
                             <Link href="/form">
                                 <button className="flex items-center justify-center gap-2 w-[128px] h-[40px] bg-[#03369D] hover:bg-[#012a7c] text-white rounded-lg">
                                     <Plus size={16} /> เพิ่มกิจกรรม
                                 </button>
                             </Link>
 
+                            {/* ช่องค้นหา */}
                             <div className="flex items-center gap-2 border rounded-lg px-3 w-[304px] h-[40px] bg-white">
                                 <Search size={16} className="text-[#A6A6A6]" />
                                 <input
@@ -412,6 +414,7 @@ export default function RopaPage() {
                                 />
                             </div>
 
+                            {/* ปุ่มฟิลเตอร์ */}
                             <div className="relative">
                                 <button
                                     onClick={() => setOpenFilter(!openFilter)}
@@ -448,6 +451,7 @@ export default function RopaPage() {
                     {/* ตาราง  flex-1 หดตัวเมื่อ card เปิด */}
                     <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]"
                         style={{ width: tableWidth }}>
+                        {/* ตาราง */}
                         <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
                             <RopaTable
                                 data={paginatedData}
