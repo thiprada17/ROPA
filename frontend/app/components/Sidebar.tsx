@@ -8,8 +8,8 @@ import { useState } from "react";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
-  { icon: ShieldPlus, href: "/form", label: "CREATE ROPA" },
-  { icon: ShieldAlert, href: "/ropa", label: "ROPA" },
+  { icon: ShieldPlus, href: "/Form", label: "CREATE ROPA" },
+  { icon: ShieldAlert, href: "/Ropa", label: "ROPA" },
   { icon: Scale, href: "/legal", label: "LEGAL" },
 ];
 

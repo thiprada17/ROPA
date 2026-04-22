@@ -861,3 +861,326 @@ export const getActivityById = async (req, res) => {
     });
   }
 };
+
+export const getRopaList = async (req, res) => {
+  try {
+    const { data: activities, error: activitiesError } = await ropaDB()
+      .from("processing_activities")
+      .select(`
+        id,
+        owner_name,
+        activity_name,
+        department_id,
+        purpose,
+        approval_status,
+        submitted_at,
+        updated_at,
+        created_by,
+        updated_by
+      `)
+      .order("submitted_at", { ascending: false });
+
+    if (activitiesError) throw activitiesError;
+
+    if (!activities || activities.length === 0) {
+      return res.json([]);
+    }
+
+    const activityIds = activities.map((a) => a.id).filter(Boolean);
+    const activityNameIds = [...new Set(activities.map((a) => a.activity_name).filter(Boolean))];
+    const departmentIds = [...new Set(activities.map((a) => a.department_id).filter(Boolean))];
+
+    const [
+      { data: activityNames, error: e1 },
+      { data: departments, error: e2 },
+      { data: activityDepartments, error: e3 },
+      { data: legalBasesRows, error: e4 },
+      { data: retentionRows, error: e5 },
+      { data: transferRows, error: e6 },
+      { data: processorRows, error: e7 },
+      { data: securityRows, error: e8 },
+      { data: minorConsentRows, error: e9 },
+      { data: categoryRows, error: e10 },
+      { data: acquisitionRows, error: e11 },
+    ] = await Promise.all([
+      activityNameIds.length
+        ? ropaDB().from("activity_name").select("id, name").in("id", activityNameIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      departmentIds.length
+        ? authDB().from("departments").select("id, department_name").in("id", departmentIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_departments").select("activity_id, department_id, access_type").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_legal_bases").select("activity_id, legal_bases_id").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("retention_policies").select("activity_id, retention_period, storage_type, storage_method, deletion_method, usage_status, usage_purpose, denial_note").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("international_transfers").select("activity_id, is_transfer, destination_country, affiliated_company, transfer_method, protection_standard, exceptions").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_processors").select("activity_id, id, access_type, data_category_accessed, note, processor_id").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_security").select("activity_id, detail, measures_id").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("minor_consent").select("activity_id, age_range, description").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_data_categories").select("activity_id, data_categories_id").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      activityIds.length
+        ? ropaDB().from("activity_acquisition").select("activity_id, acquisition_method_id").in("activity_id", activityIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const errors = [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11].filter(Boolean);
+    if (errors.length > 0) throw errors[0];
+
+    const legalBaseIds = [...new Set((legalBasesRows || []).map((x) => x.legal_bases_id).filter(Boolean))];
+    const processorIds = [...new Set((processorRows || []).map((x) => x.processor_id).filter(Boolean))];
+    const categoryIds = [...new Set((categoryRows || []).map((x) => x.data_categories_id).filter(Boolean))];
+    const acquisitionIds = [...new Set((acquisitionRows || []).map((x) => x.acquisition_method_id).filter(Boolean))];
+    const securityMeasureIds = [...new Set((securityRows || []).map((x) => x.measures_id).filter(Boolean))];
+
+    const [
+      { data: legalBaseLookup, error: e12 },
+      { data: processors, error: e13 },
+      { data: categoryLookup, error: e14 },
+      { data: acquisitionLookup, error: e15 },
+      { data: securityMeasureLookup, error: e16 },
+    ] = await Promise.all([
+      legalBaseIds.length
+        ? lookupDB().from("legal_bases").select("id, name").in("id", legalBaseIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      processorIds.length
+        ? ropaDB().from("processors").select("id, name, address").in("id", processorIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      categoryIds.length
+        ? lookupDB().from("data_categories").select("id, name").in("id", categoryIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      acquisitionIds.length
+        ? lookupDB().from("acquisition_method").select("id, name").in("id", acquisitionIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      securityMeasureIds.length
+        ? lookupDB().from("security_measures").select("id, name").in("id", securityMeasureIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const moreErrors = [e12, e13, e14, e15, e16].filter(Boolean);
+    if (moreErrors.length > 0) throw moreErrors[0];
+
+    const activityNameMap = new Map((activityNames || []).map((x) => [x.id, x.name]));
+    const departmentMap = new Map((departments || []).map((x) => [x.id, x.department_name]));
+    const legalBaseMap = new Map((legalBaseLookup || []).map((x) => [x.id, x.name]));
+    const processorMap = new Map((processors || []).map((x) => [x.id, x]));
+    const categoryMap = new Map((categoryLookup || []).map((x) => [x.id, x.name]));
+    const acquisitionMap = new Map((acquisitionLookup || []).map((x) => [x.id, x.name]));
+    const securityMeasureMap = new Map((securityMeasureLookup || []).map((x) => [x.id, x.name]));
+
+    const groupByActivity = (rows, key = "activity_id") => {
+      const map = new Map();
+      for (const row of rows || []) {
+        const id = row[key];
+        if (!map.has(id)) map.set(id, []);
+        map.get(id).push(row);
+      }
+      return map;
+    };
+
+    const departmentsByActivity = groupByActivity(activityDepartments);
+    const legalByActivity = groupByActivity(legalBasesRows);
+    const retentionByActivity = groupByActivity(retentionRows);
+    const transferByActivity = groupByActivity(transferRows);
+    const processorsByActivity = groupByActivity(processorRows);
+    const securityByActivity = groupByActivity(securityRows);
+    const minorConsentByActivity = groupByActivity(minorConsentRows);
+    const categoriesByActivity = groupByActivity(categoryRows);
+    const acquisitionByActivity = groupByActivity(acquisitionRows);
+
+    const buildStatus = (approvalStatus) => {
+      const normalized = String(approvalStatus || "").toLowerCase();
+
+      if (normalized === "approved" || normalized === "complete") return "Complete";
+      if (normalized === "revision" || normalized === "rejected") return "Revision";
+      return "Pending";
+    };
+
+    const result = activities.map((activity) => {
+      const activityId = activity.id;
+      const retention = retentionByActivity.get(activityId)?.[0] || null;
+      const transfer = transferByActivity.get(activityId)?.[0] || null;
+      const legalRows = legalByActivity.get(activityId) || [];
+      const deptRows = departmentsByActivity.get(activityId) || [];
+      const procRows = processorsByActivity.get(activityId) || [];
+      const secRows = securityByActivity.get(activityId) || [];
+      const consentRows = minorConsentByActivity.get(activityId) || [];
+      const dataCategoryRows = categoriesByActivity.get(activityId) || [];
+      const acquisitionMethodRows = acquisitionByActivity.get(activityId) || [];
+
+      const parties = [
+        ...new Set(
+          [
+            activity.department_id ? departmentMap.get(activity.department_id) : null,
+            ...deptRows.map((d) => departmentMap.get(d.department_id)),
+          ].filter(Boolean)
+        ),
+      ];
+
+      const legalBasis = [
+        ...new Set(
+          legalRows.map((row) => legalBaseMap.get(row.legal_bases_id)).filter(Boolean)
+        ),
+      ];
+
+      const processorsDetail = procRows.map((row) => {
+        const processor = processorMap.get(row.processor_id);
+
+        return {
+          name: processor?.name || "-",
+          address: processor?.address || "",
+          security: {
+            accessType: row.access_type || "",
+            responsibility_def: row.note || "",
+            organizational: "",
+            technical: "",
+            physical: "",
+            audit_trail: "",
+          },
+        };
+      });
+
+      const under10 = consentRows.find((x) => x.age_range === "under10");
+      const age10to20 = consentRows.find((x) => x.age_range === "10to20");
+      const mixed = consentRows.find((x) => x.age_range === "mixed");
+
+      const securityNames = secRows
+        .map((row) => securityMeasureMap.get(row.measures_id) || row.detail)
+        .filter(Boolean);
+
+      return {
+        id: activity.id,
+        activity: activityNameMap.get(activity.activity_name) || "-",
+        purpose: activity.purpose || "-",
+        purposeDetail: activity.purpose || "-",
+        dataOwner: activity.owner_name || "-",
+        parties,
+
+        dataSubjects: [],
+        dataDescription: "",
+        dataCategories: dataCategoryRows
+          .map((row) => categoryMap.get(row.data_categories_id))
+          .filter(Boolean),
+        dataTypes: [],
+        acquisitionMethods: acquisitionMethodRows
+          .map((row) => acquisitionMap.get(row.acquisition_method_id))
+          .filter(Boolean),
+        dataSources: [],
+
+        legal: {
+          basis: legalBasis,
+          secondaryCategory: [],
+          minorConsent: {
+            under10: under10?.description || mixed?.description || "",
+            age10to20: age10to20?.description || mixed?.description || "",
+          },
+        },
+
+        transfer: {
+          is_transfer:
+            transfer?.is_transfer === true
+              ? "true"
+              : transfer?.is_transfer === false
+                ? "false"
+                : "",
+          destination_country: transfer?.destination_country || null,
+          affiliated_company: transfer?.affiliated_company || null,
+          transfer_method: transfer?.transfer_method || null,
+          protection_standards: transfer?.protection_standard
+            ? String(transfer.protection_standard)
+                .split(",")
+                .map((x) => x.trim())
+                .filter(Boolean)
+            : [],
+          exceptions: transfer?.exceptions
+            ? String(transfer.exceptions)
+                .split(",")
+                .map((x) => x.trim())
+                .filter(Boolean)
+            : [],
+        },
+
+        retention: {
+          storageType: retention?.storage_type
+            ? String(retention.storage_type).split(",").map((x) => x.trim()).filter(Boolean)
+            : [],
+          storageMethod: retention?.storage_method
+            ? String(retention.storage_method).split(",").map((x) => x.trim()).filter(Boolean)
+            : [],
+          retentionPeriod: retention?.retention_period || "-",
+          department: parties,
+          deletionMethod: retention?.deletion_method || "",
+          usage_purpose: retention?.usage_purpose
+            ? [retention.usage_purpose]
+            : [],
+          denialNote: retention?.denial_note || null,
+        },
+
+        security: {
+          organizational: securityNames.join(", "),
+          technical: "",
+          physical: "",
+          accessType: deptRows.map((d) => d.access_type).filter(Boolean).join(", "),
+          responsibility_def: "",
+          audit_trail: "",
+        },
+
+        processors: processorsDetail,
+
+        risk: "Stable",
+        status: buildStatus(activity.approval_status),
+
+        history: [
+          {
+            action: "edit",
+            by: "system",
+            date: activity.updated_at
+              ? new Date(activity.updated_at).toLocaleDateString("en-GB")
+              : "-",
+            time: activity.updated_at
+              ? new Date(activity.updated_at).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "-",
+          },
+        ],
+      };
+    });
+
+    return res.json(result);
+  } catch (err) {
+    console.error("getRopaList error:", err);
+    return res.status(500).json({
+      error: err.message || "Failed to fetch ROPA list",
+    });
+  }
+};

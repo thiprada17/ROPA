@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express'
 import yaml from 'js-yaml'
 import authRoutes from './routes/auth.js'
 import adminRoutes from './routes/admin.js'
+import formRoutes from './routes/form.js'
 
 const app = express()
 app.use(cors())   
@@ -16,6 +17,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/form', formRoutes)
 
 app.listen(8000, () => {
   console.log('Server running on port 8000')
