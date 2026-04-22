@@ -37,10 +37,63 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
 
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-    const handleSave = () => {
-        onSave(form);
-        onClose();
+    console.log(form)
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const res = await fetch("http://localhost:8000/api/admin/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(form),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Create failed");
+            }
+
+            console.log("SUCCESS:", data);
+
+            onSave(data.user);
+            onClose();
+
+        } catch (err: any) {
+            console.error(err);
+            alert(err.message);
+        }
     };
+    const [departmentsData, setDepartmentsData] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const token = localStorage.getItem("token");
+
+                const res = await fetch("http://localhost:8000/api/admin/departments", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const data = await res.json();
+                console.log(data)
+
+                if (!res.ok) throw new Error(data.error);
+
+                setDepartmentsData(data);
+
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchDepartments();
+    }, []);
 
     return (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto">
@@ -88,10 +141,20 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="ฝ่าย">
                             <div className="relative">
-                                <select className={selectCls} value={form.department} onChange={e => set("department", e.target.value)}>
+                                <select
+                                    className={selectCls}
+                                    value={form.department}
+                                    onChange={e => set("department", e.target.value)}
+                                >
                                     <option value="">เลือกฝ่าย</option>
-                                    {departments.map(d => <option key={d}>{d}</option>)}
+
+                                    {departmentsData.map(d => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.department_name}
+                                        </option>
+                                    ))}
                                 </select>
+
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
                             </div>
                         </Field>
