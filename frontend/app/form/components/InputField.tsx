@@ -1,12 +1,13 @@
 interface InputFieldProps {
   label: string;
   placeholder?: string;
-  id?: string; 
+  id?: string;
   value?: string;
   onChange?: (val: string) => void;
-  disabled?: boolean;        
+  disabled?: boolean;
   className?: string;
-  required?: boolean; // เพิ่ม prop นี้
+  required?: boolean;
+  error?: boolean; 
 }
 
 export default function InputField({
@@ -17,12 +18,13 @@ export default function InputField({
   onChange,
   disabled = false,
   className = "",
-  required = true, 
+  required = true,
+  error = false, 
 }: InputFieldProps) {
   const inputId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={`mt-4 mb-[24px]`}>
+    <div className="relative">
       <label
         htmlFor={inputId}
         className="block text-[14px] text-BLUE font-prompt mb-1.5 px-2"
@@ -33,11 +35,13 @@ export default function InputField({
         id={inputId}
         type="text"
         placeholder={placeholder}
-        value={value}                      
-        onChange={(e) => onChange?.(e.target.value)} 
-        disabled={disabled}              
-        className={`${className} text-[14px] w-full border border-BLUE font-prompt h-[45px] rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-200 ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-blue-600"}`}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        disabled={disabled}
+        className={`${className} text-[14px] w-full border rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-200 ${error ? "border-red-500" : "border-BLUE"
+          } ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-blue-600"}`}
       />
+      {error && <p className="text-red-500 text-xs mt-1 px-2">กรุณากรอกข้อมูล</p>}
     </div>
   );
 }
