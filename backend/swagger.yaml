@@ -1,0 +1,321 @@
+openapi: 3.0.0
+info:
+  title: CN334 ROPA API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+          example: admin@test.com
+        password:
+          type: string
+          example: "1234"
+
+    CreateUserRequest:
+      type: object
+      required: [fullName, email, password]
+      properties:
+        fullName:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: john@test.com
+        password:
+          type: string
+          example: "1234"
+        phone:
+          type: string
+          example: "0812345678"
+        department:
+          type: string
+          example: IT
+        role:
+          type: string
+          example: user
+
+    StatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          example: approved
+        comment:
+          type: string
+          example: "ผ่านการตรวจสอบแล้ว"
+
+paths:
+  /api/auth/login:
+    post:
+      summary: Login
+      description: Login ด้วย email หรือ username
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account locked/inactive
+        "500":
+          description: Internal server error
+
+  /api/admin/users:
+    get:
+      summary: Get all users
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+        "401":
+          description: Unauthorized
+
+    post:
+      summary: Create user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        "200":
+          description: User created
+        "401":
+          description: Unauthorized
+
+  /api/admin/users/{id}:
+    put:
+      summary: Edit user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        "200":
+          description: User updated
+        "401":
+          description: Unauthorized
+
+    delete:
+      summary: Delete user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User deleted
+        "401":
+          description: Unauthorized
+
+  /api/form/options:
+    get:
+      summary: Get form dropdown options
+      tags: [Form]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Form options
+        "401":
+          description: Unauthorized
+
+  /api/form:
+    post:
+      summary: Create ROPA form
+      tags: [Form]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                step1:
+                  type: object
+                step2:
+                  type: object
+                step3:
+                  type: object
+                step4:
+                  type: object
+                step5:
+                  type: object
+                step6:
+                  type: object
+                step7:
+                  type: object
+      responses:
+        "201":
+          description: Form created
+        "401":
+          description: Unauthorized
+
+  /api/form/{activityId}:
+    get:
+      summary: Get ROPA detail
+      tags: [Form]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: activityId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ROPA detail
+        "401":
+          description: Unauthorized
+
+    put:
+      summary: Update ROPA form
+      tags: [Form]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: activityId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                step1:
+                  type: object
+                step2:
+                  type: object
+                step3:
+                  type: object
+                step4:
+                  type: object
+                step5:
+                  type: object
+                step6:
+                  type: object
+                step7:
+                  type: object
+      responses:
+        "200":
+          description: Form updated
+        "401":
+          description: Unauthorized
+
+  /api/ropa:
+    get:
+      summary: Fetch ROPA list
+      tags: [ROPA]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of ROPA
+        "401":
+          description: Unauthorized
+
+  /api/ropa/{id}/status:
+    patch:
+      summary: Update ROPA status
+      tags: [ROPA]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdateRequest'
+      responses:
+        "200":
+          description: Status updated
+        "401":
+          description: Unauthorized
+
+  /api/dashboard:
+    get:
+      summary: Dashboard data
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary
+        "401":
+          description: Unauthorized
