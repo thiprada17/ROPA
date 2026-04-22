@@ -3,11 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import FilterModal from "./components/FilterModal";
 import Breadcrumb from "./components/Breadcrumb";
-<<<<<<< Updated upstream
-import RopaTable from "./components/RopaTable";
-import { ropaMock } from "./data/ropaMock";
-=======
->>>>>>> Stashed changes
 import {
   Search,
   Filter,
@@ -27,14 +22,10 @@ import {
   Shield,
   ShieldAlert,
 } from "lucide-react";
-<<<<<<< Updated upstream
-import DetailCard, { RopaItem } from "./components/DetailCard";
-import Sidebar from "../components/Sidebar";
-import Link from "next/link";
-=======
 import DetailCard from "./components/DetailCard";
 import { RopaItem } from "./types/ropa";
->>>>>>> Stashed changes
+import Sidebar from "../components/Sidebar";
+import Link from "next/link";
 
 export default function RopaPage() {
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
@@ -124,99 +115,12 @@ export default function RopaPage() {
 
         const text = await res.text();
 
-<<<<<<< Updated upstream
-    // ================= SEARCH FILTER =================
-    const normalize = (text: string) => text.toLowerCase();
-
-    const filteredData = data.filter((item) => {
-        const keyword = normalize(search);
-
-        // filter search
-        const matchSearch =
-            normalize(item.activity).includes(keyword)
-
-        // filter status
-        const matchStatus =
-            selectedStatus.length === 0 ||
-            selectedStatus.includes(item.status);
-
-        // filter risk
-        const matchRisk =
-            selectedRisks.length === 0 ||
-            selectedRisks.includes(item.risk);
-
-        // filter parties
-        const matchParties =
-            selectedParties.length === 0 ||
-            item.parties.some((p) => selectedParties.includes(p));
-
-        // ================= RETENTION =================
-        const hasRetentionFilter =
-            retention.start.year ||
-            retention.start.month ||
-            retention.start.day ||
-            retention.end.year ||
-            retention.end.month ||
-            retention.end.day;
-
-        let matchRetention = true;
-
-        if (hasRetentionFilter) {
-            // แปลง text → วัน
-            const convertToDays = (text: string) => {
-                if (!text) return 0;
-
-                const clean = text.replace(/\s+/g, "");
-
-                if (clean.includes("วัน")) {
-                    return parseInt(clean.replace("วัน", "")) || 0;
-                }
-
-                if (clean.includes("สัปดาห์")) {
-                    return (parseInt(clean.replace("สัปดาห์", "")) || 0) * 7;
-                }
-
-                if (clean.includes("เดือน")) {
-                    return (parseInt(clean.replace("เดือน", "")) || 0) * 30;
-                }
-
-                if (clean.includes("ปี")) {
-                    return (parseInt(clean.replace("ปี", "")) || 0) * 365;
-                }
-
-                return 0;
-            };
-
-            const itemDays = convertToDays(item.retention.retentionPeriod);
-
-            const startDays =
-                (Number(retention.start.year || 0) * 365) +
-                (Number(retention.start.month || 0) * 30) +
-                (Number(retention.start.day || 0));
-
-            const endDays =
-                (Number(retention.end.year || 0) * 365) +
-                (Number(retention.end.month || 0) * 30) +
-                (Number(retention.end.day || 0));
-
-            const minDays = Math.min(startDays, endDays);
-            const maxDays = Math.max(startDays, endDays);
-
-            if (minDays > 0 && maxDays > 0) {
-                matchRetention = itemDays >= minDays && itemDays <= maxDays;
-            } else if (minDays > 0) {
-                matchRetention = itemDays >= minDays;
-            } else if (maxDays > 0) {
-                matchRetention = itemDays <= maxDays;
-            }
-=======
         let result: any;
         try {
           result = JSON.parse(text);
         } catch (e) {
           console.error("❌ NOT JSON RESPONSE:", text);
           throw new Error("Backend ไม่ได้ส่ง JSON");
->>>>>>> Stashed changes
         }
 
         if (!res.ok) {
@@ -245,31 +149,6 @@ export default function RopaPage() {
   const filteredData = data.filter((item) => {
     const keyword = normalize(search);
 
-<<<<<<< Updated upstream
-    const [tableWidth, setTableWidth] = useState<number | string>("auto");
-    const [detailWidth, setDetailWidth] = useState<number>(400);
-
-    const initResize = (e: React.MouseEvent) => {
-        const startX = e.clientX;
-        const startDetailWidth = detailWidth;
-
-        const onMouseMove = (e: MouseEvent) => {
-            const dx = startX - e.clientX;
-            let newWidth = startDetailWidth + dx;
-            if (newWidth < 300) newWidth = 300;
-            if (newWidth > 800) newWidth = 800;
-            setDetailWidth(newWidth);
-        };
-
-        const onMouseUp = () => {
-            document.removeEventListener("mousemove", onMouseMove);
-            document.removeEventListener("mouseup", onMouseUp);
-        };
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-    };
-=======
     // filter search
     const matchSearch = normalize(item.activity).includes(keyword);
 
@@ -294,7 +173,6 @@ export default function RopaPage() {
       retention.end.year ||
       retention.end.month ||
       retention.end.day;
->>>>>>> Stashed changes
 
     let matchRetention = true;
 
@@ -349,7 +227,6 @@ export default function RopaPage() {
     }
 
     return (
-<<<<<<< Updated upstream
         <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
             <Sidebar userName="test" userEmail="test@example.com" />
             {/* ================= Main ================= */}
@@ -578,113 +455,7 @@ export default function RopaPage() {
                     )}
                 </div>
 
-                {/* <div
-=======
-      matchSearch && matchStatus && matchRisk && matchRetention && matchParties
-    );
-  });
-
-  // ================= PAGINATION =================
-  const itemsPerPage = 10;
-  const totalItems = filteredData.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-
-  const paginatedData = filteredData.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage,
-  );
-
-  // reset page ถ้าค้นหาแล้วจำนวนหน้าลดลง
-  useEffect(() => {
-    setPage(1);
-  }, [search, selectedStatus, selectedRisks, selectedParties, retention]);
-
-  // ================= GRID CONFIG =================
-  const colConfig = {
-    activity: 2,
-    parties: 1.25,
-    purpose: 1.5,
-    legal: 1.5,
-    retention: 1.5,
-    risk: 1,
-    status: 1,
-    action: 0.1,
-  };
-
-  const col = Object.values(colConfig)
-    .map((v) => `${v}fr`)
-    .join(" ");
-
-  // ================= STYLE MAP =================
-  const riskMap = {
-    Critical: {
-      color: "bg-[#F0AFBE] text-[#BD263F]",
-      icon: <ChevronsUp size={14} />,
-    },
-    "At Risk": {
-      color: "bg-[#F3E3AE] text-[#A37D00]",
-      icon: <ChevronUp size={14} />,
-    },
-    Stable: {
-      color: "bg-[#D1E7F0] text-[#0078A3]",
-      icon: <ChevronsDown size={14} />,
-    },
-    Safe: {
-      color: "bg-[#B5DDD8] text-[#228679]",
-      icon: <ChevronDown size={14} />,
-    },
-  };
-
-  const statusMap: Record<
-    "Pending" | "Complete" | "Revision",
-    {
-      color: string;
-      icon: React.ReactElement;
-    }
-  > = {
-    Pending: {
-      color: "border border-gray-300 text-[#03369D] bg-transparent",
-      icon: <ClockFading size={14} />,
-    },
-    Complete: {
-      color: "border border-gray-300 text-[#1C635A] bg-transparent",
-      icon: <CheckCircle size={14} />,
-    },
-    Revision: {
-      color: "border border-gray-300 text-[#AC273C] bg-transparent",
-      icon: <AlertTriangle size={14} />,
-    },
-  };
-
-  const badgeBase =
-    "flex items-center justify-center gap-1 px-3 py-[4px] rounded-full text-[11px] font-medium min-w-[100px]";
-
-  const [tableWidth, setTableWidth] = useState<number | string>("auto");
-  const [detailWidth, setDetailWidth] = useState<number>(400);
-
-  const initResize = (e: React.MouseEvent) => {
-    const startX = e.clientX;
-    const startDetailWidth = detailWidth;
-
-    const onMouseMove = (e: MouseEvent) => {
-      const dx = startX - e.clientX;
-      let newWidth = startDetailWidth + dx;
-      if (newWidth < 300) newWidth = 300;
-      if (newWidth > 800) newWidth = 800;
-      setDetailWidth(newWidth);
-    };
-
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  };
-
-  return (
-    <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
+             
       {/* ================= Sidebar ================= */}
       <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4 flex-shrink-0">
         <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
@@ -1077,24 +848,6 @@ export default function RopaPage() {
             </div>
           )}
         </div>
-
-        {/* <div
->>>>>>> Stashed changes
-    className="flex-1 overflow-y-auto py-6 transition-all duration-300"
-    style={{ paddingLeft: selectedItem ? "40px" : "120px", paddingRight: selectedItem ? "40px" : "120px" }}
-  >
-                <div className="max-w-[1440px] mx-auto">
-                    <div className="mb-4">
-                        <div className="mt-6">
-                            <div className="bg-white rounded-xl shadow p-3">
-                                <div className="w-full flex flex-col">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                </div>
-                  <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} /> */}
       </main>
     </div>
   );
