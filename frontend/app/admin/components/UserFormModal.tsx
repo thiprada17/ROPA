@@ -41,7 +41,6 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
     const handleSave = async () => {
         try {
             const token = localStorage.getItem("token");
-
             const res = await fetch("http://localhost:8000/api/admin/users", {
                 method: "POST",
                 headers: {
@@ -52,14 +51,9 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
             });
 
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Create failed");
 
-            if (!res.ok) {
-                throw new Error(data.error || "Create failed");
-            }
-
-            console.log("SUCCESS:", data);
-
-            onSave(data.user);
+            onSave(data.user); // trigger fetchUsers ใน parent
             onClose();
 
         } catch (err: any) {
@@ -67,6 +61,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
             alert(err.message);
         }
     };
+
     const [departmentsData, setDepartmentsData] = useState<any[]>([]);
 
     useEffect(() => {

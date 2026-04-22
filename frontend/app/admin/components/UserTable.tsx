@@ -65,7 +65,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     onClick={() => onRowClick(item)}
                                 >
                                     {/* ชื่อ-นามสกุล */}
-                                    <div className="truncate font-medium text-[12px] text-gray-800 pr-2">{item.fullName}</div>
+                                    <div className="truncate font-medium text-[12px] text-gray-800 pr-2">{item.fullName || "-"}</div>
 
                                     {/* Email */}
                                     <div className="truncate text-[12px] text-gray-600 pr-2">{item.email}</div>
@@ -82,7 +82,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     </div>
 
                                     {/* ฝ่าย */}
-                                    <div className="text-gray-600 text-[12px]">{item.department}</div>
+                                    <div className="text-gray-600 text-[12px]">{item.department || "-"}</div>
 
                                     {/* ตำแหน่ง */}
                                     <div className="truncate text-gray-600 text-[12px]">{item.team}</div>
