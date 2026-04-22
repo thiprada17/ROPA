@@ -57,6 +57,8 @@ router.post('/forget-password', async (req, res) => {
   }
 })
 
+router.post('/login', login)
+
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -134,6 +136,4 @@ const { error: updateError } = await supabase
   }
 })
 
-router.post('/login', login)
-
-export default router
+export default router;
