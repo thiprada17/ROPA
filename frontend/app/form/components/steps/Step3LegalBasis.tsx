@@ -2,6 +2,11 @@
 "use client";
 import MultiSelect from "../../../components/MultiSelect";
 
+type Option = {
+  label: string;
+  value: string;
+};
+
 const legalBases = [
   "ความยินยอม (Consent)",
   "สัญญา (Contract)",
@@ -35,10 +40,13 @@ interface StepProps {
     minorConsent: { under10: string; age10to20: string };
   };
   errors: Record<string, boolean>;
+  options: {
+    legalBases: Option[];
+  };
   updateField: (field: string, value: any) => void;
 }
 
-export default function Step3LegalBasis({ formData, errors, updateField }: StepProps) {
+export default function Step3LegalBasis({ formData, errors, updateField, options }: StepProps) {
   return (
     <div className="space-y-6 font-prompt">
 
@@ -49,7 +57,7 @@ export default function Step3LegalBasis({ formData, errors, updateField }: StepP
           <div>
             <MultiSelect
               label="หมวดหมู่หลัก"
-              options={legalBases}
+              options={options.legalBases}
               selected={formData.primaryBases}
               onChange={(v) => updateField("primaryBases", v)}
               placeholder="เลือกฐานหลัก..."
@@ -61,7 +69,7 @@ export default function Step3LegalBasis({ formData, errors, updateField }: StepP
           <div>
             <MultiSelect
               label="หมวดหมู่เสริม (ถ้ามี)"
-              options={dataCategories}
+              options={[]}
               selected={formData.supplementaryBases}
               onChange={(v) => updateField("supplementaryBases", v)}
               placeholder="เลือกประเภทเสริม..."

@@ -58,6 +58,8 @@ router.post('/forget-password', async (req, res) => {
   }
 })
 
+router.post('/login', login)
+
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
