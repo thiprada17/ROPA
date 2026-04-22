@@ -2,14 +2,16 @@ import express from 'express'
 import crypto from 'crypto'
 import supabase from '../lib/supabase.js'
 import { sendOtpEmail } from '../lib/mailer.js'
-
+import { login } from '../controllers/authController.js'
 const router = express.Router()
+import bcrypt from 'bcrypt'
 
 router.post('/forget-password', async (req, res) => {
   try {
     const { email } = req.body
 
     const { data, error } = await supabase
+     .schema('auths')
       .from('users')
       .select('email')
       .eq('email', email)
@@ -108,10 +110,13 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'OTP หมดอายุ' });
     }
 
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ password: newPassword })
-      .eq('email', email);
+const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+const { error: updateError } = await supabase
+  .schema('auths')
+  .from('users')
+  .update({ password: hashedPassword })
+  .eq('email', email);
 
     if (updateError) {
       return res.status(500).json({ error: 'เปลี่ยนรหัสไม่สำเร็จ' });
@@ -128,5 +133,7 @@ router.post('/reset-password', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 })
+
+router.post('/login', login)
 
 export default router
