@@ -5,6 +5,7 @@ import { sendOtpEmail } from '../lib/mailer.js'
 import { login } from '../controllers/authController.js'
 const router = express.Router()
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 router.post('/forget-password', async (req, res) => {
   try {
@@ -135,5 +136,6 @@ const { error: updateError } = await supabase
 })
 
 router.post('/login', login)
+
 
 export default router
