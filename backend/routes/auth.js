@@ -2,6 +2,7 @@ import express from 'express'
 import crypto from 'crypto'
 import supabase from '../lib/supabase.js'
 import { sendOtpEmail } from '../lib/mailer.js'
+import { login } from '../controllers/authController.js'
 
 const router = express.Router()
 
@@ -54,6 +55,8 @@ router.post('/forget-password', async (req, res) => {
     })
   }
 })
+
+router.post('/login', login)
 
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
@@ -129,4 +132,4 @@ router.post('/reset-password', async (req, res) => {
   }
 })
 
-export default router
+export default router;

@@ -3,6 +3,11 @@
 import InputField from "../InputField";
 import SingleSelect from "../../../components/SingleSelect";
 
+type Option = {
+  label: string;
+  value: string;
+};
+
 const processingActivities = [
   "การจัดการลูกค้า",
   "การบริหารทรัพยากรบุคคล",
@@ -15,15 +20,18 @@ const processingActivities = [
 // Validation สำหรับ Step1
 export function validateStep1({
   dataOwner,
+  departmentId,
   processActivity,
   processingPurpose,
 }: {
   dataOwner: string;
+  departmentId: string;
   processActivity: string;
   processingPurpose: string;
 }) {
   return {
     dataOwner: !dataOwner.trim(), // true = error
+    departmentId: !departmentId.trim(),
     processActivity: !processActivity.trim(),
     processingPurpose: !processingPurpose.trim(), 
   };
@@ -32,18 +40,25 @@ export function validateStep1({
 interface StepProps {
   formData: {
     dataOwner: string;
+    departmentId: string;
     processActivity: string;
     processingPurpose: string;
   };
   errors: {
     dataOwner?: boolean;
+    departmentId?: boolean;
     processActivity?: boolean;
     processingPurpose?: boolean;
+  };
+  options: {
+    activityNames: Option[];
+    purposes: Option[];
+    departments: Option[];
   };
   updateField: (field: string, value: any) => void;
 }
 
-export default function Step1Activity({ formData, errors, updateField }: StepProps) {
+export default function Step1Activity({ formData, errors, updateField, options }: StepProps) {
   return (
     <div className="space-y-6 font-prompt">
       <InputField
@@ -57,10 +72,24 @@ export default function Step1Activity({ formData, errors, updateField }: StepPro
 
       <div>
         <label className="text-[14px] text-BLUE block mb-[5px] px-2">
+          หน่วยงาน <span className="text-red-500">*</span>
+        </label>
+        <SingleSelect
+          options={options.departments}
+          value={formData.departmentId}
+          onChange={(v) => updateField("departmentId", v)}
+          placeholder="เลือกหน่วยงาน..."
+          error={errors.departmentId}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="text-[14px] text-BLUE block mb-[5px] px-2">
           กิจกรรมการประมวลผล <span className="text-red-500">*</span>
         </label>
         <SingleSelect
-          options={processingActivities}
+          options={options.activityNames}
           value={formData.processActivity}
           onChange={(v) => updateField("processActivity", v)}
           placeholder="เลือกกิจกรรมการประมวลผล..."
@@ -70,13 +99,16 @@ export default function Step1Activity({ formData, errors, updateField }: StepPro
       </div>
 
       <div>
-        <InputField
-          id="processingPurpose"
-          label="วัตถุประสงค์ของการประมวลผล"
+        <label className="text-[14px] text-BLUE block mb-[5px] px-2">
+          วัตถุประสงค์ของการประมวลผล <span className="text-red-500">*</span>
+        </label>
+        <SingleSelect
+          options={options.purposes}
           value={formData.processingPurpose}
           onChange={(v) => updateField("processingPurpose", v)}
-          placeholder="ระบุวัตถุประสงค์ของการประมวลผลข้อมูลส่วนบุคคล"
+          placeholder="เลือกวัตถุประสงค์ของการประมวลผล..."
           error={errors.processingPurpose}
+          required
         />
       </div>
     </div>

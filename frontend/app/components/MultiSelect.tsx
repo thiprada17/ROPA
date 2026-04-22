@@ -2,9 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 
+type Option = {
+  label: string;
+  value: string;
+};
+
 interface MultiSelectProps {
   label?: string; // label เป็น optional
-  options: string[];
+  options: Option[];
   selected?: string[];
   onChange: (val: string[]) => void;
   placeholder?: string;
@@ -27,8 +32,12 @@ export default function MultiSelect({
   const ref = useRef<HTMLDivElement>(null);
   const selectId = label ? label.replace(/\s+/g, "-").toLowerCase() : "";
 
-  const toggle = (opt: string) => {
-    onChange(selected.includes(opt) ? selected.filter((s) => s !== opt) : [...selected, opt]);
+  const toggle = (val: string) => {
+    onChange(
+      selected.includes(val)
+        ? selected.filter((s) => s !== val)
+        : [...selected, val]
+    );
   };
 
   useEffect(() => {
@@ -38,6 +47,8 @@ export default function MultiSelect({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const selectedOptions = options.filter((o) => selected.includes(o.value));
 
   return (
     <div ref={ref} className="relative">
@@ -55,20 +66,20 @@ export default function MultiSelect({
           ${className}`}
       >
         <div className="flex flex-wrap gap-1.5 flex-1">
-          {selected.length === 0 ? (
+          {selectedOptions.length === 0 ? (
             <span className="text-sm text-gray-400">{placeholder}</span>
           ) : (
-            selected.map((s) => (
+            selectedOptions.map((opt) => (
               <span
-                key={s}
+                key={opt.value}
                 className="flex items-center gap-1 bg-[#e8edf8] text-[#1a3a8f] text-[12px] px-2 py-0.5 rounded-md"
               >
-                {s}
+                {opt.label}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggle(s);
+                    toggle(opt.value);
                   }}
                   className="hover:text-red-500 leading-none"
                 >
@@ -113,21 +124,24 @@ export default function MultiSelect({
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
           {options.map((opt) => (
             <div
-              key={opt}
-              onClick={() => toggle(opt)}
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
               className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-[#f0f4ff] text-gray-700"
             >
               <div
-                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selected.includes(opt) ? "bg-[#1a3a8f] border-[#1a3a8f]" : "border-gray-300"
-                  }`}
+                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                  selected.includes(opt.value)
+                    ? "bg-[#1a3a8f] border-[#1a3a8f]"
+                    : "border-gray-300"
+                }`}
               >
-                {selected.includes(opt) && (
+                {selected.includes(opt.value) && (
                   <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </div>
-              {opt}
+              {opt.label}
             </div>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabaseClient.js';
+import supabase from '../lib/supabase.js';
 
 export async function findUserByIdentifier(identifier) {
   const { data, error } = await supabase
