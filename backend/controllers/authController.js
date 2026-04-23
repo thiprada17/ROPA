@@ -43,7 +43,14 @@ export async function login(req, res) {
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    let isPasswordValid = false;
+
+    if (user.password.startsWith("$2b$")) {
+      isPasswordValid = await bcrypt.compare(password, user.password);
+    } else {
+      isPasswordValid = password === user.password;
+    }
 
     if (!isPasswordValid) {
       const { newAttempts, shouldLock } = await incrementFailedAttempts(
