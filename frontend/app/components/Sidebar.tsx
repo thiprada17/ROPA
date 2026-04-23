@@ -1,7 +1,9 @@
 // app/components/Sidebar.tsx
 "use client";
 
-import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness, UserLock, Settings, LogOut, User} from "lucide-react";
+import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness, UserLock, Settings, LogOut, User,
+          UserRoundCog, UserStar
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +13,8 @@ const menuItems = [
   { icon: ShieldPlus, href: "/Form", label: "CREATE ROPA" },
   { icon: ShieldAlert, href: "/Ropa", label: "ROPA" },
   { icon: Scale, href: "/legal", label: "LEGAL" },
+  { icon: UserRoundCog, href: "/admin", label: "ADMIN" },
+  { icon: UserStar, href: "/dpo", label: "DPO" },
 ];
 
 const userItems = [
