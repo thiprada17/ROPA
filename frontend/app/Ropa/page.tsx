@@ -227,16 +227,179 @@ export default function RopaPage() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
-            <Sidebar userName="test" userEmail="test@example.com" />
-            {/* ================= Main ================= */}
-            {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
-            <main className="ml-16 flex-1 flex flex-col overflow-hidden">
-                {/* ฝั่งซ้ายโรป้า */}
-                {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
-                <div className="px-10 pt-6 pb-4 shrink-0">
-                    <div className="mb-3">
-                        <Breadcrumb items={breadcrumbItems} />
+      matchSearch && matchStatus && matchRisk && matchRetention && matchParties
+    );
+  });
+
+  // ================= PAGINATION =================
+  const itemsPerPage = 10;
+  const totalItems = filteredData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
+
+  // reset page ถ้าค้นหาแล้วจำนวนหน้าลดลง
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedStatus, selectedRisks, selectedParties, retention]);
+
+  // ================= GRID CONFIG =================
+  const colConfig = {
+    activity: 2,
+    parties: 1.25,
+    purpose: 1.5,
+    legal: 1.5,
+    retention: 1.5,
+    risk: 1,
+    status: 1,
+    action: 0.1,
+  };
+
+  const col = Object.values(colConfig)
+    .map((v) => `${v}fr`)
+    .join(" ");
+
+  // ================= STYLE MAP =================
+  const riskMap = {
+    Critical: {
+      color: "bg-[#F0AFBE] text-[#BD263F]",
+      icon: <ChevronsUp size={14} />,
+    },
+    "At Risk": {
+      color: "bg-[#F3E3AE] text-[#A37D00]",
+      icon: <ChevronUp size={14} />,
+    },
+    Stable: {
+      color: "bg-[#D1E7F0] text-[#0078A3]",
+      icon: <ChevronsDown size={14} />,
+    },
+    Safe: {
+      color: "bg-[#B5DDD8] text-[#228679]",
+      icon: <ChevronDown size={14} />,
+    },
+  };
+
+  const statusMap: Record<
+    "Pending" | "Complete" | "Revision",
+    {
+      color: string;
+      icon: React.ReactElement;
+    }
+  > = {
+    Pending: {
+      color: "border border-gray-300 text-[#03369D] bg-transparent",
+      icon: <ClockFading size={14} />,
+    },
+    Complete: {
+      color: "border border-gray-300 text-[#1C635A] bg-transparent",
+      icon: <CheckCircle size={14} />,
+    },
+    Revision: {
+      color: "border border-gray-300 text-[#AC273C] bg-transparent",
+      icon: <AlertTriangle size={14} />,
+    },
+  };
+
+  const badgeBase =
+    "flex items-center justify-center gap-1 px-3 py-[4px] rounded-full text-[11px] font-medium min-w-[100px]";
+
+  const [tableWidth, setTableWidth] = useState<number | string>("auto");
+  const [detailWidth, setDetailWidth] = useState<number>(400);
+
+  const initResize = (e: React.MouseEvent) => {
+    const startX = e.clientX;
+    const startDetailWidth = detailWidth;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const dx = startX - e.clientX;
+      let newWidth = startDetailWidth + dx;
+      if (newWidth < 300) newWidth = 300;
+      if (newWidth > 800) newWidth = 800;
+      setDetailWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
+      {/* ================= Sidebar ================= */}
+      <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4 flex-shrink-0">
+        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
+          LOGO
+        </div>
+
+        <div className="flex flex-col gap-6 mt-4">
+          <div className="w-6 h-6 bg-gray-500 rounded"></div>
+          <div className="w-6 h-6 bg-gray-500 rounded"></div>
+          <div className="w-6 h-6 bg-gray-500 rounded"></div>
+        </div>
+
+        <div className="mt-auto w-10 h-10 bg-gray-300 rounded-full"></div>
+      </aside>
+
+      {/* ================= Main ================= */}
+      {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* ฝั่งซ้ายโรป้า */}
+        {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
+        <div className="px-10 pt-6 pb-4 shrink-0">
+          <div className="mb-3">
+            <Breadcrumb items={breadcrumbItems} />
+          </div>
+          {/* LINE DIVIDER */}
+          <div className="border-b border-gray-200 mb-4" />
+          <br />
+          {/* FILTER + ACTIONS */}
+          <div className="flex flex-col md:flex-row md:justify-between gap-4 items-start md:items-center">
+            {/* ================= DATE FILTER ================= */}
+            <div className="relative" ref={ref}>
+              <button
+                onClick={() => setOpen(!open)}
+                className="flex items-center justify-between gap-2 bg-white border rounded-lg px-4 h-[40px] w-[274px] shadow-sm hover:border-gray-400 transition"
+              >
+                <span className="text-sm flex items-center gap-2 text-[#1C1B1F]">
+                  <Calendar size={16} className="shrink-0" />
+                  <span className="truncate">
+                    {startDate && endDate ? (
+                      isSameDay ? (
+                        <>
+                          {formatDate(startDate)}
+                          {isToday && (
+                            <span className="text-[#03369D]">(today)</span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {formatDate(startDate)}
+                          <span className="text-gray-400 mx-1">-</span>
+                          {formatDate(endDate)}
+                        </>
+                      )
+                    ) : (
+                      <span className="text-[#1C1B1F]">เลือกช่วงวันที่</span>
+                    )}
+                  </span>
+                </span>
+
+                <ChevronDown size={16} className="text-[#A6A6A6]" />
+              </button>
+
+              {open && (
+                <div className="absolute mt-2 w-[264px] bg-white border rounded-xl shadow-lg p-4 z-20">
+                  {/* header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-sm font-semibold text-[#1C1B1F]">
+                      เลือกช่วงวันที่
                     </div>
                     {/* LINE DIVIDER */}
                     <div className="border-b border-gray-200 mb-4" />
@@ -249,30 +412,22 @@ export default function RopaPage() {
                                 onClick={() => setOpen(!open)}
                                 className="flex items-center justify-between gap-2 bg-white border rounded-lg px-4 h-[40px] w-[274px] shadow-sm hover:border-gray-400 transition"
                             >
-                                <span className="text-sm flex items-center gap-2 text-[#1C1B1F]">
-                                    <Calendar size={16} className="shrink-0" />
-                                    <span className="truncate">
-                                        {startDate && endDate ? (
-                                            isSameDay ? (
-                                                <>
-                                                    {formatDate(startDate)}
-                                                    {isToday && <span className="text-[#03369D]">(today)</span>}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {formatDate(startDate)}
-                                                    <span className="text-gray-400 mx-1">-</span>
-                                                    {formatDate(endDate)}
-                                                </>
-                                            )
-                                        ) : (
-                                            <span className="text-[#616872] text-[12px]">เลือกช่วงวันที่</span>
-                                        )}
-                                    </span>
-                                </span>
+                              {l}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[#A6A6A6] text-[11px]">
+                            ไม่มีข้อมูล
+                          </span>
+                        )}
+                      </div>
 
-                                <ChevronDown size={16} className="text-[#A6A6A6]" />
-                            </button>
+                      {/* retention */}
+                      <div>
+                        <span className="px-4 text-[#1C1B1F]">
+                          {item.retention?.retentionPeriod}
+                        </span>
+                      </div>
 
                             {open && (
                                 <div className="absolute mt-2 w-[264px] bg-white border rounded-xl shadow-lg p-4 z-20">
@@ -454,10 +609,10 @@ export default function RopaPage() {
                             className="flex-shrink-0 rounded-xl overflow-hidden shadow"
                             style={{ width: detailWidth }}
                         >
-                            <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
-                        </div>
-                    )}
-                </div>
+                          {riskMap[item.risk as keyof typeof riskMap]?.icon}
+                          {item.risk}
+                        </span>
+                      </div>
 
              
       {/* ================= Sidebar ================= */}
@@ -852,6 +1007,7 @@ export default function RopaPage() {
             </div>
           )}
         </div>
+
       </main>
     </div>
   );
