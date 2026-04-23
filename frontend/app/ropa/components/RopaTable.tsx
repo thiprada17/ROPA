@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { RopaItem } from "./DetailCard";
+import { RopaItem } from "../types/ropa";
 import { EllipsisVertical } from "lucide-react";
 
 interface Props {

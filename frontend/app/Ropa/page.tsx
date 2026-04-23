@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import DetailCard from "./components/DetailCard";
 import { RopaItem } from "./types/ropa";
+import Sidebar from "../components/Sidebar";
 
 export default function RopaPage() {
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
@@ -331,8 +332,8 @@ export default function RopaPage() {
   return (
     <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
       {/* ================= Sidebar ================= */}
-      <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4 flex-shrink-0">
-        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
+      <aside className="w-20 text-white flex flex-col items-center py-4 flex-shrink-0">
+        {/* <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
           LOGO
         </div>
 
@@ -342,7 +343,8 @@ export default function RopaPage() {
           <div className="w-6 h-6 bg-gray-500 rounded"></div>
         </div>
 
-        <div className="mt-auto w-10 h-10 bg-gray-300 rounded-full"></div>
+        <div className="mt-auto w-10 h-10 bg-gray-300 rounded-full"></div> */}
+        <Sidebar userEmail="test@gmail.com" userName="test"/>
       </aside>
 
       {/* ================= Main ================= */}

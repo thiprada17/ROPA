@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
-  { icon: ShieldPlus, href: "/Form", label: "CREATE ROPA" },
+  { icon: ShieldPlus, href: "/form", label: "CREATE ROPA" },
   { icon: ShieldAlert, href: "/Ropa", label: "ROPA" },
   { icon: Scale, href: "/legal", label: "LEGAL" },
   { icon: UserRoundCog, href: "/admin", label: "ADMIN" },
@@ -21,7 +21,7 @@ const userItems = [
   { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
   { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
   { icon: Settings, href: "/settings", label: "SETTING" },
-  { icon: LogOut, href: "/logout", label: "LOG OUT", rotate: true },
+  { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
 ];
 
 interface SidebarProps {
