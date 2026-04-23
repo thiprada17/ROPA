@@ -26,6 +26,8 @@ import DetailCard from "./components/DetailCard";
 import { RopaItem } from "./types/ropa";
 import Sidebar from "../components/Sidebar";
 
+const role = typeof window !== "undefined" ? localStorage.getItem("role") as "DPO" | "User" : undefined;
+
 export default function RopaPage() {
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
   // ================= BREADCRUMB ================
@@ -720,6 +722,7 @@ export default function RopaPage() {
               <DetailCard
                 item={selectedItem}
                 onClose={() => setSelectedItem(null)}
+                role={role}
               />
             </div>
           )}
