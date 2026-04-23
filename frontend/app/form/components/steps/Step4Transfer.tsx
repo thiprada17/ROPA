@@ -4,6 +4,11 @@ import InputField from "../InputField";
 import SingleSelect from "../../../components/SingleSelect";
 import MultiSelect from "../../../components/MultiSelect";
 
+type Option = {
+  label: string;
+  value: string;
+};
+
 const countries = ["สหรัฐอเมริกา", "สหราชอาณาจักร", "ญี่ปุ่น", "สิงคโปร์", "เยอรมนี"];
 const methods = ["เอกสาร", "API", "FTP", "อีเมล", "ระบบดิจิทัล"];
 const standards = ["GDPR", "PDPA", "APEC Privacy Framework", "ISO 27001"];
@@ -43,10 +48,15 @@ interface StepProps {
         legalExemption: string[];
     };
     errors: Record<string, boolean>;
+    options: {
+        transferMethods: Option[];
+        protectionStandards: Option[];
+        legalExemptions: Option[];
+    };
     updateField: (field: string, value: any) => void;
 }
 
-export default function Step4Transfer({ formData, errors, updateField }: StepProps) {
+export default function Step4Transfer({ formData, errors, updateField, options }: StepProps) {
     return (
         <div className="space-y-6 font-prompt">
             {/* มีการโอนข้อมูลต่างประเทศ */}
@@ -70,6 +80,8 @@ export default function Step4Transfer({ formData, errors, updateField }: StepPro
                             </span>
                         </label>
                     ))}
+
+                    {/* country = text เหมือนเดิม (backend เก็บ text) */}
                     {formData.hasTransferAbroad === "มี" && (
                         <div className="flex items-center gap-2">
                             <span className="text-[12px] text-gray-600 whitespace-nowrap">โปรดระบุประเทศปลายทาง :</span>
@@ -110,6 +122,7 @@ export default function Step4Transfer({ formData, errors, updateField }: StepPro
                             </span>
                         </label>
                     ))}
+
                     {formData.isToSubsidiary === "ใช่" && (
                         <div className="flex items-center gap-2">
                             <span className="text-[12px] text-gray-600 whitespace-nowrap">โปรดระบุชื่อบริษัท :</span>
@@ -129,14 +142,15 @@ export default function Step4Transfer({ formData, errors, updateField }: StepPro
                 </div>
             </div>
 
-            {/* วิธีโอน มาตรฐาน */}
+            {/* วิธีโอน */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="mt-[18px]">
                     <label className="text-sm font-medium text-[#1a3a8f] block mb-1">
                         วิธีการโอนข้อมูล <span className="text-red-500">*</span>
                     </label>
+
                     <SingleSelect
-                        options={methods}
+                        options={options.transferMethods}
                         value={formData.transferMethod}
                         onChange={(v) => updateField("transferMethod", v)}
                         placeholder="เลือกวิธีการโอนข้อมูล"
@@ -144,10 +158,11 @@ export default function Step4Transfer({ formData, errors, updateField }: StepPro
                         required
                     />
                 </div>
+
                 <div className="mt-[16px]">
                     <MultiSelect
                         label="มาตรฐานการคุ้มครองข้อมูลส่วนบุคคลของประเทศปลายทาง"
-                        options={standards}
+                        options={options.protectionStandards}
                         selected={formData.dataProtectionStandard}
                         onChange={(v) => updateField("dataProtectionStandard", v)}
                         placeholder="เลือกมาตรฐาน"
@@ -159,7 +174,7 @@ export default function Step4Transfer({ formData, errors, updateField }: StepPro
             <div>
                 <MultiSelect
                     label="ข้อยกเว้นตามมาตรา 28"
-                    options={exemptions}
+                    options={options.legalExemptions}
                     selected={formData.legalExemption}
                     onChange={(v) => updateField("legalExemption", v)}
                     placeholder="เลือกข้อยกเว้น"

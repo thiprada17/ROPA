@@ -1,7 +1,9 @@
 // app/components/Sidebar.tsx
 "use client";
 
-import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness, UserLock, Settings, LogOut, User} from "lucide-react";
+import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness, UserLock, Settings, LogOut, User,
+          UserRoundCog, UserStar
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -9,15 +11,17 @@ import { useState } from "react";
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
   { icon: ShieldPlus, href: "/form", label: "CREATE ROPA" },
-  { icon: ShieldAlert, href: "/ropa", label: "ROPA" },
+  { icon: ShieldAlert, href: "/Ropa", label: "ROPA" },
   { icon: Scale, href: "/legal", label: "LEGAL" },
+  { icon: UserRoundCog, href: "/admin", label: "ADMIN" },
+  { icon: UserStar, href: "/dpo", label: "DPO" },
 ];
 
 const userItems = [
   { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
   { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
   { icon: Settings, href: "/settings", label: "SETTING" },
-  { icon: LogOut, href: "/logout", label: "LOG OUT", rotate: true },
+  { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
 ];
 
 interface SidebarProps {

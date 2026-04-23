@@ -14,6 +14,7 @@ import TabTransfer from "./tabs/TabTransfer";
 import TabProcessor from "./tabs/TabProcessor";
 import TabHistory from "./tabs/TabHistory";
 import { RopaItem } from "../types/ropa";
+import Link from "next/link";
 
 
 const riskMap: Record<string, { color: string; icon: React.ReactNode }> = {
@@ -198,7 +199,9 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                                     setShowMenu(false);
                                 }}
                             >
+                                <Link href="/form">
                                 <div className="flex flex-col-2 gap-2"><Pencil size={14} /> แก้ไขกิจกรรม</div>
+                                </Link>
                             </button>
 
                             <button
