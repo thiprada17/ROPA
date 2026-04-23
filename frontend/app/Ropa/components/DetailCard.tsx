@@ -312,6 +312,26 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                     {activeTab === "security" && <TabSecurity item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRow={InfoRow} />}
                     {activeTab === "processor" && <TabProcessor item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
                     {activeTab === "history" && <TabHistory item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
+                    {activeTab === "approve" && role === "DPO" && (
+        <TabApprove
+            itemId={item.id}
+            currentStatus={item.status}
+            onUpdateStatus={(status, comments) => {
+                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    body: JSON.stringify({ status, comments }),
+                })
+                .then(() => {
+                    alert("อัปเดตสถานะเรียบร้อย");
+                })
+                .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
+            }}
+        />
+    )}
                 </div>
             </div>
         </div>

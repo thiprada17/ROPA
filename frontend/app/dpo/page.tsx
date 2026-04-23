@@ -11,6 +11,8 @@ import DetailCard from "../Ropa/components/DetailCard";
 import FilterModal from "../Ropa/components/FilterModal";
 import { RopaItem } from "../Ropa/types/ropa";
 
+const role = typeof window !== "undefined" ? localStorage.getItem("role") as "DPO" | "User" : undefined;
+
 export default function DpoPage() {
   const breadcrumbItems = [
     { label: <Shield size={16} />, href: "/" },
@@ -316,7 +318,7 @@ export default function DpoPage() {
           {/* Detail card */}
           {selectedItem && (
             <div className="flex-shrink-0 rounded-xl overflow-hidden shadow" style={{ width: detailWidth }}>
-              <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+              <DetailCard item={selectedItem} onClose={() => setSelectedItem(null)} role={role} />
             </div>
           )}
         </div>

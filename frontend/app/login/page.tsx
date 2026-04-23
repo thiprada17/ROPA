@@ -70,11 +70,14 @@ export default function LoginPage() {
       console.log(data)
 
       const role = data.user.role;
+      localStorage.setItem("role", role);
 
       if (role === "Admin") {
         router.push("/admin");
       } else if (role === "User") {
         router.push("/dashboard");
+      } else if (role === "DPO") {
+        router.push("/dpo");
       }
 
     } catch (err) {
