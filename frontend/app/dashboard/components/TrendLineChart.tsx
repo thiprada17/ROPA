@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import {
     LineChart,
     Line,
@@ -31,9 +32,21 @@ export default function TrendLineChart({ data }: Props) {
 
             {/* HEADER */}
             <div className="flex justify-between mb-4">
+                <div className="flex items-center gap-2 relative group">
                 <p className="text-sm text-gray-500 font-medium">
                     ROPA Trend
                 </p>
+                {/* INFO ICON */}
+                    <Info
+                        size={14}
+                        className="text-gray-400 cursor-pointer"
+                    />
+
+                    {/* TOOLTIP */}
+                    <div className="font-prompt absolute left-0 top-6 w-[220px] text-xs border border-gray-300 bg-gray-100 text-black px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                        แผนภูมิเส้นแสดงแนวโน้มจำนวนรายการ ROPA ที่เพิ่มเข้าสู่ระบบ
+                    </div>
+                </div>
             </div>
 
             {/* CHART */}
