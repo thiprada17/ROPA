@@ -40,21 +40,40 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
     console.log(form)
     const handleSave = async () => {
         try {
-            const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:8000/api/admin/users", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(form),
-            });
+            if (mode == "create") {
+                const token = localStorage.getItem("token");
+                const res = await fetch("http://localhost:8000/api/admin/users", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(form),
+                });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Create failed");
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Create failed");
 
-            onSave(data.user); // trigger fetchUsers ใน parent
-            onClose();
+                onSave(data.user); // trigger fetchUsers ใน parent
+                onClose();
+            } else {
+                const token = localStorage.getItem("token");
+                const res = await fetch("http://localhost:8000/api/admin/edit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(form),
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Create failed");
+
+                onSave(data.user); // trigger fetchUsers ใน parent
+                onClose();
+            }
+
 
         } catch (err: any) {
             console.error(err);

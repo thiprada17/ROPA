@@ -1,5 +1,5 @@
 import express from 'express'
-import { createUser, getUsers } from '../controllers/adminController.js'
+import { createUser, getUsers, editUser } from '../controllers/adminController.js'
 import { verifyToken, requireAdmin } from '../middleware/auth.js'
 import supabase from '../lib/supabase.js'
 
@@ -27,5 +27,6 @@ router.get('/departments', async (req, res) => {
 })
 
 router.get('/users/get', getUsers)
+router.put('/edit', verifyToken, requireAdmin, editUser)
 
 export default router
