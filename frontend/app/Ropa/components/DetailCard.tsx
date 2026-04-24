@@ -16,6 +16,7 @@ import TabHistory from "./tabs/TabHistory";
 import { RopaItem } from "../types/ropa";
 import TabApprove from "./tabs/TabApprove";
 import Link from "next/link";
+import { RopaItem } from "../types/ropa";
 
 const riskMap: Record<string, { color: string; icon: React.ReactNode }> = {
 
