@@ -38,13 +38,13 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
     const handleSave = () => {
-        onSave(form);
-        onClose();
+        const payload = mode === "edit" && user ? { id: user.id, ...form } : form;
+        onSave(payload);
     };
 
     return (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full sm:w-[75vw] max-h-[90vh] overflow-y-auto my-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-[600px] sm:w-[75vw] max-h-[calc(100vh-2rem)] overflow-y-auto my-auto ml-[64px] sm:ml-[16px]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-[14px] font-semibold text-gray-800">

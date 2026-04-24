@@ -49,11 +49,27 @@ export default function AdminPage() {
 
     const handleSave = (data: Partial<UserData>) => {
         if (modal?.mode === "create") {
-            const newUser: UserData = { id: Date.now().toString(), fullName: "", email: "", password: "", phone: "", position: "", department: "", team: "", role: "User", accountStatus: "Active", lockStatus: "Unlocked", createdAt: new Date().toISOString().split("T")[0], ...data } as UserData;
+            const newUser: UserData = {
+                id: Date.now().toString(),
+                fullName: "",
+                email: "",
+                password: "",
+                phone: "",
+                position: "",
+                department: "",
+                team: "",
+                role: "User",
+                accountStatus: "Active",
+                lockStatus: "Unlocked",
+                createdAt: new Date().toISOString().split("T")[0],
+                ...data
+            } as UserData;
             setUsers(prev => [newUser, ...prev]);
-        } else if (modal?.user) {
+        } else if (modal?.mode === "edit" && modal.user) {
+            // เปนแบบนี้น่าจะ put ได้นะ
             setUsers(prev => prev.map(u => u.id === modal.user!.id ? { ...u, ...data } : u));
         }
+        setModal(null);
     };
 
     const handleDelete = (id: string) => setUsers(prev => prev.filter(u => u.id !== id));
@@ -62,7 +78,7 @@ export default function AdminPage() {
         <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
             {/* Sidebar placeholder */}
             <aside className="w-16 bg-gray-700 flex-shrink-0" />
-            < Sidebar userName="txt" userEmail="testt@mail.com"/>
+            < Sidebar userName="txt" userEmail="testt@mail.com" />
 
             {/* Main */}
             <main className="flex-1 overflow-y-auto px-4 md:px-[40px] xl:px-[80px] py-6">
@@ -70,8 +86,8 @@ export default function AdminPage() {
 
                     {/* Breadcrumb */}
                     <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-3">
-                        <span><ShieldAlert size={18}/></span>
-                        <span><ChevronRight size={15}/> </span>
+                        <span><ShieldAlert size={18} /></span>
+                        <span><ChevronRight size={15} /> </span>
                         <span className="text-gray-700 font-gabarito text-[12px]">ADMIN</span>
                     </div>
 
