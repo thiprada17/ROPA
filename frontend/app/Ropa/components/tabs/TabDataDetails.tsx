@@ -16,7 +16,7 @@ export default function TabDataDetails({
 }) {
     return (
         <div className="space-y-2">
-
+{/* เปลี่ยน datacat อันนี้เปน data class */}
             <InfoRowPlain label="ประเภทข้อมูลส่วนบุคคล">
                 <RenderValue value={item.dataCategories} />
             </InfoRowPlain>
@@ -37,12 +37,12 @@ export default function TabDataDetails({
                 />
             </div>
 
+            {/* <InfoRowPlain label="หมวดหมู่ของข้อมูล">
+                <RenderValue value={item.dataSubjects} />
+            </InfoRowPlain> */}
+
             <InfoRowPlain label="ประเภทของข้อมูล">
                 <RenderValue value={item.dataTypes} />
-            </InfoRowPlain>
-
-            <InfoRowPlain label="เจ้าของข้อมูล">
-                <RenderValue value={item.dataSubjects} />
             </InfoRowPlain>
 
             <InfoRowPlain label="วิธีที่ได้มาซึ่งข้อมูล">
