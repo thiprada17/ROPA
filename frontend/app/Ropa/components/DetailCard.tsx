@@ -16,7 +16,6 @@ import TabHistory from "./tabs/TabHistory";
 import { RopaItem } from "../types/ropa";
 import TabApprove from "./tabs/TabApprove";
 import Link from "next/link";
-import { RopaItem } from "../types/ropa";
 
 const riskMap: Record<string, { color: string; icon: React.ReactNode }> = {
 
@@ -120,8 +119,8 @@ export const display = (val?: string | string[] | null) => {
 interface DetailCardProps {
     item: RopaItem | null;
     onClose: () => void;
-    role?: "DPO" | "User" | "Admin";
-}
+    role?: "DPO" | "User" | "Admin" | "Viewer"};
+
 
 const RenderValue = ({ value }: { value?: string[] }) => {
     if (!value || value.length === 0) {

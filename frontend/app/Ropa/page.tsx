@@ -206,25 +206,15 @@ export default function RopaPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
+    <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
       {/* ================= Sidebar ================= */}
-      <aside className="w-20 bg-gray-700 text-white flex flex-col items-center py-4 flex-shrink-0">
-        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-black mb-6">
-          LOGO
-        </div>
-
-        <div className="flex flex-col gap-6 mt-4">
-          <div className="w-6 h-6 bg-gray-500 rounded"></div>
-          <div className="w-6 h-6 bg-gray-500 rounded"></div>
-          <div className="w-6 h-6 bg-gray-500 rounded"></div>
-        </div>
-
-        <div className="mt-auto w-10 h-10 bg-gray-300 rounded-full"></div>
+      <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
+        <Sidebar userEmail="" userName=""/>
       </aside>
 
       {/* ================= Main ================= */}
       {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden text-[12px] ">
         {/* ฝั่งซ้ายโรป้า */}
         {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
         <div className="px-10 pt-6 pb-4 shrink-0">
