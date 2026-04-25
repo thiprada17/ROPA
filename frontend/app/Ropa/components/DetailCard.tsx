@@ -33,7 +33,7 @@ const statusMap: Record<string, { color: string; icon: React.ReactNode }> = {
 
 const badgeBase = "inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap";
 
-type Tab = "dataDetails" | "legal" | 'transfer' | "retention" | "security" | "processor" | "history" | "approve"  ;
+type Tab = "dataDetails" | "legal" | 'transfer' | "retention" | "security" | "processor" | "history" | "approve";
 
 const Tag = ({ label }: { label: string }) => (
     <span className="bg-[#DFE9FF] text-[#03369D] px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap">
@@ -119,7 +119,8 @@ export const display = (val?: string | string[] | null) => {
 interface DetailCardProps {
     item: RopaItem | null;
     onClose: () => void;
-    role?: "DPO" | "User" | "Admin" | "Viewer"};
+    role?: "DPO" | "User" | "Admin" | "Viewer"
+};
 
 
 const RenderValue = ({ value }: { value?: string[] }) => {
@@ -286,7 +287,8 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
 
                 {/* tabs bar */}
                 <div className="border-b border-gray-100">
-                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none">
+                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none scroll-smooth"
+                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}>
                         {tabs.map((t) => (
                             <button
                                 key={t.key}
@@ -313,25 +315,25 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                     {activeTab === "processor" && <TabProcessor item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
                     {activeTab === "history" && <TabHistory item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
                     {activeTab === "approve" && role === "DPO" && (
-        <TabApprove
-            itemId={item.id}
-            currentStatus={item.status}
-            onUpdateStatus={(status, comments) => {
-                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                    body: JSON.stringify({ status, comments }),
-                })
-                .then(() => {
-                    alert("อัปเดตสถานะเรียบร้อย");
-                })
-                .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
-            }}
-        />
-    )}
+                        <TabApprove
+                            itemId={item.id}
+                            currentStatus={item.status}
+                            onUpdateStatus={(status, comments) => {
+                                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
+                                    method: "PUT",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                    },
+                                    body: JSON.stringify({ status, comments }),
+                                })
+                                    .then(() => {
+                                        alert("อัปเดตสถานะเรียบร้อย");
+                                    })
+                                    .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </div>
