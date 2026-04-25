@@ -69,7 +69,7 @@ export default function Step3LegalBasis({ formData, errors, updateField, options
           <div>
             <MultiSelect
               label="หมวดหมู่เสริม (ถ้ามี)"
-              options={[]}
+              options={options.legalBases}
               selected={formData.supplementaryBases}
               onChange={(v) => updateField("supplementaryBases", v)}
               placeholder="เลือกประเภทเสริม..."

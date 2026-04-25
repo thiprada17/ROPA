@@ -13,6 +13,8 @@ import { validateStep3 } from "./components/steps/Step3LegalBasis";
 import { validateStep4 } from "./components/steps/Step4Transfer";
 import { ProcessorData } from "./components/steps/Step7Processor";
 import { validateStep5 } from "./components/steps/Step5Retention";
+import Link from "next/link";
+import { useRouter } from "next/navigation"; 
 
 type Option = {
   label: string;
@@ -52,7 +54,7 @@ export default function FormPage() {
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState("");
   const [formOptions, setFormOptions] = useState<FormOptions | null>(null);
-
+  const router = useRouter();
   interface FormData {
     step1: {
       dataOwner: string;
@@ -256,6 +258,7 @@ export default function FormPage() {
       if (res.ok) {
         alert("Form submitted successfully!");
         console.log("SUCCESS:", data);
+        router.push('/Ropa')
       } else {
         alert(`Submission failed: ${data.error || "Unknown error"}`);
         console.error("SUBMIT ERROR:", data);

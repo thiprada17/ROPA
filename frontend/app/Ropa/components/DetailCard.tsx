@@ -14,7 +14,8 @@ import TabTransfer from "./tabs/TabTransfer";
 import TabProcessor from "./tabs/TabProcessor";
 import TabHistory from "./tabs/TabHistory";
 import { RopaItem } from "../types/ropa";
-
+import TabApprove from "./tabs/TabApprove";
+import Link from "next/link";
 
 const riskMap: Record<string, { color: string; icon: React.ReactNode }> = {
 
@@ -32,7 +33,7 @@ const statusMap: Record<string, { color: string; icon: React.ReactNode }> = {
 
 const badgeBase = "inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap";
 
-type Tab = "dataDetails" | "legal" | 'transfer' | "retention" | "security" | "processor" | "history";
+type Tab = "dataDetails" | "legal" | 'transfer' | "retention" | "security" | "processor" | "history" | "approve"  ;
 
 const Tag = ({ label }: { label: string }) => (
     <span className="bg-[#DFE9FF] text-[#03369D] px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap">
@@ -118,7 +119,8 @@ export const display = (val?: string | string[] | null) => {
 interface DetailCardProps {
     item: RopaItem | null;
     onClose: () => void;
-}
+    role?: "DPO" | "User" | "Admin" | "Viewer"};
+
 
 const RenderValue = ({ value }: { value?: string[] }) => {
     if (!value || value.length === 0) {
@@ -137,6 +139,8 @@ const RenderValue = ({ value }: { value?: string[] }) => {
         </>
     );
 };
+
+const role = typeof window !== "undefined" ? localStorage.getItem("role") as "DPO" | "User" | "Viewer" | "Admin" : undefined;
 
 export default function DetailCard({ item, onClose }: DetailCardProps) {
     const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
@@ -159,7 +163,7 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
     const risk = riskMap[item.risk] ?? { color: "bg-gray-100 text-gray-600", icon: null };
     const status = statusMap[item.status] ?? { color: "bg-gray-100 text-gray-600", icon: null };
 
-    const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    const tabs: { key: Tab | "approve"; label: string; icon: React.ReactNode }[] = [
         { key: "dataDetails", label: "ข้อมูลส่วนบุคคลที่จัดเก็บ", icon: <FolderOpen size={12} /> },
         { key: "legal", label: "ข้อกฎหมายและการให้ความยินยอม", icon: <Scale size={12} /> },
         { key: "transfer", label: "การส่งและการถ่ายโอนข้อมูล", icon: <ArrowLeftRight size={12} /> },
@@ -169,6 +173,9 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
         { key: "history", label: "ประวัติการแก้ไข", icon: <ClockFading size={12} /> },
     ];
 
+    if (role === "DPO") {
+        tabs.push({ key: "approve", label: "Approve", icon: <CheckCircle size={12} /> });
+    }
     return (
         <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden font-prompt text-[12px]">
 
@@ -198,7 +205,9 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                                     setShowMenu(false);
                                 }}
                             >
-                                <div className="flex flex-col-2 gap-2"><Pencil size={14} /> แก้ไขกิจกรรม</div>
+                                <Link href="/form">
+                                    <div className="flex flex-col-2 gap-2"><Pencil size={14} /> แก้ไขกิจกรรม</div>
+                                </Link>
                             </button>
 
                             <button
@@ -264,7 +273,7 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                         )}
                     </InfoRow>
                     <div className="flex items-start gap-3 py-2">
-                        <div className="text-[#A6A6A6] mt-0.5 shrink-0"><Book size={14} className="text-[#656565]"/></div>
+                        <div className="text-[#A6A6A6] mt-0.5 shrink-0"><Book size={14} className="text-[#656565]" /></div>
                         <p className="text-[11px] text-[#A6A6A6]">วัตถุประสงค์ของการประมวลผล</p>
                     </div>
 
@@ -303,6 +312,26 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                     {activeTab === "security" && <TabSecurity item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRow={InfoRow} />}
                     {activeTab === "processor" && <TabProcessor item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
                     {activeTab === "history" && <TabHistory item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
+                    {activeTab === "approve" && role === "DPO" && (
+        <TabApprove
+            itemId={item.id}
+            currentStatus={item.status}
+            onUpdateStatus={(status, comments) => {
+                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    body: JSON.stringify({ status, comments }),
+                })
+                .then(() => {
+                    alert("อัปเดตสถานะเรียบร้อย");
+                })
+                .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
+            }}
+        />
+    )}
                 </div>
             </div>
         </div>

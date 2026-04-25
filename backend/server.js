@@ -1,20 +1,30 @@
-import express from "express";
-import cors from "cors";
-import authRoutes from "./routes/auth.js";
-import formRoutes from "./routes/form.js";
+import express from 'express'
+import cors from 'cors'
+import 'dotenv/config'
+import { readFileSync } from 'fs'  
+import swaggerUi from 'swagger-ui-express'  
+import yaml from 'js-yaml'
+import authRoutes from './routes/auth.js'
+import adminRoutes from './routes/admin.js'
+import formRoutes from './routes/form.js'
 
-const app = express();
+const app = express()
+app.use(cors())   
+app.use(express.json())
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-}));
+const swaggerDocument = yaml.load(readFileSync('./swagger.yaml', 'utf8'))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-app.use(express.json());
-
-app.use("/api/auth", authRoutes);
-app.use("/api/form", formRoutes);
+app.use('/api/auth', authRoutes)
+app.use('/api/admin', adminRoutes)
+app.use('/api/form', formRoutes)
 
 app.listen(8000, () => {
-  console.log("Server running on port 8000");
-});
+  console.log('Server running on port 8000')
+  console.log('Swagger UI: http://localhost:8000/api-docs')
+})
+
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json')
+  res.send(swaggerDocument)
+})

@@ -2,6 +2,7 @@ import supabase from '../lib/supabase.js';
 
 export async function findUserByIdentifier(identifier) {
   const { data, error } = await supabase
+       .schema('auths')
     .from('users')
     .select('*')
     .or(`email.eq.${identifier},username.eq.${identifier}`)
@@ -16,6 +17,7 @@ export async function incrementFailedAttempts(userId, currentAttempts) {
   const shouldLock = newAttempts >= 5;
 
   await supabase
+       .schema('auths')
     .from('users')
     .update({
       failed_login_attempts: newAttempts,
@@ -29,6 +31,7 @@ export async function incrementFailedAttempts(userId, currentAttempts) {
 
 export async function resetFailedAttempts(userId) {
   await supabase
+       .schema('auths')
     .from('users')
     .update({
       failed_login_attempts: 0,
