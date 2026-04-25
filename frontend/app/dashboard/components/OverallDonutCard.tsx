@@ -6,11 +6,12 @@ import { ChevronDown, Info } from "lucide-react";
 
 type Props = {
     dataSource: any[];
+    selectedDept: string[];
 };
 
 type FilterType = "risk" | "department" | "legal";
 
-export default function OverallDonutCard({ dataSource }: Props) {
+export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
 
     // =========================
     // STATE: เลือกประเภทข้อมูลที่จะแสดงใน donut
@@ -35,11 +36,39 @@ export default function OverallDonutCard({ dataSource }: Props) {
 
         // ===== DEPARTMENT MODE =====
         if (filter === "department") {
+
+            const map: Record<string, number> = {};
+
             dataSource.forEach((item) => {
-                item.parties.forEach((p: string) => {
-                    map[p] = (map[p] || 0) + 1;
+                item.parties?.forEach((p: string) => {
+
+                    // ✅ กรองเฉพาะที่ user เลือก
+                    if (selectedDept.length === 0 || selectedDept.includes(p)) {
+                        map[p] = (map[p] || 0) + 1;
+                    }
+
                 });
             });
+
+            const entries = Object.entries(map);
+
+            // ✅ ถ้าเลือกแค่ 1 department → 100%
+            if (selectedDept.length === 1) {
+                return [
+                    {
+                        name: selectedDept[0],
+                        value: entries.reduce((sum, [, v]) => sum + v, 0),
+                    },
+                ];
+            }
+
+            // ✅ หลายอัน → แยก slice
+            return entries
+                .map(([key, val]) => ({
+                    name: key,
+                    value: val,
+                }))
+                .sort((a, b) => b.value - a.value);
         }
 
         // ===== LEGAL BASIS MODE =====

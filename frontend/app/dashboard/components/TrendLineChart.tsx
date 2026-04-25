@@ -17,15 +17,17 @@ type Props = {
 
 export default function TrendLineChart({ data }: Props) {
     const safeData =
-        Array.isArray(data) && data.length > 0
-            ? data
-            : [
-                { day: "Mon", value: 10 },
-                { day: "Tue", value: 20 },
-                { day: "Wed", value: 15 },
-                { day: "Thu", value: 30 },
-                { day: "Fri", value: 25 },
-            ];
+  Array.isArray(data) && data.length > 0
+    ? data
+    : [
+        { day: "Sun", value: 20 },
+        { day: "Mon", value: 100 },
+        { day: "Tue", value: 70 },
+        { day: "Wed", value: 100 },
+        { day: "Thu", value: 120 },
+        { day: "Fri", value: 160 },
+        { day: "Sat", value: 10 },
+      ];
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm h-[366px] w-full">
@@ -33,10 +35,10 @@ export default function TrendLineChart({ data }: Props) {
             {/* HEADER */}
             <div className="flex justify-between mb-4">
                 <div className="flex items-center gap-2 relative group">
-                <p className="text-sm text-gray-500 font-medium">
-                    ROPA Trend
-                </p>
-                {/* INFO ICON */}
+                    <p className="text-sm text-gray-500 font-medium">
+                        ROPA Trend
+                    </p>
+                    {/* INFO ICON */}
                     <Info
                         size={14}
                         className="text-gray-400 cursor-pointer"
@@ -53,7 +55,7 @@ export default function TrendLineChart({ data }: Props) {
             <div className="w-full h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
 
-                    <LineChart data={safeData}>
+                    <LineChart data={safeData} margin={{ top: 5, right: 10, left: -35, bottom: 0 }}>
 
                         {/* GRID (soft + modern) */}
                         <CartesianGrid
@@ -68,6 +70,7 @@ export default function TrendLineChart({ data }: Props) {
                             tick={{ fill: "#9CA3AF", fontSize: 12 }}
                             axisLine={false}
                             tickLine={false}
+                            padding={{ left: 0, right: 2 }}
                         />
 
                         <YAxis

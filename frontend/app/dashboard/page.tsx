@@ -10,6 +10,7 @@ import TrendLineChart from "./components/TrendLineChart";
 import Sidebar from "../components/Sidebar";
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import MultiSelect from "../components/MultiSelect";
 
 // ================= TYPE =================
 type Dept = {
@@ -28,9 +29,6 @@ export default function DashboardPage() {
 
     // เก็บ department ที่เลือก (multi-select)
     const [selectedDept, setSelectedDept] = useState<string[]>([]);
-
-    // เปิด/ปิด dropdown department
-    const [openDept, setOpenDept] = useState(false);
 
     // ================= DEPARTMENT OPTIONS =================
     // ดึง list department ทั้งหมดจากข้อมูล (unique)
@@ -107,12 +105,54 @@ export default function DashboardPage() {
         });
     });
 
-    const comparison = Object.values(deptMap);
+    const comparison = Object.values(deptMap).filter((d) =>
+        selectedDept.length === 0 || selectedDept.includes(d.name)
+    );
 
     // ================= TREND DATA =================
     const getTrendData = (range: string) => {
+        const now = new Date();
         const map: Record<string, number> = {};
 
+        let labels: string[] = [];
+
+        // ================= LABEL GENERATION =================
+        if (range === "1W") {
+            labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        }
+
+        else if (range === "1M") {
+            const daysInMonth = new Date(
+                now.getFullYear(),
+                now.getMonth() + 1,
+                0
+            ).getDate();
+
+            labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+        }
+
+        else if (range === "3M" || range === "6M") {
+            const count = range === "3M" ? 3 : 6;
+
+            const months = [];
+            for (let i = count - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(
+                    d.toLocaleString("en-US", { month: "short" })
+                );
+            }
+
+            labels = months;
+        }
+
+        else if (range === "1Y") {
+            labels = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+        }
+
+        // ================= COUNT DATA =================
         filteredRopa.forEach((r) => {
             r.history?.forEach((h) => {
                 if (!h?.date) return;
@@ -123,37 +163,28 @@ export default function DashboardPage() {
                 let key = "";
 
                 if (range === "1W") {
-                    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                    key = days[date.getDay()];
-                } else if (range === "1M") {
-                    key = String(date.getDate());
-                } else {
-                    const months = [
-                        "Jan","Feb","Mar","Apr","May","Jun",
-                        "Jul","Aug","Sep","Oct","Nov","Dec"
-                    ];
-                    key = months[date.getMonth()];
+                    key = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
                 }
 
-                map[key] = (map[key] || 0) + 1;
+                else if (range === "1M") {
+                    key = String(date.getDate());
+                }
+
+                else {
+                    key = date.toLocaleString("en-US", { month: "short" });
+                }
+
+                if (labels.includes(key)) {
+                    map[key] = (map[key] || 0) + 1;
+                }
             });
         });
 
-        const result = Object.entries(map).map(([day, value]) => ({
-            day,
-            value,
+        // ================= FINAL RESULT =================
+        return labels.map((label) => ({
+            day: label,
+            value: map[label] || 0,
         }));
-
-        // fallback กันกราฟหาย
-        return result.length > 0
-            ? result
-            : [
-                { day: "Mon", value: 3 },
-                { day: "Tue", value: 5 },
-                { day: "Wed", value: 2 },
-                { day: "Thu", value: 6 },
-                { day: "Fri", value: 4 },
-            ];
     };
 
     const trend = useMemo(() => getTrendData(range), [range, filteredRopa]);
@@ -190,57 +221,22 @@ export default function DashboardPage() {
                             </div>
 
                             {/* ================= DEPARTMENT MULTI FILTER ================= */}
-                            <div className="relative">
-
-                                {/* ปุ่มเปิด dropdown */}
-                                <button
-                                    onClick={() => setOpenDept(!openDept)}
-                                    className="border border-[#616872] rounded-[6px] px-3 py-1 pr-8 text-sm w-[180px] text-left bg-white"
-                                >
-                                    {/* ถ้าไม่เลือก = All */}
-                                    {selectedDept.length === 0
-                                        ? "All Department"
-                                        : selectedDept.join(", ")}
-                                </button>
-
-                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-
-                                {/* dropdown list */}
-                                {openDept && (
-                                    <div className="absolute mt-2 w-[180px] bg-white border rounded-md shadow z-50 p-2">
-
-                                        {/* checkbox list */}
-                                        {deptOptions.map((dept) => (
-                                            <label
-                                                key={dept}
-                                                className="flex items-center gap-2 p-1 text-sm"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedDept.includes(dept)}
-                                                    onChange={() => {
-                                                        setSelectedDept((prev) =>
-                                                            prev.includes(dept)
-                                                                ? prev.filter((d) => d !== dept)
-                                                                : [...prev, dept]
-                                                        );
-                                                    }}
-                                                />
-                                                {dept}
-                                            </label>
-                                        ))}
-
-                                        {/* clear all */}
-                                        <button
-                                            className="text-xs text-blue-500 mt-2"
-                                            onClick={() => setSelectedDept([])}
-                                        >
-                                            Clear all
-                                        </button>
-                                    </div>
-                                )}
+                            <div className="min-w-[180px] max-w-[600px]">
+                                <MultiSelect
+                                    options={deptOptions}
+                                    selected={selectedDept}
+                                    onChange={(val) => {
+                                        // ถ้าเลือกครบทุก option
+                                        if (val.length === deptOptions.length) {
+                                            setSelectedDept([]); // 👉 reset เป็น All Department
+                                        } else {
+                                            setSelectedDept(val);
+                                        }
+                                    }}
+                                    placeholder="All Department"
+                                    className="!min-h-[30px] !h-[30px] px-3 py-1 text-sm border-[#616872] !rounded-[6px] text-black"
+                                />
                             </div>
-
                         </div>
                     </div>
 
@@ -259,7 +255,10 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="w-[509px]">
-                                <OverallDonutCard dataSource={filteredRopa} />
+                                <OverallDonutCard
+                                    dataSource={filteredRopa}
+                                    selectedDept={selectedDept}
+                                />
                             </div>
                         </div>
 
