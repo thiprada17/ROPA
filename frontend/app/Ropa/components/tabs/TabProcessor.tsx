@@ -2,69 +2,63 @@
 "use client";
 import { RopaItem, display } from "../DetailCard";
 
-export default function TabProcessor({
-    item,
-    RenderValue,
-    BulletRow,
-    InfoRowPlain,
-    InfoRow,
-}: {
-    item: RopaItem;
-    RenderValue: any;
-    BulletRow: any;
-    InfoRowPlain: any;
-    InfoRow: any;
+export default function TabProcessor({ item, BulletRow, InfoRowPlain }: {
+  item: RopaItem; BulletRow: any; InfoRowPlain: any; RenderValue?: any; InfoRow?: any;
 }) {
-    const processor = item.processors
-    if (!processor || processor.length === 0) {
-        return <p className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</p>;
-    }
+  const processors: any[] = Array.isArray(item.processors) ? item.processors : [];
 
-    return (
-        <div className="space-y-1">
-            {processor.map((p, i) => (
-                <div key={i} className="space-y-1">
+  if (processors.length === 0) {
+    return <p className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</p>;
+  }
 
-                    {/* header */}
-                    <InfoRowPlain label="ชื่อผู้ประมวลผลข้อมูลส่วนบุคคล">
-                        <span className="text-[11px]">{display(p.name)}</span>
-                    </InfoRowPlain>
+  const securityLabels = [
+    "มาตรการเชิงองค์กร",
+    "มาตรการเชิงเทคนิค",
+    "มาตรการทางกายภาพ",
+    "การควบคุมการเข้าถึงข้อมูล",
+    "การกำหนดหน้าที่ความรับผิดชอบของผู้ใช้งาน",
+    "มาตรการตรวจสอบย้อนหลัง",
+  ];
 
-                    <InfoRowPlain label="ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล">
-                        <span className="text-[11px]">{display(p.address)}</span>
-                    </InfoRowPlain>
+  return (
+    <div className="space-y-4">
+      {processors.map((p, i) => {
+        const info = p.processors || p;
+        const secRows: any[] = p.processor_security_measures || [];
 
-                    {/* section title */}
-                    <p className="text-[11px] text-[#A6A6A6]">นโยบายการเก็บรักษาข้อมูลส่วนบุคคล</p>
+        return (
+          <div key={i} className="space-y-1">
+            <InfoRowPlain label="ชื่อผู้ประมวลผลข้อมูลส่วนบุคคล">
+              <span className="text-[11px]">{display(info.name)}</span>
+            </InfoRowPlain>
+            <InfoRowPlain label="ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล">
+              <span className="text-[11px]">{display(info.address)}</span>
+            </InfoRowPlain>
 
-                    {/* bullets */}
-                    <div className="space-y-2">
-                        <BulletRow label="มาตรการเชิงองค์กร">
-                            <span className="text-[11px]">{display(p.security?.organizational)}</span>
-                        </BulletRow>
-
-                        <BulletRow label="มาตรการเชิงเทคนิค">
-                            <span className="text-[11px]">{display(p.security?.technical)}</span>
-                        </BulletRow>
-
-                        <BulletRow label="มาตรการทางกายภาพ">
-                            <span className="text-[11px]">{display(p.security?.physical)}</span>
-                        </BulletRow>
-
-                        <BulletRow label="การควบคุมการเข้าถึงข้อมูล">
-                            <span className="text-[11px]">{display(p.security?.accessType)}</span>
-                        </BulletRow>
-
-                        <BulletRow label="การกำหนดหน้าที่ความรับผิดชอบของผู้ใช้งาน">
-                            <span className="text-[11px]">{display(p.security?.responsibility_def)}</span>
-                        </BulletRow>
-
-                        <BulletRow label="มาตรการตรวจสอบย้อนหลัง">
-                            <span className="text-[11px]">{display(p.security?.audit_trail)}</span>
-                        </BulletRow>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
+            <p className="text-[11px] text-[#A6A6A6] pt-1">นโยบายการเก็บรักษาข้อมูลส่วนบุคคล</p>
+            <div className="space-y-2">
+              {securityLabels.map((label) => {
+                const found = secRows.find((r) => r.type === label);
+                return (
+                  <BulletRow
+                    key={label}
+                    label={label}
+                    labelClassName={found ? "text-[#1C1B1F]" : "text-[#A6A6A6]"}
+                  >
+                    {found ? (
+                      found.detail
+                        ? <span className="text-[11px] text-[#1C1B1F]">{found.detail}</span>
+                        : null
+                    ) : (
+                      <span className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</span>
+                    )}
+                  </BulletRow>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
