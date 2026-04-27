@@ -1,95 +1,136 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional
+from fastapi import Request, HTTPException
 from lib.supabase import supabase
-from middleware.auth import require_admin
-import bcrypt
-
-router = APIRouter()
 
 
-class UserCreate(BaseModel):
-    fullName: str
-    email: str
-    password: str
-    phone: Optional[str] = None
-    position: Optional[str] = None
-    department: Optional[str] = None
-    team: Optional[str] = None
-    role: Optional[str] = "User"
-
-
-
-@router.post("/users")
-def create_user(body: UserCreate, user=Depends(require_admin)):
+async def createUser(request: Request):
     try:
-        # hashed_password = bcrypt.hashpw(body.password.encode(), bcrypt.gensalt()).decode()
+        body = await request.json()
 
-        response = supabase.schema("auths").table("users").insert({
-            "username": body.fullName,
-            "email": body.email,
-            "password": body.password,
-            "phone": body.phone,
-            "department_id": body.department,
-            "position": body.team,
-            "role": body.role,
-            "status": "ACTIVE",
-            "is_locked": False,
-            "failed_login_attempts": 0
-        }).execute()
+        fullName = body.get("fullName")
+        email = body.get("email")
+        password = body.get("password")
+        phone = body.get("phone")
+        position = body.get("position")
+        department = body.get("department")
+        team = body.get("team")
+        role = body.get("role")
 
-        if response.error:
-            raise HTTPException(status_code=500, detail=response.error.message)
+        if not email or not password or not fullName:
+            raise HTTPException(status_code=400, detail="Missing required fields")
+
+        res = supabase.schema("auths").table("users") \
+            .insert([{
+                "username": fullName,
+                "email": email,
+                "password": password,
+                "phone": phone,
+                "department_id": department,
+                "position": team,
+                "role": role,
+                "status": "ACTIVE",
+                "is_locked": False,
+                "failed_login_attempts": 0,
+            }]) \
+            .execute()
+
+        if hasattr(res, "error") and res.error:
+            print("SUPABASE ERROR:", res.error)
+            raise HTTPException(status_code=500, detail=str(res.error))
 
         return {
             "message": "User created successfully",
-            "user": response.data[0]
+            "user": res.data[0] if res.data else None
         }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        print(err)
+        raise HTTPException(status_code=500, detail="Server error")
 
 
-
-@router.get("/users")
-def get_users(user=Depends(require_admin)):
+async def getUsers(request: Request):
     try:
-        response = supabase.schema("auths").table("users").select("""
-            *,
-            departments (
-                department_name
-            )
-        """).execute()
+        res = supabase.schema("auths").table("users") \
+            .select("""
+                *,
+                departments (
+                    department_name
+                )
+            """) \
+            .execute()
 
-        if response.error:
-            raise HTTPException(status_code=500, detail=response.error.message)
+        if hasattr(res, "error") and res.error:
+            print(res.error)
+            raise HTTPException(status_code=500, detail=str(res.error))
 
-        return response.data
+        return res.data
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail="Server error")
 
 
-@router.put("/users/{user_id}")
-def edit_user(user_id: str, body: UserCreate, user=Depends(require_admin)):
+async def editUser(user_id: str, request: Request):
     try:
-        response = supabase.schema("auths").table("users").update({
-            "username": body.fullName,
-            "email": body.email,
-            "password": body.password,
-            "phone": body.phone,
-            "department_id": body.department,
-            "position": body.team,
-            "role": body.role,
-        }).eq("id", user_id).execute()
+        body = await request.json()
 
-        if response.error:
-            raise HTTPException(status_code=500, detail=response.error.message)
+        fullName = body.get("fullName")
+        email = body.get("email")
+        password = body.get("password")
+        phone = body.get("phone")
+        department = body.get("department")
+        team = body.get("team")
+        role = body.get("role")
+        lockStatus = body.get("lockStatus")
+        accountStatus = body.get("accountStatus")
+
+        if not fullName or not email:
+            raise HTTPException(status_code=400, detail="Missing required fields")
+
+        update_data = {
+            "username": fullName,
+            "email": email,
+            "phone": phone,
+            "department_id": department,
+            "position": team,
+            "role": role,
+            "is_locked": True if lockStatus == "Locked" else False,
+            "status": "ACTIVE" if accountStatus == "Active" else "INACTIVE",
+        }
+
+        if password:
+            update_data["password"] = password
+
+        res = supabase.schema("auths").table("users") \
+            .update(update_data) \
+            .eq("id", user_id) \
+            .execute()
+
+        if not res.data:
+            raise HTTPException(status_code=404, detail="User not found")
 
         return {
             "message": "User updated successfully",
-            "user": response.data[0]
+            "user": res.data[0]
+        }
+    except Exception as err:
+        print(err)
+    raise HTTPException(status_code=500, detail=str(err))
+
+async def deleteUser(user_id: str, request: Request):
+    try:
+
+        res = supabase.schema("auths").table("users") \
+            .delete() \
+            .eq("id", user_id)\
+            .execute()
+
+        if hasattr(res, "error") and res.error:
+            print("SUPABASE ERROR:", res.error)
+            raise HTTPException(status_code=500, detail=str(res.error))
+
+        return {
+            "message": "User delete successfully",
         }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        print(err)
+        raise HTTPException(status_code=500, detail="Server error")
