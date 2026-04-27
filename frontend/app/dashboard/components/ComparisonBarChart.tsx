@@ -12,8 +12,16 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
+type ComparisonData = {
+    name: string;
+    atRisk: number;
+    critical: number;
+    safe: number;
+    stable: number;
+};
+
 type Props = {
-    data: any[];
+    data: ComparisonData[];
 };
 
 export default function ComparisonBarChart({ data }: Props) {

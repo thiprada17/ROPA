@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 type Activity = {
-    id: number;
+    id: string;
     activity: string;
     parties: string[];
     risk: "Critical" | "At Risk" | "Stable" | "Safe";
