@@ -319,18 +319,13 @@ export default function RopaPage() {
   };
 
   return (
-<<<<<<< Updated upstream
     <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
-      <Sidebar userName="test" userEmail="test@example.com" />
-=======
-    <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
       {/* ================= Sidebar ================= */}
       <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
-        <Sidebar userEmail="" userName="" />
+        <Sidebar userName="test" userEmail="test@example.com" />
       </aside>
->>>>>>> Stashed changes
 
-      <main className="ml-16 flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {/* HEADER */}
         <div className="px-10 pt-6 pb-4 shrink-0">
           <div className="mb-3">

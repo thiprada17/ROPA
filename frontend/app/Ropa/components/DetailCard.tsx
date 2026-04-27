@@ -72,9 +72,6 @@ const statusMap: Record<string, { color: string; icon: React.ReactNode }> = {
 const badgeBase =
   "inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap";
 
-<<<<<<< Updated upstream
-type Tab = "dataDetails" | "legal" | 'transfer' | "retention" | "security" | "processor" | "history";
-=======
 type Tab =
   | "dataDetails"
   | "legal"
@@ -84,7 +81,6 @@ type Tab =
   | "processor"
   | "history"
   | "approve";
->>>>>>> Stashed changes
 
 const Tag = ({ label }: { label: string }) => (
   <span className="bg-[#DFE9FF] text-[#03369D] px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap">
@@ -163,14 +159,9 @@ export const display = (val?: string | string[] | null) => {
 };
 
 interface DetailCardProps {
-<<<<<<< Updated upstream
-    item: RopaItem | null;
-    onClose: () => void;
-=======
   item: RopaItem | null;
   onClose: () => void;
   role?: "DPO" | "User" | "Admin" | "Viewer";
->>>>>>> Stashed changes
 }
 
 const RenderValue = ({ value }: { value?: string[] }) => {
@@ -191,14 +182,11 @@ const RenderValue = ({ value }: { value?: string[] }) => {
   );
 };
 
-<<<<<<< Updated upstream
-=======
 const role =
   typeof window !== "undefined"
     ? (localStorage.getItem("role") as "DPO" | "User" | "Viewer" | "Admin")
     : undefined;
 
->>>>>>> Stashed changes
 export default function DetailCard({ item, onClose }: DetailCardProps) {
   const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
   const [showMenu, setShowMenu] = useState(false);
@@ -226,20 +214,6 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
     icon: null,
   };
 
-<<<<<<< Updated upstream
-    const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-        { key: "dataDetails", label: "ข้อมูลส่วนบุคคลที่จัดเก็บ", icon: <FolderOpen size={12} /> },
-        { key: "legal", label: "ข้อกฎหมายและการให้ความยินยอม", icon: <Scale size={12} /> },
-        { key: "transfer", label: "การส่งและการถ่ายโอนข้อมูล", icon: <ArrowLeftRight size={12} /> },
-        { key: "retention", label: "การเก็บรักษาและการใช้/เปิดเผยข้อมูล", icon: <Folder size={12} /> },
-        { key: "security", label: "ความปลอดภัย", icon: <Shield size={12} /> },
-        { key: "processor", label: "Processor", icon: <UserCog size={12} /> },
-        { key: "history", label: "ประวัติการแก้ไข", icon: <ClockFading size={12} /> },
-    ];
-
-    return (
-        <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden font-prompt text-[12px]">
-=======
   const tabs: { key: Tab | "approve"; label: string; icon: React.ReactNode }[] =
     [
       {
@@ -275,7 +249,6 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
     if (!text) return text;
     return text.replace(/\b0+(\d)/g, "$1"); // ตัด 0 นำหน้าออก
   };
->>>>>>> Stashed changes
 
   if (role === "DPO") {
     tabs.push({
@@ -285,125 +258,6 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
     });
   }
 
-<<<<<<< Updated upstream
-                    {/* dropdown */}
-                    {showMenu && (
-                        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-50">
-                            <button
-                                className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100"
-                                onClick={() => {
-                                    console.log("edit activity");
-                                    setShowMenu(false);
-                                }}
-                            >
-                                <Link href="/form">
-                                <div className="flex flex-col-2 gap-2"><Pencil size={14} /> แก้ไขกิจกรรม</div>
-                                </Link>
-                            </button>
-
-                            <button
-                                className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500"
-                                onClick={() => {
-                                    console.log("delete activity");
-                                    setShowMenu(false);
-                                }}
-                            >
-                                <div className="flex flex-col-2 gap-2"> <Trash2 size={14} /> ลบกิจกรรม </div>
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* scroll wrapper */}
-            <div className="flex-1 overflow-y-auto">
-
-                {/* header */}
-                <div className="px-5 pt-4 pb-3">
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                        <h2 className="text-[22px] font-bold text-[#1C1B1F] leading-tight font-prompt">
-                            {item.activity}
-                        </h2>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 hover:bg-gray-100 rounded text-[#A6A6A6] shrink-0 mt-1"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        <span className={`${badgeBase} ${risk.color} gap-1`}>{risk.icon} {item.risk}</span>
-                        <span className={`${badgeBase} ${status.color} gap-1`}>{status.icon} {item.status}</span>
-                    </div>
-                </div>
-
-                {/* meta info */}
-                <div className="px-5 border-b border-gray-100 pb-3">
-                    <InfoRow icon={<Users size={14} className="text-[#656565]" />} label="เจ้าของข้อมูลส่วนบุคคล">
-                        <span className="text-[#1C1B1F]">{item.dataOwner ?? "นายเจ้าของ ข้อมูล"}</span>
-                    </InfoRow>
-                    <InfoRow icon={<Clock size={14} className="text-[#656565]" />} label="ระยะเวลาการเก็บรักษา">
-                        <span className="text-[#1C1B1F]">{item.retention.retentionPeriod}</span>
-                    </InfoRow>
-                    <InfoRow icon={<Building2 size={14} className="text-[#656565]" />} label="ฝ่ายที่เกี่ยวข้อง">
-                        {item.parties.length > 1 ? (
-                            item.parties.map((p, i) => <Tag key={i} label={p} />)
-                        ) : (
-                            <span>{item.parties[0]}</span>
-                        )}
-                    </InfoRow>
-                    <InfoRow icon={<Scale size={14} className="text-[#656565]" />} label="ฐานกฎหมาย">
-                        {item.legal?.basis?.length ? (
-                            item.legal.basis.length > 1 ? (
-                                item.legal.basis.map((l, i) => <Tag key={i} label={l} />)
-                            ) : (
-                                <span>{item.legal.basis[0]}</span>
-                            )
-                        ) : (
-                            <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
-                        )}
-                    </InfoRow>
-                    <div className="flex items-start gap-3 py-2">
-                        <div className="text-[#A6A6A6] mt-0.5 shrink-0"><Book size={14} className="text-[#656565]"/></div>
-                        <p className="text-[11px] text-[#A6A6A6]">วัตถุประสงค์ของการประมวลผล</p>
-                    </div>
-
-                    <textarea
-                        readOnly
-                        value={item.purposeDetail ?? ""}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] leading-relaxed resize-y"
-                    />
-                </div>
-
-                {/* tabs bar */}
-                <div className="border-b border-gray-100">
-                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none">
-                        {tabs.map((t) => (
-                            <button
-                                key={t.key}
-                                onClick={() => setActiveTab(t.key)}
-                                className={`flex items-center gap-1.5 whitespace-nowrap pb-2.5 px-3 text-[11px] font-medium border-b-2 transition-colors ${activeTab === t.key
-                                    ? "border-[#03369D] text-[#03369D]"
-                                    : "border-transparent text-[#A6A6A6] hover:text-[#1C1B1F]"
-                                    }`}
-                            >
-                                {t.icon}
-                                {t.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* tab content */}
-                <div className="px-5 py-4">
-                    {activeTab === "dataDetails" && <TabDataDetails item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} />}
-                    {activeTab === "legal" && (<TabLegal item={item} RenderValue={RenderValue} BulletRow={BulletRow} />)}
-                    {activeTab === "transfer" && <TabTransfer item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRow={InfoRow} />}
-                    {activeTab === "retention" && <TabRetention item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRow={InfoRow} InfoRowPlain={InfoRowPlain} />}
-                    {activeTab === "security" && <TabSecurity item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRow={InfoRow} />}
-                    {activeTab === "processor" && <TabProcessor item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
-                    {activeTab === "history" && <TabHistory item={item} RenderValue={RenderValue} BulletRow={BulletRow} InfoRowPlain={InfoRowPlain} InfoRow={InfoRow} />}
-=======
   return (
     <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden font-prompt text-[12px]">
       {/* top toolbar */}
@@ -452,7 +306,6 @@ export default function DetailCard({ item, onClose }: DetailCardProps) {
                 <div className="flex flex-col-2 gap-2">
                   {" "}
                   <Trash2 size={14} /> ลบกิจกรรม{" "}
->>>>>>> Stashed changes
                 </div>
               </button>
             </div>

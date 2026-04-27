@@ -1,12 +1,7 @@
 "use client";
-<<<<<<< Updated upstream
-import { RopaItem, display } from "../DetailCard";
-import { Pencil, Plus , Calendar, Clock} from "lucide-react";
-=======
 import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 import { Pencil, Plus, Calendar, Clock } from "lucide-react";
->>>>>>> Stashed changes
 
 export default function TabHistory({
   item,

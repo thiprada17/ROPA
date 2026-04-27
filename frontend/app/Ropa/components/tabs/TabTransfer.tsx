@@ -1,11 +1,7 @@
 "use client";
-<<<<<<< Updated upstream
-import { RopaItem } from "../DetailCard";
-=======
 
 import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
->>>>>>> Stashed changes
 
 export default function TabTransfer({
   item,

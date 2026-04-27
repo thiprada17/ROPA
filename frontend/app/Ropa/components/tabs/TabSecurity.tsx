@@ -1,10 +1,5 @@
 "use client";
-<<<<<<< Updated upstream
-import { Shield } from "lucide-react";
-import { RopaItem, display } from "../DetailCard";
-=======
 import { RopaItem } from "../../types/ropa";
->>>>>>> Stashed changes
 
 export default function TabSecurity({
   item,
