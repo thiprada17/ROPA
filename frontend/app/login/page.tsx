@@ -68,10 +68,12 @@ export default function LoginPage() {
 
       localStorage.setItem("token", data.token);
       console.log(data)
-
+      console.log(data.user);
       const role = data.user.role;
       localStorage.setItem("role", role);
 
+      /*สำหรับคอมเมนต์ DPO */
+      localStorage.setItem("username", data.user.username || data.user.email || "");
       if (role === "Admin") {
         router.push("/admin");
       } else if (role === "User") {
