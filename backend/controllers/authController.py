@@ -64,7 +64,7 @@ async def login(request: Request):
         stored_password = user.get("password", "")
         isPasswordValid = False
 
-        if stored_password.startswith("$2b$"):
+        if stored_password.startswith("$2"):
             isPasswordValid = bcrypt.checkpw(
                 password.encode(), stored_password.encode()
             )
