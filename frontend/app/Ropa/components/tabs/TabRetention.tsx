@@ -1,6 +1,5 @@
 // app/Ropa/components/tabs/TabRetention.tsx
 "use client";
-import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 
 // tab: retention
@@ -27,6 +26,12 @@ export default function TabRetention({
   const usageList = retention.usage_purpose || [];
   const hasUsage = usageList.length > 0;
 
+  const Tag = ({ label }: { label: string }) => (
+  <span className="bg-[#DFE9FF] text-[#03369D] px-2.5 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
+    {label}
+  </span>
+);
+
   return (
     <div className="space-y-2">
       <p className="text-[11px] text-[#A6A6A6]">
@@ -45,12 +50,22 @@ export default function TabRetention({
 
       {/* retention period */}
       <BulletRow label="ระยะเวลาการเก็บข้อมูล" indent>
-        <span>{retention.retentionPeriod ?? "ไม่มีข้อมูล"}</span>
+        <span>
+          {retention.retentionPeriod
+            ? retention.retentionPeriod.replace(/\b0+(\d)/g, "$1")
+            : "ไม่มีข้อมูล"}
+        </span>
       </BulletRow>
 
       {/* department */}
       <BulletRow label="สิทธิและวิธีการเข้าถึงข้อมูลส่วนบุคคล" indent>
-        <RenderValue value={retention.department} />
+        {(item.retention?.department ?? retention.department ?? []).length > 0 ? (
+          (item.retention?.department ?? retention.department ?? []).map(
+            (d: string, i: number) => <Tag key={i} label={d} />,
+          )
+        ) : (
+          <span className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</span>
+        )}
       </BulletRow>
 
       {/* deletion */}
@@ -79,13 +94,13 @@ export default function TabRetention({
 
       {/* denial */}
       <InfoRowPlain label="การปฏิเสธคำขอหรือคำคัดค้านการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล">
-        <span
-          className={`text-[11px] ${
-            hasUsage ? "text-gray-400" : "text-[#1C1B1F]"
-          }`}
-        >
-          {retention.denialNote || "ไม่มีข้อมูล"}
-        </span>
+        {retention.denialNote ? (
+          <span className="text-[11px] text-[#1C1B1F]">
+            {retention.denialNote}
+          </span>
+        ) : (
+          <span className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</span>
+        )}
       </InfoRowPlain>
     </div>
   );

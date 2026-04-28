@@ -1,16 +1,13 @@
 // app/form/components/steps/Step1Activity
 "use client";
+
 import InputField from "../InputField";
 import SingleSelect from "../../../components/SingleSelect";
 
-const processingActivities = [
-  "การจัดการลูกค้า",
-  "การบริหารทรัพยากรบุคคล",
-  "การตลาดและโฆษณา",
-  "การวิเคราะห์ข้อมูล",
-  "การปรับปรุงบริการ",
-  "การปฏิบัติตามกฎหมาย",
-];
+type Option = {
+  label: string;
+  value: string;
+};
 
 // Validation สำหรับ Step1
 export function validateStep1({
@@ -25,7 +22,7 @@ export function validateStep1({
   return {
     dataOwner: !dataOwner.trim(), // true = error
     processActivity: !processActivity.trim(),
-    processingPurpose: !processingPurpose.trim(), 
+    processingPurpose: !processingPurpose.trim(),
   };
 }
 
@@ -40,10 +37,19 @@ interface StepProps {
     processActivity?: boolean;
     processingPurpose?: boolean;
   };
+  options: {
+    activityNames: Option[];
+    purposes: Option[];
+  };
   updateField: (field: string, value: any) => void;
 }
 
-export default function Step1Activity({ formData, errors, updateField }: StepProps) {
+export default function Step1Activity({
+  formData,
+  errors,
+  updateField,
+  options,
+}: StepProps) {
   return (
     <div className="space-y-6 font-prompt">
       <InputField
@@ -53,32 +59,32 @@ export default function Step1Activity({ formData, errors, updateField }: StepPro
         onChange={(v) => updateField("dataOwner", v)}
         placeholder="ชื่อ-นามสกุล เจ้าของข้อมูล"
         error={errors.dataOwner}
+        required
       />
 
       <div>
         <label className="text-[14px] text-BLUE block mb-[5px] px-2">
-          กิจกรรมการประมวลผล <span className="text-red-500">*</span>
+          กิจกรรมประมวลผล <span className="text-red-500">*</span>
         </label>
         <SingleSelect
-          options={processingActivities}
+          options={options.activityNames}
           value={formData.processActivity}
           onChange={(v) => updateField("processActivity", v)}
-          placeholder="เลือกกิจกรรมการประมวลผล..."
+          placeholder="เลือกกิจกรรมประมวลผล..."
           error={errors.processActivity}
           required
         />
       </div>
 
-      <div>
-        <InputField
-          id="processingPurpose"
-          label="วัตถุประสงค์ของการประมวลผล"
-          value={formData.processingPurpose}
-          onChange={(v) => updateField("processingPurpose", v)}
-          placeholder="ระบุวัตถุประสงค์ของการประมวลผลข้อมูลส่วนบุคคล"
-          error={errors.processingPurpose}
-        />
-      </div>
+      <InputField
+        id="processingPurpose"
+        label="วัตถุประสงค์ของการประมวลผล"
+        value={formData.processingPurpose}
+        onChange={(v) => updateField("processingPurpose", v)}
+        placeholder="วัตถุประสงค์"
+        error={errors.processingPurpose}
+        required
+      />
     </div>
   );
 }

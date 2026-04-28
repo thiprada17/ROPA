@@ -3,6 +3,11 @@
 import SingleSelect from "../../../components/SingleSelect";
 import MultiSelect from "../../../components/MultiSelect";
 
+type Option = {
+  label: string;
+  value: string;
+};
+
 const dataTypes = ["เอกสาร", "ข้อมูลอิเล็กทรอนิกส์", "ภาพถ่าย", "เสียง"];
 const storageMethods = ["เข้ารหัส", "Cloud", "Server ภายใน", "กระดาษ"];
 const accessRights = ["ผู้มีสิทธิ", "ฝ่าย HR", "ผู้บริหาร", "IT"];
@@ -72,10 +77,17 @@ export function validateStep5(formData: any) {
 interface StepProps {
   formData: any;
   errors: Record<string, boolean>;
+  options: {
+    retentionStorageTypes: Option[];
+    retentionStorageMethods: Option[];
+    accessRights: Option[];
+    deletionMethods: Option[];
+    usagePurposes: Option[];
+  };
   updateField: (field: string, value: any) => void;
 }
 
-export default function Step5Retention({ formData, errors, updateField }: StepProps) {
+export default function Step5Retention({ formData, errors, updateField, options }: StepProps) {
   return (
     <div className="space-y-6 font-prompt">
       <div>
@@ -89,7 +101,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
               ประเภทของข้อมูลที่จัดเก็บ<span className="text-red-500">*</span>
             </label>
             <MultiSelect
-              options={dataTypes}
+              options={options.retentionStorageTypes}
               selected={formData.dataType}
               onChange={(v) => updateField("dataType", v)}
               placeholder="เลือกประเภท"
@@ -102,7 +114,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
               วิธีการเก็บรักษาข้อมูล<span className="text-red-500">*</span>
             </label>
             <MultiSelect
-              options={storageMethods}
+              options={options.retentionStorageMethods}
               selected={formData.storageMethod}
               onChange={(v) => updateField("storageMethod", v)}
               placeholder="เลือกวิธีการ"
@@ -138,7 +150,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
                 สิทธิและวิธีการเข้าถึงข้อมูลส่วนบุคคล<span className="text-red-500">*</span>
               </label>
               <MultiSelect
-                options={accessRights}
+                options={options.accessRights}
                 selected={formData.accessRight}
                 onChange={(v) => updateField("accessRight", v)}
                 placeholder="เลือกสิทธิ์"
@@ -147,13 +159,14 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
               />
               <div className="h-4 mt-1" />
             </div>
+
             {/* วิธีทำลาย */}
             <div className="w-36">
               <label className="text-[12px] font-medium text-[#1a3a8f] block mb-1">
                 วิธีการทำลายข้อมูล
               </label>
               <SingleSelect
-                options={destructionMethods}
+                options={options.deletionMethods}
                 value={formData.destructionMethod}
                 onChange={(v) => updateField("destructionMethod", v)}
                 placeholder="ตัวเลือก"
@@ -192,19 +205,18 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
             <div className="flex-1 px-3 h-full flex items-center">
               <select
                 value={formData.usagePurpose}
-                  disabled={formData.usageStatus !== "มีการใช้"}
+                disabled={formData.usageStatus !== "มีการใช้"}
                 onChange={(e) => updateField("usagePurpose", e.target.value)}
                 className="w-full text-sm text-gray-500 outline-none bg-transparent cursor-pointer"
               >
                 <option value="">ตัวเลือก</option>
-                {usagePurposes.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                {options.usagePurposes.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* แยก error message ถ้าเค้าำม่เลือกทั้งสอง */}
           <div className="h-4 mt-1">
             {errors.usageStatus && !formData.usageStatus && (
               <p className="text-red-500 text-[10px]">กรุณาเลือกสถานะการใช้งาน</p>
@@ -214,6 +226,7 @@ export default function Step5Retention({ formData, errors, updateField }: StepPr
             )}
           </div>
         </div>
+
         <div>
           <p className="text-[12px] font-medium text-[#1a3a8f] mb-2">
             การปฏิเสธคำขอหรือคัดค้านการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล
