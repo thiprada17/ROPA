@@ -194,17 +194,13 @@ const role =
 export default function DetailCard({ item, onClose, role, existingComments, onStatusChange, onAddComment }: DetailCardProps) {
     const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
     const [showMenu, setShowMenu] = useState(false);
-    const [isApprovingEdit, setIsApprovingEdit] = useState(false);
+    const [isApprovingEdit, setIsApprovingEdit] = useState(role === "DPO");
     const [approveStatus, setApproveStatus] = useState(item?.status ?? "");
     const [approveComments, setApproveComments] = useState<{ username: string; text: string }[]>([]);
 
     const currentUser = typeof window !== "undefined"
         ? { username: localStorage.getItem("username") ?? undefined, email: localStorage.getItem("email") ?? undefined }
         : undefined;
-
-    useEffect(() => {
-        if (item) setActiveTab("dataDetails");
-    }, [item?.id]);
 
     useEffect(() => {
         const handleClickOutside = () => setShowMenu(false);
@@ -215,10 +211,17 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
     }, [showMenu]);
 
     useEffect(() => {
-        setApproveStatus(item?.status ?? "");
-        setApproveComments([]);
-        setIsApprovingEdit(false);
-    }, [item?.id]);
+        if (item) {
+            if (role === "DPO") {
+                setActiveTab("approve");
+                setIsApprovingEdit(true);
+                setApproveComments(existingComments ?? []);
+            } else {
+                setActiveTab("dataDetails");
+                setIsApprovingEdit(false);
+            }
+        }
+    }, [item?.id, role, existingComments]);
 
     if (!item) return null;
 
@@ -321,13 +324,13 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                                 <>
                                     <button
                                         className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100 flex items-center gap-2"
-                                        onClick={() => {setShowMenu(false);}}>
+                                        onClick={() => { setShowMenu(false); }}>
                                         <Link href="/form" className="flex items-center gap-2">
                                             <Pencil size={14} /> แก้ไขกิจกรรม
                                         </Link>
                                     </button>
                                     <button className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500 flex items-center gap-2"
-                                        onClick={() => { console.log("delete activity"); setShowMenu(false);}}>
+                                        onClick={() => { console.log("delete activity"); setShowMenu(false); }}>
                                         <Trash2 size={14} /> ลบกิจกรรม
                                     </button>
                                 </>
