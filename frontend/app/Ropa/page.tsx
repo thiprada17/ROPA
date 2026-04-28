@@ -27,6 +27,7 @@ import {
   Shield,
   ShieldAlert,
 } from "lucide-react";
+import LoadingScreen from "../components/Loading";
 
 const role =
   typeof window !== "undefined"
@@ -504,10 +505,12 @@ export default function RopaPage() {
             }}
           >
             <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
-              {loading ? (
+              {/* {loading ? (
                 <div className="text-center text-gray-400 py-6">
                   กำลังโหลดข้อมูล...
-                </div>
+                </div> */}
+                {loading ? (
+  <LoadingScreen message="กำลังโหลดข้อมูล ROPA..." fullScreen={false} />
               ) : apiError ? (
                 <div className="text-center text-red-500 py-6">{apiError}</div>
               ) : (

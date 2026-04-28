@@ -15,6 +15,7 @@ import { ProcessorData } from "./components/steps/Step7Processor";
 import { validateStep5 } from "./components/steps/Step5Retention";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; 
+import LoadingScreen from "../components/Loading";
 
 type Option = {
   label: string;
@@ -320,9 +321,8 @@ export default function FormPage() {
     "Processor",
   ];
 
-  if (loadingOptions) {
-    return <div className="p-10">Loading form options...</div>;
-  }
+if (loadingOptions) return <LoadingScreen message="กำลังโหลดฟอร์ม..." />;
+
 
   if (optionsError || !formOptions) {
     return <div className="p-10 text-red-500">{optionsError || "Failed to load form options."}</div>;
