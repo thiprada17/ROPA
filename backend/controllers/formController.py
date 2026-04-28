@@ -76,6 +76,87 @@ DEPARTMENT_NAME_MAP = {
 def strip_department_prefix(name: str) -> str:
     return DEPARTMENT_NAME_MAP.get(name, name)
 
+def _parse_retention_days(period: str) -> int:
+    if not period:
+        return 0
+    years  = int(m.group(1)) if (m := re.search(r"(\d+)\s*ปี",    period)) else 0
+    months = int(m.group(1)) if (m := re.search(r"(\d+)\s*เดือน", period)) else 0
+    days   = int(m.group(1)) if (m := re.search(r"(\d+)\s*วัน",   period)) else 0
+    return years * 365 + months * 30 + days
+
+
+def _score_data(data_type_name: str, category_names: list[str]) -> int:
+    if data_type_name == "ข้อมูลอ่อนไหว":
+        return 3
+    if any("ผู้ติดต่อ" in c for c in category_names):
+        return 2
+    return 1
+
+
+def _score_legal(legal_names: list[str]) -> int:
+    LEVEL3 = ["Historical", "Research", "Statistics", "Consent"]
+    LEVEL2 = ["Vital Interest", "Contract"]
+    joined = " ".join(legal_names)
+    if any(k in joined for k in LEVEL3):
+        return 3
+    if any(k in joined for k in LEVEL2):
+        return 2
+    return 1
+
+
+def _score_transfer(is_transfer: bool, protection_standard: str | None) -> int:
+    if not is_transfer:
+        return 1
+    if protection_standard:
+        return 2
+    return 3
+
+
+def _score_retention(period: str) -> int:
+    if not period:
+        return 3
+    days = _parse_retention_days(period)
+    if days < 3 * 365:
+        return 1
+    if days <= 7 * 365:
+        return 2
+    return 3
+
+
+def _score_storage(storage_method: str) -> int:
+    if not storage_method:
+        return 1
+    if "ตู้เอกสาร" in storage_method or "แฟ้ม" in storage_method:
+        return 3
+    if "สแกน" in storage_method:
+        return 2
+    return 1
+
+
+def calculate_risk_score(
+    data_type_name: str,
+    category_names: list[str],
+    legal_names: list[str],
+    is_transfer: bool,
+    protection_standard: str | None,
+    retention_period: str,
+    storage_method: str,
+) -> str:
+    total = (
+        _score_data(data_type_name, category_names)
+        + _score_legal(legal_names)
+        + _score_transfer(is_transfer, protection_standard)
+        + _score_retention(retention_period)
+        + _score_storage(storage_method)
+    )
+    if total <= 7:
+        return "Safe"
+    if total <= 10:
+        return "Stable"
+    if total <= 12:
+        return "At Risk"
+    return "Critical"
+
 async def get_single_lookup_id_by_name(table, value, name_column="name"):
     if not value:
         return None
@@ -983,137 +1064,454 @@ async def updateForm(activityId: str, request: Request):
         print("updateForm error:", repr(err))
         raise HTTPException(status_code=500, detail=str(err))
 
-
 async def getRopaList(request: Request):
     try:
-        activities_res = ropaDB().table("processing_activities").select("""
+        def unique_values(values):
+            seen = set()
+            result = []
+            for value in values:
+                if value and value not in seen:
+                    seen.add(value)
+                    result.append(value)
+            return result
+
+        def group_rows_by(rows, key):
+            grouped = {}
+            for row in rows:
+                group_key = row.get(key)
+                if not group_key:
+                    continue
+                grouped.setdefault(group_key, []).append(row)
+            return grouped
+
+        def map_rows_by_id(rows, id_key="id", value_key="name"):
+            return {
+                row[id_key]: row.get(value_key)
+                for row in rows
+                if row.get(id_key)
+            }
+
+        def names_from_ids(ids, name_map):
+            names = []
+            seen = set()
+
+            for item_id in ids:
+                name = name_map.get(item_id)
+                if name and name not in seen:
+                    seen.add(name)
+                    names.append(name)
+
+            return names
+
+        def parse_minor_consent(minor_rows):
+            minor_consent = {
+                "under10": "",
+                "age10to20": "",
+            }
+
+            for row in minor_rows:
+                age_range = row.get("age_range")
+                desc = row.get("description") or ""
+
+                if age_range == "under10":
+                    minor_consent["under10"] = desc
+
+                elif age_range == "age10to20":
+                    minor_consent["age10to20"] = desc
+
+                elif age_range == "mixed":
+                    for part in desc.split("|"):
+                        part = part.strip()
+                        lower_part = part.lower()
+
+                        if lower_part.startswith("under10:") or lower_part.startswith("under_10:"):
+                            minor_consent["under10"] = part.split(":", 1)[1].strip()
+
+                        elif lower_part.startswith("age10to20:") or lower_part.startswith("10_to_"):
+                            minor_consent["age10to20"] = part.split(":", 1)[1].strip()
+
+            return minor_consent
+
+        def username_from_id(user_id, user_map):
+            if not user_id:
+                return "system"
+
+            if is_uuid(user_id):
+                return user_map.get(user_id, "system")
+
+            return user_id
+
+        # Optional pagination
+        # ถ้า frontend ส่ง ?page=1&pageSize=20 จะโหลดเฉพาะหน้านั้น
+        # ถ้าไม่ส่ง จะทำงานเหมือนเดิม คือโหลดทั้งหมด
+        page = request.query_params.get("page")
+        page_size = request.query_params.get("pageSize")
+
+        query = ropaDB().table("processing_activities").select("""
             id,
             owner_name,
             activity_name,
             department_id,
             purpose,
+            description,
+            data_main_type,
+            other_text,
+            data_type_id,
+            source_id,
             approval_status,
             submitted_at,
             updated_at,
             created_by,
             updated_by
-        """).order("submitted_at", desc=True).execute()
+        """).order("submitted_at", desc=True)
 
+        if page or page_size:
+            page = int(page or 1)
+            page_size = int(page_size or 20)
+
+            # กัน frontend ขอเยอะเกินไป
+            page = max(page, 1)
+            page_size = max(1, min(page_size, 100))
+
+            start = (page - 1) * page_size
+            end = start + page_size - 1
+
+            query = query.range(start, end)
+
+        activities_res = query.execute()
         activities = safe_data(activities_res, [])
-        result = []
 
-        for activity in activities:
-            activity_id = activity["id"]
+        if not activities:
+            return []
 
-            activity_name = "-"
-            department_name = "-"
+        activity_ids = unique_values([
+            activity.get("id")
+            for activity in activities
+        ])
 
-            if activity.get("activity_name"):
-                name_row = first_row(
-                    ropaDB().table("activity_name")
-                    .select("id, name")
-                    .eq("id", activity["activity_name"])
-                    .maybe_single()
-                    .execute()
-                )
-                if name_row:
-                    activity_name = name_row.get("name") or "-"
+        activity_name_ids = unique_values([
+            activity.get("activity_name")
+            for activity in activities
+        ])
 
-            if activity.get("department_id"):
-                dept_row = first_row(
-                    authDB().table("departments")
-                    .select("id, department_name")
-                    .eq("id", activity["department_id"])
-                    .maybe_single()
-                    .execute()
-                )
-                if dept_row:
-                    department_name = dept_row.get("department_name") or "-"
+        department_ids = unique_values([
+            activity.get("department_id")
+            for activity in activities
+        ])
 
-            retention = first_row(
-                ropaDB().table("retention_policies")
-                .select("*")
-                .eq("activity_id", activity_id)
-                .limit(1)
+        data_type_ids = unique_values([
+            activity.get("data_type_id")
+            for activity in activities
+        ])
+
+        user_ids = unique_values([
+            user_id
+            for activity in activities
+            for user_id in [activity.get("created_by"), activity.get("updated_by")]
+            if user_id and is_uuid(user_id)
+        ])
+
+        # -----------------------------
+        # 1. Batch activity names
+        # -----------------------------
+        activity_name_map = {}
+
+        if activity_name_ids:
+            res = ropaDB().table("activity_name") \
+                .select("id, name") \
+                .in_("id", activity_name_ids) \
                 .execute()
+
+            activity_name_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
             )
 
-            transfer = first_row(
-                ropaDB().table("international_transfers")
-                .select("*")
-                .eq("activity_id", activity_id)
-                .limit(1)
+        # -----------------------------
+        # 2. Batch departments
+        # -----------------------------
+        department_map = {}
+
+        if department_ids:
+            res = authDB().table("departments") \
+                .select("id, department_name") \
+                .in_("id", department_ids) \
                 .execute()
+
+            department_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="department_name"
             )
 
-            legal_rows = safe_data(
-                ropaDB().table("activity_legal_bases")
-                .select("*")
-                .eq("activity_id", activity_id)
-                .execute(),
-                [],
+        # -----------------------------
+        # 3. Batch data types
+        # -----------------------------
+        data_type_map = {}
+
+        if data_type_ids:
+            res = lookupDB().table("data_types") \
+                .select("id, name") \
+                .in_("id", data_type_ids) \
+                .execute()
+
+            data_type_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
             )
 
-            minor_rows = safe_data(
-                ropaDB().table("minor_consent")
-                .select("*")
-                .eq("activity_id", activity_id)
-                .execute(),
-                [],
+        # -----------------------------
+        # 4. Batch users
+        # -----------------------------
+        user_map = {}
+
+        if user_ids:
+            res = authDB().table("users") \
+                .select("id, username") \
+                .in_("id", user_ids) \
+                .execute()
+
+            user_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="username"
             )
 
-            security_rows = safe_data(
-                ropaDB().table("activity_security")
-                .select("*")
-                .eq("activity_id", activity_id)
-                .execute(),
-                [],
+        # -----------------------------
+        # 5. Batch retention policies
+        # -----------------------------
+        retention_map = {}
+
+        if activity_ids:
+            res = ropaDB().table("retention_policies") \
+                .select("*") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            for row in safe_data(res, []):
+                activity_id = row.get("activity_id")
+                if activity_id:
+                    retention_map[activity_id] = row
+
+        # -----------------------------
+        # 6. Batch international transfers
+        # -----------------------------
+        transfer_map = {}
+
+        if activity_ids:
+            res = ropaDB().table("international_transfers") \
+                .select("*") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            for row in safe_data(res, []):
+                activity_id = row.get("activity_id")
+                if activity_id:
+                    transfer_map[activity_id] = row
+
+        # -----------------------------
+        # 7. Batch legal bases relation
+        # -----------------------------
+        legal_rows_map = {}
+        all_legal_basis_ids = []
+
+        if activity_ids:
+            res = ropaDB().table("activity_legal_bases") \
+                .select("*") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            legal_rows = safe_data(res, [])
+            legal_rows_map = group_rows_by(legal_rows, "activity_id")
+
+            all_legal_basis_ids = unique_values([
+                row.get("legal_bases_id")
+                for row in legal_rows
+                if row.get("legal_bases_id")
+            ])
+
+        legal_basis_map = {}
+
+        if all_legal_basis_ids:
+            res = lookupDB().table("legal_bases") \
+                .select("id, name") \
+                .in_("id", all_legal_basis_ids) \
+                .execute()
+
+            legal_basis_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
             )
 
-            measure_ids = [
+        # -----------------------------
+        # 8. Batch access rights relation
+        # -----------------------------
+        access_rows_map = {}
+        all_access_right_ids = []
+
+        if activity_ids:
+            res = ropaDB().table("activity_departments") \
+                .select("activity_id, department_id") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            access_rows = safe_data(res, [])
+            access_rows_map = group_rows_by(access_rows, "activity_id")
+
+            all_access_right_ids = unique_values([
+                row.get("department_id")
+                for row in access_rows
+                if row.get("department_id")
+            ])
+
+        access_right_map = {}
+
+        if all_access_right_ids:
+            res = lookupDB().table("access_rights") \
+                .select("id, name") \
+                .in_("id", all_access_right_ids) \
+                .execute()
+
+            access_right_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
+            )
+
+        # -----------------------------
+        # 9. Batch data categories relation
+        # -----------------------------
+        category_rows_map = {}
+        all_category_ids = []
+
+        if activity_ids:
+            res = ropaDB().table("activity_data_categories") \
+                .select("activity_id, data_categories_id") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            category_rows = safe_data(res, [])
+            category_rows_map = group_rows_by(category_rows, "activity_id")
+
+            all_category_ids = unique_values([
+                row.get("data_categories_id")
+                for row in category_rows
+                if row.get("data_categories_id")
+            ])
+
+        category_map = {}
+
+        if all_category_ids:
+            res = lookupDB().table("data_categories") \
+                .select("id, name") \
+                .in_("id", all_category_ids) \
+                .execute()
+
+            category_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
+            )
+
+        # -----------------------------
+        # 10. Batch minor consent
+        # -----------------------------
+        minor_rows_map = {}
+
+        if activity_ids:
+            res = ropaDB().table("minor_consent") \
+                .select("*") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            minor_rows_map = group_rows_by(
+                safe_data(res, []),
+                "activity_id"
+            )
+
+        # -----------------------------
+        # 11. Batch security rows + security names
+        # -----------------------------
+        security_rows_map = {}
+        all_measure_ids = []
+
+        if activity_ids:
+            res = ropaDB().table("activity_security") \
+                .select("*") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            security_rows = safe_data(res, [])
+            security_rows_map = group_rows_by(security_rows, "activity_id")
+
+            all_measure_ids = unique_values([
                 row.get("measures_id")
                 for row in security_rows
                 if row.get("measures_id")
-            ]
+            ])
 
-            measure_map = {}
+        measure_map = {}
 
-            if measure_ids:
-                measure_rows = safe_data(
-                    lookupDB().table("security_measures")
-                    .select("id, name")
-                    .in_("id", measure_ids)
-                    .execute(),
-                    [],
-                )
+        if all_measure_ids:
+            res = lookupDB().table("security_measures") \
+                .select("id, name") \
+                .in_("id", all_measure_ids) \
+                .execute()
 
-                measure_map = {
-                    row["id"]: row["name"]
-                    for row in measure_rows
-                    if row.get("id")
-                }
-
-            security_with_names = [
-                {
-                    **row,
-                    "name": measure_map.get(row.get("measures_id"), ""),
-                    }
-                for row in security_rows
-            ]
-
-            processor_rows = safe_data(
-                ropaDB().table("activity_processors")
-                .select("""
-                    *,
-                    processors (*),
-                    processor_security_measures (*)
-                """)
-                .eq("activity_id", activity_id)
-                .execute(),
-                [],
+            measure_map = map_rows_by_id(
+                safe_data(res, []),
+                id_key="id",
+                value_key="name"
             )
 
+        # -----------------------------
+        # 12. Batch processors
+        # -----------------------------
+        processor_rows_map = {}
+
+        if activity_ids:
+            res = ropaDB().table("activity_processors") \
+                .select("*, processors (*), processor_security_measures (*)") \
+                .in_("activity_id", activity_ids) \
+                .execute()
+
+            processor_rows_map = group_rows_by(
+                safe_data(res, []),
+                "activity_id"
+            )
+
+        # -----------------------------
+        # Build final response
+        # ไม่มี DB query ใน loop แล้ว
+        # -----------------------------
+        result = []
+
+        for activity in activities:
+            activity_id = activity.get("id")
+
+            activity_name = activity_name_map.get(
+                activity.get("activity_name"),
+                "-"
+            )
+
+            department_name = department_map.get(
+                activity.get("department_id"),
+                "-"
+            )
+
+            retention = retention_map.get(activity_id)
+            transfer = transfer_map.get(activity_id)
+
+            legal_rows = legal_rows_map.get(activity_id, [])
+            minor_rows = minor_rows_map.get(activity_id, [])
+            security_rows = security_rows_map.get(activity_id, [])
+            processor_rows = processor_rows_map.get(activity_id, [])
+
             status_raw = str(activity.get("approval_status") or "").lower()
+
             if status_raw in ["approved", "complete"]:
                 status = "Complete"
             elif status_raw in ["revision", "rejected"]:
@@ -1121,39 +1519,76 @@ async def getRopaList(request: Request):
             else:
                 status = "Pending"
 
-            primary_ids = [row.get("legal_bases_id") for row in legal_rows if row.get("basis_type") == "primary"]
-            legal_names = await get_many_lookup_names_by_values("legal_bases", primary_ids)
+            primary_ids = [
+                row.get("legal_bases_id")
+                for row in legal_rows
+                if row.get("basis_type") == "primary"
+            ]
 
-            supplementary_ids = [row.get("legal_bases_id") for row in legal_rows if row.get("basis_type") == "supplementary"]
-            supplementary_names = await get_many_lookup_names_by_values("legal_bases", supplementary_ids)
+            supplementary_ids = [
+                row.get("legal_bases_id")
+                for row in legal_rows
+                if row.get("basis_type") == "supplementary"
+            ]
 
-            # resolve minor consent
-            minor_consent = {"under10": "", "age10to20": ""}
-            for row in minor_rows:
-                if row.get("age_range") == "under10":
-                    minor_consent["under10"] = row.get("description") or ""
-                elif row.get("age_range") == "age10to20":
-                    minor_consent["age10to20"] = row.get("description") or ""
-            
-            department_rows = safe_data(
-                ropaDB().table("activity_departments")
-                .select("department_id")
-                .eq("activity_id", activity_id)
-                .execute(), []
+            legal_names = names_from_ids(primary_ids, legal_basis_map)
+            supplementary_names = names_from_ids(supplementary_ids, legal_basis_map)
+
+            minor_consent = parse_minor_consent(minor_rows)
+
+            access_ids = [
+                row.get("department_id")
+                for row in access_rows_map.get(activity_id, [])
+                if row.get("department_id")
+            ]
+
+            access_names = names_from_ids(access_ids, access_right_map)
+            access_names = [
+                strip_department_prefix(name)
+                for name in access_names
+            ]
+
+            category_ids = [
+                row.get("data_categories_id")
+                for row in category_rows_map.get(activity_id, [])
+                if row.get("data_categories_id")
+            ]
+
+            category_names = names_from_ids(category_ids, category_map)
+
+            data_type_name = data_type_map.get(
+                activity.get("data_type_id"),
+                ""
+            ) or ""
+
+            security_with_names = [
+                {
+                    **row,
+                    "name": measure_map.get(row.get("measures_id"), ""),
+                }
+                for row in security_rows
+            ]
+
+            created_by_name = username_from_id(
+                activity.get("created_by"),
+                user_map
             )
-            access_names = await get_many_lookup_names_by_values(
-                "access_rights",
-                [row.get("department_id") for row in department_rows if row.get("department_id")]
+
+            updated_by_name = username_from_id(
+                activity.get("updated_by"),
+                user_map
             )
-            access_names = [strip_department_prefix(n) for n in access_names]
-            created_by_name = await get_username(activity.get("created_by"))
-            updated_by_name = await get_username(activity.get("updated_by"))
+
             result.append({
                 "id": activity_id,
+
                 "activity": activity_name,
                 "purpose": activity.get("purpose") or "-",
                 "purposeDetail": activity.get("purpose") or "-",
                 "dataOwner": activity.get("owner_name") or "-",
+                "dataClass": activity.get("data_main_type") or "",
+                "otherText": activity.get("other_text") or "",
+                "dataDescription": activity.get("description") or "",
                 "parties": access_names,
 
                 "legal": {
@@ -1169,34 +1604,66 @@ async def getRopaList(request: Request):
                     "transfer_method": transfer.get("transfer_method") if transfer else None,
                     "protection_standard": transfer.get("protection_standard") if transfer else None,
                     "exceptions": (
-                        [x.strip() for x in str(transfer.get("exceptions") or "").split(",") if x.strip()]
+                        [
+                            x.strip()
+                            for x in str(transfer.get("exceptions") or "").split(",")
+                            if x.strip()
+                        ]
                         if transfer else []
                     ),
                 },
 
                 "retention": {
                     "storageType": (
-                        [x.strip() for x in str(retention.get("storage_type") or "").split(",") if x.strip()]
+                        [
+                            x.strip()
+                            for x in str(retention.get("storage_type") or "").split(",")
+                            if x.strip()
+                        ]
                         if retention else []
                     ),
+
                     "storageMethod": (
-                        [x.strip() for x in str(retention.get("storage_method") or "").split(",") if x.strip()]
+                        [
+                            x.strip()
+                            for x in str(retention.get("storage_method") or "").split(",")
+                            if x.strip()
+                        ]
                         if retention else []
                     ),
+
                     "retentionPeriod": retention.get("retention_period") if retention else "-",
-                    "department": [department_name] if department_name != "-" else [],
+
+                    "department": (
+                        [department_name]
+                        if department_name != "-"
+                        else []
+                    ),
+
                     "deletionMethod": retention.get("deletion_method") if retention else "",
+
                     "usage_purpose": (
                         [retention.get("usage_purpose")]
                         if retention and retention.get("usage_purpose")
                         else []
                     ),
+
                     "denialNote": retention.get("denial_note") if retention else None,
                 },
 
                 "security": security_with_names,
                 "processors": processor_rows,
-                "risk": "Stable",
+
+                "risk": calculate_risk_score(
+                    data_type_name=data_type_name,
+                    category_names=category_names,
+                    legal_names=legal_names,
+                    is_transfer=transfer.get("is_transfer") if transfer else False,
+                    protection_standard=transfer.get("protection_standard") if transfer else None,
+                    retention_period=retention.get("retention_period") if retention else "",
+                    storage_method=retention.get("storage_method") if retention else "",
+                ),
+
                 "status": status,
 
                 "history": [
@@ -1220,3 +1687,240 @@ async def getRopaList(request: Request):
     except Exception as err:
         print("getRopaList error:", repr(err))
         raise HTTPException(status_code=500, detail=str(err))
+
+# async def getRopaList(request: Request):
+#     try:
+#         activities_res = ropaDB().table("processing_activities").select("""
+#             id,
+#             owner_name,
+#             activity_name,
+#             department_id,
+#             purpose,
+#             approval_status,
+#             submitted_at,
+#             updated_at,
+#             created_by,
+#             updated_by
+#         """).order("submitted_at", desc=True).execute()
+
+#         activities = safe_data(activities_res, [])
+#         result = []
+
+#         for activity in activities:
+#             activity_id = activity["id"]
+
+#             activity_name = "-"
+#             department_name = "-"
+
+#             if activity.get("activity_name"):
+#                 name_row = first_row(
+#                     ropaDB().table("activity_name")
+#                     .select("id, name")
+#                     .eq("id", activity["activity_name"])
+#                     .maybe_single()
+#                     .execute()
+#                 )
+#                 if name_row:
+#                     activity_name = name_row.get("name") or "-"
+
+#             if activity.get("department_id"):
+#                 dept_row = first_row(
+#                     authDB().table("departments")
+#                     .select("id, department_name")
+#                     .eq("id", activity["department_id"])
+#                     .maybe_single()
+#                     .execute()
+#                 )
+#                 if dept_row:
+#                     department_name = dept_row.get("department_name") or "-"
+
+#             retention = first_row(
+#                 ropaDB().table("retention_policies")
+#                 .select("*")
+#                 .eq("activity_id", activity_id)
+#                 .limit(1)
+#                 .execute()
+#             )
+
+#             transfer = first_row(
+#                 ropaDB().table("international_transfers")
+#                 .select("*")
+#                 .eq("activity_id", activity_id)
+#                 .limit(1)
+#                 .execute()
+#             )
+
+#             legal_rows = safe_data(
+#                 ropaDB().table("activity_legal_bases")
+#                 .select("*")
+#                 .eq("activity_id", activity_id)
+#                 .execute(),
+#                 [],
+#             )
+
+#             minor_rows = safe_data(
+#                 ropaDB().table("minor_consent")
+#                 .select("*")
+#                 .eq("activity_id", activity_id)
+#                 .execute(),
+#                 [],
+#             )
+
+#             security_rows = safe_data(
+#                 ropaDB().table("activity_security")
+#                 .select("*")
+#                 .eq("activity_id", activity_id)
+#                 .execute(),
+#                 [],
+#             )
+
+#             measure_ids = [
+#                 row.get("measures_id")
+#                 for row in security_rows
+#                 if row.get("measures_id")
+#             ]
+
+#             measure_map = {}
+
+#             if measure_ids:
+#                 measure_rows = safe_data(
+#                     lookupDB().table("security_measures")
+#                     .select("id, name")
+#                     .in_("id", measure_ids)
+#                     .execute(),
+#                     [],
+#                 )
+
+#                 measure_map = {
+#                     row["id"]: row["name"]
+#                     for row in measure_rows
+#                     if row.get("id")
+#                 }
+
+#             security_with_names = [
+#                 {
+#                     **row,
+#                     "name": measure_map.get(row.get("measures_id"), ""),
+#                     }
+#                 for row in security_rows
+#             ]
+
+#             processor_rows = safe_data(
+#                 ropaDB().table("activity_processors")
+#                 .select("""
+#                     *,
+#                     processors (*),
+#                     processor_security_measures (*)
+#                 """)
+#                 .eq("activity_id", activity_id)
+#                 .execute(),
+#                 [],
+#             )
+
+#             status_raw = str(activity.get("approval_status") or "").lower()
+#             if status_raw in ["approved", "complete"]:
+#                 status = "Complete"
+#             elif status_raw in ["revision", "rejected"]:
+#                 status = "Revision"
+#             else:
+#                 status = "Pending"
+
+#             primary_ids = [row.get("legal_bases_id") for row in legal_rows if row.get("basis_type") == "primary"]
+#             legal_names = await get_many_lookup_names_by_values("legal_bases", primary_ids)
+
+#             supplementary_ids = [row.get("legal_bases_id") for row in legal_rows if row.get("basis_type") == "supplementary"]
+#             supplementary_names = await get_many_lookup_names_by_values("legal_bases", supplementary_ids)
+
+#             # resolve minor consent
+#             minor_consent = {"under10": "", "age10to20": ""}
+#             for row in minor_rows:
+#                 if row.get("age_range") == "under10":
+#                     minor_consent["under10"] = row.get("description") or ""
+#                 elif row.get("age_range") == "age10to20":
+#                     minor_consent["age10to20"] = row.get("description") or ""
+            
+#             department_rows = safe_data(
+#                 ropaDB().table("activity_departments")
+#                 .select("department_id")
+#                 .eq("activity_id", activity_id)
+#                 .execute(), []
+#             )
+#             access_names = await get_many_lookup_names_by_values(
+#                 "access_rights",
+#                 [row.get("department_id") for row in department_rows if row.get("department_id")]
+#             )
+#             access_names = [strip_department_prefix(n) for n in access_names]
+#             created_by_name = await get_username(activity.get("created_by"))
+#             updated_by_name = await get_username(activity.get("updated_by"))
+#             result.append({
+#                 "id": activity_id,
+#                 "activity": activity_name,
+#                 "purpose": activity.get("purpose") or "-",
+#                 "purposeDetail": activity.get("purpose") or "-",
+#                 "dataOwner": activity.get("owner_name") or "-",
+#                 "parties": access_names,
+
+#                 "legal": {
+#                     "basis": legal_names,
+#                     "secondaryCategory": supplementary_names,
+#                     "minorConsent": minor_consent,
+#                 },
+
+#                 "transfer": {
+#                     "is_transfer": transfer.get("is_transfer") if transfer else None,
+#                     "destination_country": transfer.get("destination_country") if transfer else None,
+#                     "affiliated_company": transfer.get("affiliated_company") if transfer else None,
+#                     "transfer_method": transfer.get("transfer_method") if transfer else None,
+#                     "protection_standard": transfer.get("protection_standard") if transfer else None,
+#                     "exceptions": (
+#                         [x.strip() for x in str(transfer.get("exceptions") or "").split(",") if x.strip()]
+#                         if transfer else []
+#                     ),
+#                 },
+
+#                 "retention": {
+#                     "storageType": (
+#                         [x.strip() for x in str(retention.get("storage_type") or "").split(",") if x.strip()]
+#                         if retention else []
+#                     ),
+#                     "storageMethod": (
+#                         [x.strip() for x in str(retention.get("storage_method") or "").split(",") if x.strip()]
+#                         if retention else []
+#                     ),
+#                     "retentionPeriod": retention.get("retention_period") if retention else "-",
+#                     "department": [department_name] if department_name != "-" else [],
+#                     "deletionMethod": retention.get("deletion_method") if retention else "",
+#                     "usage_purpose": (
+#                         [retention.get("usage_purpose")]
+#                         if retention and retention.get("usage_purpose")
+#                         else []
+#                     ),
+#                     "denialNote": retention.get("denial_note") if retention else None,
+#                 },
+
+#                 "security": security_with_names,
+#                 "processors": processor_rows,
+#                 "risk": "Stable",
+#                 "status": status,
+
+#                 "history": [
+#                     {
+#                         "action": "edit",
+#                         "by": updated_by_name,
+#                         "date": activity.get("updated_at") or "-",
+#                         "time": activity.get("updated_at") or "-",
+#                     },
+#                     {
+#                         "action": "create",
+#                         "by": created_by_name,
+#                         "date": activity.get("submitted_at") or "-",
+#                         "time": activity.get("submitted_at") or "-",
+#                     },
+#                 ],
+#             })
+
+#         return result
+
+#     except Exception as err:
+#         print("getRopaList error:", repr(err))
+#         raise HTTPException(status_code=500, detail=str(err))
