@@ -98,8 +98,26 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
 
             if (!res.ok) throw new Error(data.detail || "Save failed");
 
-            onSave(data.user);
-            onClose()
+            // onSave(data.user);
+            if (mode === "edit") {
+                const matchedDept = departmentsData.find((d: any) => d.id === form.department);
+                onSave({
+                    fullName: form.fullName,
+                    email: form.email,
+                    phone: form.phone,
+                    position: form.position,
+                    department: matchedDept?.department_name || form.department,
+                    team: form.team,
+                    role: form.role,
+                    lockStatus: form.lockStatus,
+                    accountStatus: form.accountStatus,
+                });
+            }
+            else {
+                onSave(data.user);
+            }
+
+            onClose();
 
         } catch (err: any) {
             console.error(err)
@@ -110,7 +128,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
     const handleDelete = async (id: string) => {
         try {
             const user_id = id
-                      const token = localStorage.getItem("token");
+            const token = localStorage.getItem("token");
             const res = await fetch(
                 `http://localhost:8000/api/admin/delete/${user_id}`, {
                 method: "DELETE",
@@ -272,7 +290,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-4 border-t sticky bottom-0 bg-white">
                     {mode === "edit" && onDelete && user ? (
                         <button
-                            onClick={() => {handleDelete(user.id); onDelete(user.id); onClose(); }}
+                            onClick={() => { handleDelete(user.id); onDelete(user.id); onClose(); }}
                             className="flex items-center gap-1.5 text-[12px] text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition"
                         >
                             <Trash2 size={14} /> Delete User

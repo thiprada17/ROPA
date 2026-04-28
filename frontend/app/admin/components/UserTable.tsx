@@ -72,7 +72,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     {/* Email */}
                                     <div className="truncate text-[12px] text-gray-600 pr-2">{item.email}</div>
 
-                                    {/* Password — plain text ตามภาพ */}
+                                    {/* Password plain text ตามภาพ */}
                                     {/* <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div> */}
                                     <div className="truncate text-[12px] text-gray-600 pr-2" 
                                     title={isHashed(item.password) ? "Password hidden" : item.password}>
@@ -82,7 +82,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     {/* เบอร์โทร */}
                                     <div className="text-gray-600 text-[12px]">{item.phone}</div>
 
-                                    {/* ที่อยู่ — truncate พร้อม tooltip */}
+                                    {/* ที่อยู่ truncate พร้อม tooltip */}
                                     <div className="truncate text-gray-500 pr-1 text-[12px]" title={item.team}>
                                         มม.เกาะรังสิต...
                                     </div>
