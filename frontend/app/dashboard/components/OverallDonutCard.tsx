@@ -7,6 +7,7 @@ import { ChevronDown, Info } from "lucide-react";
 type RawItem = {
   risk: string;
   parties?: string[];
+  ownerDepartment?: string;
   legal?: {
     basis?: string[];
   };
@@ -46,32 +47,16 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
       const map: Record<string, number> = {};
 
       dataSource.forEach((item) => {
-        item.parties?.forEach((p: string) => {
-          // ✅ กรองเฉพาะที่ user เลือก
-          if (selectedDept.length === 0 || selectedDept.includes(p)) {
-            map[p] = (map[p] || 0) + 1;
-          }
-        });
+        const dept = (item as any).ownerDepartment as string | undefined;
+        if (!dept) return;
+
+        if (selectedDept.length === 0 || selectedDept.includes(dept)) {
+          map[dept] = (map[dept] || 0) + 1;
+        }
       });
 
-      const entries = Object.entries(map);
-
-      // ✅ ถ้าเลือกแค่ 1 department → 100%
-      if (selectedDept.length === 1) {
-        return [
-          {
-            name: selectedDept[0],
-            value: entries.reduce((sum, [, v]) => sum + v, 0),
-          },
-        ];
-      }
-
-      // ✅ หลายอัน → แยก slice
-      return entries
-        .map(([key, val]) => ({
-          name: key,
-          value: val,
-        }))
+      return Object.entries(map)
+        .map(([key, val]) => ({ name: key, value: val }))
         .sort((a, b) => b.value - a.value);
     }
 
@@ -281,7 +266,10 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
           {visibleData.map((d) => {
             const percent = total ? ((d.value / total) * 100).toFixed(1) : "0";
             return (
-              <div key={d.name} className="flex items-center justify-between gap-2 min-w-0">
+              <div
+                key={d.name}
+                className="flex items-center justify-between gap-2 min-w-0"
+              >
                 {/* LEFT: dot + label (truncate ถ้ายาวเกิน) */}
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <span
@@ -290,7 +278,7 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
                   />
                   <span
                     className="text-[#616872] text-[12px] font-medium truncate"
-                    title={d.name}  // แสดง full text เมื่อ hover
+                    title={d.name} // แสดง full text เมื่อ hover
                   >
                     {d.name}
                   </span>
@@ -309,7 +297,9 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
 
           {/* แสดงว่ายังมีรายการที่ซ่อนอยู่อีก */}
           {hiddenCount > 0 && (
-            <p className="text-[11px] text-gray-400 ml-5">+{hiddenCount} more</p>
+            <p className="text-[11px] text-gray-400 ml-5">
+              +{hiddenCount} more
+            </p>
           )}
         </div>
       </div>

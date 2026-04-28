@@ -27,6 +27,9 @@ export default function DashboardPage() {
   const [rawList, setRawList] = useState<any[]>([]);
   const [comparison, setComparison] = useState<Dept[]>([]);
   const [trend, setTrend] = useState<{ day: string; value: number }[]>([]);
+  const [deptOptions, setDeptOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   // ================= FILTER STATE =================
   // เลือกช่วงเวลา
@@ -35,41 +38,52 @@ export default function DashboardPage() {
   // เก็บ department ที่เลือก (multi-select)
   const [selectedDept, setSelectedDept] = useState<string[]>([]);
 
-  const deptOptions = Array.from(
-    new Set(rawList.flatMap((r) => r.parties ?? [])),
-  );
-
   useEffect(() => {
     async function fetchDashboard() {
-      const [
-        totalRes,
-        approvalRes,
-        activitiesRes,
-        rawRes,
-        comparisonRes,
-        trendRes,
-      ] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/dashboard/total"),
-        fetch("http://127.0.0.1:8000/api/dashboard/approval"),
-        fetch("http://127.0.0.1:8000/api/dashboard/activities"),
-        fetch("http://127.0.0.1:8000/api/dashboard/raw"),
-        fetch("http://127.0.0.1:8000/api/dashboard/comparison"),
-        fetch(`http://127.0.0.1:8000/api/dashboard/trend?range=${range}`),
-      ]);
+      try {
+        const [
+          totalRes,
+          approvalRes,
+          activitiesRes,
+          rawRes,
+          comparisonRes,
+          trendRes,
+        ] = await Promise.all([
+          fetch("http://127.0.0.1:8000/api/dashboard/total"),
+          fetch("http://127.0.0.1:8000/api/dashboard/approval"),
+          fetch("http://127.0.0.1:8000/api/dashboard/activities"),
+          fetch("http://127.0.0.1:8000/api/dashboard/raw"),
+          fetch("http://127.0.0.1:8000/api/dashboard/comparison"),
+          fetch(`http://127.0.0.1:8000/api/dashboard/trend?range=${range}`),
+        ]);
 
-      const totalJson = await totalRes.json();
-      const approvalJson = await approvalRes.json();
-      const activitiesJson = await activitiesRes.json();
-      const rawJson = await rawRes.json();
-      const comparisonJson = await comparisonRes.json();
-      const trendJson = await trendRes.json();
+        const [
+          totalJson,
+          approvalJson,
+          activitiesJson,
+          rawJson,
+          comparisonJson,
+          trendJson,
+        ] = await Promise.all([
+          totalRes.json(),
+          approvalRes.json(),
+          activitiesRes.json(),
+          rawRes.json(),
+          comparisonRes.json(),
+          trendRes.json(),
+        ]);
 
-      setTotalData(totalJson);
-      setApprovalData(approvalJson);
-      setActivities(activitiesJson.items ?? []);
-      setRawList(rawJson.items ?? []);
-      setComparison(comparisonJson.departments ?? []);
-      setTrend(trendJson.items ?? []);
+        setTotalData(totalJson);
+        setApprovalData(approvalJson);
+        setActivities(activitiesJson.items ?? []);
+        setRawList(rawJson.items ?? []);
+        setComparison(comparisonJson.departments ?? []);
+        setTrend(trendJson.items ?? []);
+        setRawList(rawJson.items ?? []);
+        setDeptOptions(rawJson.departments ?? []);
+      } catch (err) {
+        console.error("fetchDashboard error:", err);
+      }
     }
 
     fetchDashboard();
@@ -105,14 +119,13 @@ export default function DashboardPage() {
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
               {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
-                            <div className="w-[180px] flex-shrink-0">
+              <div className="w-[180px] flex-shrink-0">
                 <MultiSelect
                   options={deptOptions}
                   selected={selectedDept}
                   onChange={(val) => {
-                    // ถ้าเลือกครบทุก option
                     if (val.length === deptOptions.length) {
-                      setSelectedDept([]); // 👉 reset เป็น All Department
+                      setSelectedDept([]);
                     } else {
                       setSelectedDept(val);
                     }
@@ -159,7 +172,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="col-span-4">
-               <TrendLineChart data={trend} />
+                <TrendLineChart data={trend} />
               </div>
             </div>
           </div>
