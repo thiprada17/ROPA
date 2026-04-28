@@ -275,6 +275,13 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
         });
     }
 
+    {/* click outside ปิดเมนู */ }
+    useEffect(() => {
+        const handleClickOutside = () => setShowMenu(false);
+        if (showMenu) window.addEventListener("click", handleClickOutside);
+        return () => window.removeEventListener("click", handleClickOutside);
+    }, [showMenu]);
+
     return (
         <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden font-prompt text-[12px]">
             {/* top toolbar */}
@@ -298,41 +305,34 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
 
                     {/* dropdown */}
                     {showMenu && (
-                        role === "DPO" ? (
-                            <button onClick={() => { setActiveTab("approve"); setIsApprovingEdit(true); }}>
-                                แก้ไขสถานะ
-                            </button>
-                        ) : (
-                            <>
-                                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-50">
+                        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-50">
+                            {role === "DPO" ? (
+                                <button
+                                    className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100"
+                                    onClick={() => {
+                                        setActiveTab("approve");                      // เปิดแท็บ Approve
+                                        setIsApprovingEdit(true);                      // เปิดโหมดแก้ไข
+                                        setApproveComments(existingComments ?? []);    // โหลด comment ปัจจุบัน
+                                        setShowMenu(false);                            // ปิดเมนู
+                                    }}>
+                                    แก้ไขสถานะ
+                                </button>
+                            ) : (
+                                <>
                                     <button
-                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100"
-                                        onClick={() => {
-                                            console.log("edit activity");
-                                            setShowMenu(false);
-                                        }}
-                                    >
-                                        <Link href="/form">
-                                            <div className="flex flex-col-2 gap-2">
-                                                <Pencil size={14} /> แก้ไขกิจกรรม
-                                            </div>
+                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100 flex items-center gap-2"
+                                        onClick={() => {setShowMenu(false);}}>
+                                        <Link href="/form" className="flex items-center gap-2">
+                                            <Pencil size={14} /> แก้ไขกิจกรรม
                                         </Link>
                                     </button>
-
-                                    <button
-                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500"
-                                        onClick={() => {
-                                            console.log("delete activity");
-                                            setShowMenu(false);
-                                        }}
-                                    >
-                                        <div className="flex flex-col-2 gap-2">
-                                            <Trash2 size={14} /> ลบกิจกรรม
-                                        </div>
+                                    <button className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500 flex items-center gap-2"
+                                        onClick={() => { console.log("delete activity"); setShowMenu(false);}}>
+                                        <Trash2 size={14} /> ลบกิจกรรม
                                     </button>
-                                </div>
-                            </>
-                        )
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -504,10 +504,13 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                             itemId={item.id}
                             currentStatus={approveStatus}
                             currentUser={currentUser}
-                            existingComments={existingComments}
+                            existingComments={approveComments}
                             isEditingFromParent={isApprovingEdit}
                             onEditingChange={setIsApprovingEdit}
-                            onAddComment={onAddComment}
+                            onAddComment={(itemId, comment) => {
+                                setApproveComments(prev => [...prev, comment]);
+                                onAddComment?.(itemId, comment);
+                            }}
                             onUpdateStatus={(status, comments) => {
                                 fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
                                     method: "PUT",
@@ -521,7 +524,7 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                                         setApproveStatus(status);
                                         if (comments) setApproveComments(comments);
                                         setIsApprovingEdit(false);
-                                        onStatusChange?.(item.id, status); // ← แจ้ง parent
+                                        onStatusChange?.(item.id, status);
                                         alert("อัปเดตสถานะเรียบร้อย");
                                     })
                                     .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
