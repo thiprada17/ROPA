@@ -8,7 +8,7 @@ import AdminFilterModal from "./components/AdminFilterModal";
 import Sidebar from "../components/Sidebar";
 
 export default function AdminPage() {
-    const [users, setUsers] = useState<UserData[]>(userMock);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [openDate, setOpenDate] = useState(false);
@@ -21,6 +21,29 @@ export default function AdminPage() {
     const dateRef = useRef<HTMLDivElement>(null);
 
     const ITEMS_PER_PAGE = 10;
+
+    useEffect(() => {
+        fetch("http://localhost:8000/api/admin/users/get")
+            .then(res => res.json())
+            .then(data => {
+                const formatted = data.map((u: any) => ({
+                    id: u.id,
+                    fullName: u.username,
+                    email: u.email,
+                    password: u.password,
+                    phone: u.phone,
+                    department: u.departments?.department_name || "-",
+                    team: u.position,
+                    role: u.role,
+                    lockStatus: u.is_locked ? "Locked" : "Unlocked",
+                    accountStatus: u.status === "ACTIVE" ? "Active" : "InActive",
+                    createdAt: u.created_at || new Date().toISOString().split("T")[0]
+                }));
+
+                setUsers(formatted);
+            })
+            .catch(err => console.error(err));
+    }, []);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -47,29 +70,35 @@ export default function AdminPage() {
 
     const formatDate = (d: string) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
 
-    const handleSave = (data: Partial<UserData>) => {
-        if (modal?.mode === "create") {
-            const newUser: UserData = {
-                id: Date.now().toString(),
-                fullName: "",
-                email: "",
-                password: "",
-                phone: "",
-                position: "",
-                department: "",
-                team: "",
-                role: "User",
-                accountStatus: "Active",
-                lockStatus: "Unlocked",
-                createdAt: new Date().toISOString().split("T")[0],
-                ...data
-            } as UserData;
-            setUsers(prev => [newUser, ...prev]);
-        } else if (modal?.mode === "edit" && modal.user) {
-            // เปนแบบนี้น่าจะ put ได้นะ
-            setUsers(prev => prev.map(u => u.id === modal.user!.id ? { ...u, ...data } : u));
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch("http://localhost:8000/api/admin/users/get");
+            const data = await res.json();
+            const formatted = data.map((u: any) => ({
+                id: u.id,
+                fullName: u.username,
+                email: u.email,
+                password: u.password,
+                phone: u.phone,
+                department: u.departments?.department_name || "-",
+                team: u.position,
+                role: u.role,
+                lockStatus: u.is_locked ? "Locked" : "Unlocked",
+                accountStatus: u.status === "ACTIVE" ? "Active" : "InActive",
+                createdAt: u.created_at || new Date().toISOString().split("T")[0],
+            }));
+            setUsers(formatted);
+        } catch (err) {
+            console.error(err);
         }
-        setModal(null);
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const handleSave = () => {
+        fetchUsers();
     };
 
     const handleDelete = (id: string) => setUsers(prev => prev.filter(u => u.id !== id));

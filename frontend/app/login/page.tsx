@@ -14,14 +14,14 @@ export default function LoginPage() {
   // errors เก็บ object ของ error message แต่ละ field เช่น { email: "...", password: "..." }
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  {/* validate function returns error object */}
+  {/* validate function returns error object */ }
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
       newErrors.email = "Please enter the email";
-    } 
-    
+    }
+
     if (!password) {
       newErrors.password = "Please enter the password";
     }
@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
 
-  {/* handleLogin function เรียกใช้ตอนกด login button */}
+  {/* handleLogin function เรียกใช้ตอนกด login button */ }
   const handleLogin = async () => {
     // เรียก validate() เพื่อเช็ค error ก่อน
     const validationErrors = validate();
@@ -49,41 +49,53 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-    const res = await fetch("http://localhost:8000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        identifier: email,
-        password: password,
-      }),
-    });
+      const res = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier: email,
+          password: password,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.error || "Login failed");
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      console.log(data)
+      console.log(data.user);
+      const role = data.user.role;
+      localStorage.setItem("role", role);
+
+      /*สำหรับคอมเมนต์ DPO */
+      localStorage.setItem("username", data.user.username || data.user.email || "");
+      if (role === "Admin") {
+        router.push("/admin");
+      } else if (role === "User") {
+        router.push("/dashboard");
+      } else if (role === "DPO") {
+        router.push("/dpo");
+      }
+
+    } catch (err) {
+      console.error(err);
+      setErrors({
+        password: err.message,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem("token", data.token);
-
-    router.push("/Ropa");
-
-  } catch (err) {
-    console.error(err);
-    setErrors({
-      password: err.message,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center 
       bg-[url('/login_bg.png')] bg-cover bg-top">
-      
+
       {/* login card */}
       <div className="bg-white/20 backdrop-filter backdrop-blur-lg 
         border-t-[0.5px] border-b-[0.5px] border-gray-200 
@@ -92,7 +104,7 @@ export default function LoginPage() {
         <p className="text-[#131415] font-gabarito text-5xl text-center font-bold my-16">
           login
         </p>
-        
+
         <div className="flex-1">
           <div className="flex flex-col">
 
@@ -100,13 +112,13 @@ export default function LoginPage() {
             <div className="mb-2">
               <div className={`flex items-center bg-white rounded-lg p-4 
                 ${errors.email ? "border border-[#D82D49]" : ""}`}>
-                <img  src="/person.svg" className='w-[24px] h-[24px] absolute'/>
-                <input type="text" id="username" title='Enter the Username/Email' 
+                <img src="/person.svg" className='w-[24px] h-[24px] absolute' />
+                <input type="text" id="username" title='Enter the Username/Email'
                   value={email}
                   onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErrors((prev) => ({ ...prev, email: undefined }));
-                    }}
+                    setEmail(e.target.value);
+                    setErrors((prev) => ({ ...prev, email: undefined }));
+                  }}
                   placeholder="Username/Email"
                   className="text-[16px] font-gabarito text-black placeholder-[#616872] 
                   pl-8 border-none w-full"/>
@@ -116,18 +128,18 @@ export default function LoginPage() {
               <p className="text-[#D82D49] text-sm mt-1 pl-2 min-h-[24px]">
                 {errors.email ?? ""}</p>
             </div>
-      
+
             {/* password */}
             <div>
               <div className={`flex items-center bg-white rounded-lg p-4 
                 ${errors.password ? "border border-[#D82D49]" : ""}`}>
-                <img src="/lock.svg" className='w-[24px] h-[24px] absolute'/>
-                <input type={showPassword ? "text" : "password"}  title='Enter the Password' 
+                <img src="/lock.svg" className='w-[24px] h-[24px] absolute' />
+                <input type={showPassword ? "text" : "password"} title='Enter the Password'
                   value={password}
                   onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, password: undefined }));
-                    }}
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
                   placeholder="Password"
                   className="text-[16px] font-gabarito text-black placeholder-[#616872] 
                     pl-8 rounded-lg border-none w-full"/>
@@ -137,21 +149,21 @@ export default function LoginPage() {
                     : <img src="/visibility.svg" className="w-[24px] h-[24px]" />}
                 </button>
               </div>
-              
+
               <div className="flex  mt-1">
                 <p className="text-[#D82D49] text-sm pl-2 min-h-[20px]">
-                {errors.password ?? ""}</p>
+                  {errors.password ?? ""}</p>
                 <Link href="/login/send-email"
                   className="text-[16px] font-gabarito text-black ml-auto">
                   Forgot password?
                 </Link>
               </div>
               {/* แสดง error message ใต้ field ถ้ามี */}
-              
+
             </div>
           </div>
 
-          
+
         </div>
 
         {/* login button */}
@@ -164,7 +176,7 @@ export default function LoginPage() {
         >
           {loading ? "LOGGING IN..." : "LOGIN"}
         </button>
-        
+
       </div>
 
     </div>

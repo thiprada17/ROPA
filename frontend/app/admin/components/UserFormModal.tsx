@@ -37,10 +37,139 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
 
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-    const handleSave = () => {
-        const payload = mode === "edit" && user ? { id: user.id, ...form } : form;
-        onSave(payload);
+    console.log(form)
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+
+            if (!form.fullName?.trim()) {
+                alert("กรุณากรอกชื่อ-นามสกุล");
+                return;
+            }
+
+            if (!form.email?.trim()) {
+                alert("กรุณากรอก Email");
+                return;
+            }
+
+            if (mode === "create" && !form.password?.trim()) {
+                alert("กรุณากรอก Password");
+                return;
+            }
+
+            if (!form.department) {
+                alert("กรุณาเลือกฝ่าย");
+                return;
+            }
+
+            if (!form.role) {
+                alert("กรุณาเลือกสิทธิ์");
+                return;
+            }
+
+            const payload: any = { ...form };
+
+            if (mode === "edit" && !payload.password) {
+                delete payload.password;
+            }
+
+            let url = "";
+            let method = "";
+
+            if (mode === "create") {
+                url = "http://localhost:8000/api/admin/users";
+                method = "POST"
+            } else {
+                url = `http://localhost:8000/api/admin/edit/${user?.id}`;
+                method = "PUT"
+            }
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            })
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.detail || "Save failed");
+
+            onSave(data.user);
+            onClose()
+
+        } catch (err: any) {
+            console.error(err)
+            alert(err.message)
+        }
     };
+
+    const handleDelete = async (id: string) => {
+        try {
+            const user_id = id
+                      const token = localStorage.getItem("token");
+            const res = await fetch(
+                `http://localhost:8000/api/admin/delete/${user_id}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            const data = res.json()
+
+            console.log(data)
+
+
+        } catch (error) {
+            console.log('delete user error: ' + error)
+        }
+    }
+
+    const [departmentsData, setDepartmentsData] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const token = localStorage.getItem("token");
+
+                const res = await fetch("http://localhost:8000/api/admin/departments", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const data = await res.json();
+                console.log(data)
+
+                if (!res.ok) throw new Error(data.error);
+
+                setDepartmentsData(data);
+
+                if (user?.department) {
+                    const matched = data.find(
+                        (d: any) =>
+                            d.id === user.department ||
+                            d.department_name === user.department
+                    );
+                    if (matched) {
+                        set("department", matched.id);
+                    }
+                }
+
+
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchDepartments();
+    }, []);
+
 
     return (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto">
@@ -88,10 +217,20 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="ฝ่าย">
                             <div className="relative">
-                                <select className={selectCls} value={form.department} onChange={e => set("department", e.target.value)}>
+                                <select
+                                    className={selectCls}
+                                    value={form.department}
+                                    onChange={e => set("department", e.target.value)}
+                                >
                                     <option value="">เลือกฝ่าย</option>
-                                    {departments.map(d => <option key={d}>{d}</option>)}
+
+                                    {departmentsData.map(d => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.department_name}
+                                        </option>
+                                    ))}
                                 </select>
+
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
                             </div>
                         </Field>
@@ -133,7 +272,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-4 border-t sticky bottom-0 bg-white">
                     {mode === "edit" && onDelete && user ? (
                         <button
-                            onClick={() => { onDelete(user.id); onClose(); }}
+                            onClick={() => {handleDelete(user.id); onDelete(user.id); onClose(); }}
                             className="flex items-center gap-1.5 text-[12px] text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition"
                         >
                             <Trash2 size={14} /> Delete User

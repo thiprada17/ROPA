@@ -1,0 +1,13 @@
+import os
+from dotenv import load_dotenv
+from supabase import create_client
+
+load_dotenv()  # 🔥 ต้องมาก่อนทุกอย่าง
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_SERVICE_KEY")
+
+if not url or not key:
+    raise ValueError(f"ENV ERROR → URL: {url}, KEY: {key}")
+
+supabase = create_client(url, key)

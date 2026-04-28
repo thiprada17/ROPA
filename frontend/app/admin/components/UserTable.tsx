@@ -53,9 +53,9 @@ export default function UserTable({ data, onRowClick }: Props) {
                     </div>
 
                     {/* Body */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col font-prompt">
                         {data.length === 0 ? (
-                            <div className="text-center text-gray-400 py-8 text-sm">ไม่พบข้อมูล</div>
+                            <div className="text-center text-gray-400 py-8 text-[8px]">ไม่พบข้อมูล</div>
                         ) : (
                             data.map((item) => (
                                 <div
@@ -65,31 +65,31 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     onClick={() => onRowClick(item)}
                                 >
                                     {/* ชื่อ-นามสกุล */}
-                                    <div className="truncate font-medium text-gray-800 pr-2">{item.fullName}</div>
+                                    <div className="truncate font-medium text-[12px] text-gray-800 pr-2">{item.fullName || "-"}</div>
 
                                     {/* Email */}
-                                    <div className="truncate text-gray-600 pr-2">{item.email}</div>
+                                    <div className="truncate text-[12px] text-gray-600 pr-2">{item.email}</div>
 
                                     {/* Password — plain text ตามภาพ */}
-                                    <div className="truncate text-gray-600 pr-2">{item.password}</div>
+                                    <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div>
 
                                     {/* เบอร์โทร */}
-                                    <div className="text-gray-600">{item.phone}</div>
+                                    <div className="text-gray-600 text-[12px]">{item.phone}</div>
 
                                     {/* ที่อยู่ — truncate พร้อม tooltip */}
-                                    <div className="truncate text-gray-500 pr-1" title={item.team}>
+                                    <div className="truncate text-gray-500 pr-1 text-[12px]" title={item.team}>
                                         มม.เกาะรังสิต...
                                     </div>
 
                                     {/* ฝ่าย */}
-                                    <div className="text-gray-600">{item.department}</div>
+                                    <div className="text-gray-600 text-[12px]">{item.department || "-"}</div>
 
                                     {/* ตำแหน่ง */}
-                                    <div className="truncate text-gray-600">{item.team}</div>
+                                    <div className="truncate text-gray-600 text-[12px]">{item.team}</div>
 
                                     {/* บทบาท (Role) */}
                                     <div className="flex justify-center">
-                                        <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border ${roleMap[item.role].color}`}>
+                                        <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border ${roleMap[item.role].color}`}>
                                             {roleMap[item.role].icon}
                                             {item.role}
                                         </span>
@@ -105,7 +105,7 @@ export default function UserTable({ data, onRowClick }: Props) {
 
                                     {/* สถานะบัญชี */}
                                     <div className="flex justify-center">
-                                        <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium ${statusMap[item.accountStatus].color}`}>
+                                        <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium ${statusMap[item.accountStatus].color}`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${statusMap[item.accountStatus].dot}`} />
                                             {item.accountStatus}
                                         </span>
