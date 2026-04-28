@@ -6,6 +6,7 @@ import {
     ChevronsDown,
     ChevronDown,
     ClipboardClock,
+    Info, 
 } from "lucide-react";
 
 type Activity = {
@@ -47,9 +48,24 @@ export default function ActivityCard({
 
             {/* HEADER + ICON */}
             <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">
-                    Latest Activity
-                </p>
+
+                {/* TITLE + INFO */}
+                <div className="flex items-center gap-2 relative group">
+                    <p className="text-sm text-gray-500">
+                        Latest Activity
+                    </p>
+
+                    {/* INFO ICON */}
+                    <Info
+                        size={14}
+                        className="text-gray-400 cursor-pointer"
+                    />
+
+                    {/* TOOLTIP */}
+                    <div className="font-prompt absolute left-0 top-6 w-[220px] text-xs border border-gray-300 bg-gray-100 text-black px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                        แสดงรายการ ROPA ล่าสุด พร้อมความเสี่ยงและฝ่ายที่เกี่ยวข้อง
+                    </div>
+                </div>
 
                 <ClipboardClock
                     size={26}
@@ -80,8 +96,7 @@ export default function ActivityCard({
                                 </p>
 
                                 <div
-                                    className={`px-2 py-1 rounded-md flex items-center justify-center ${risk.color
-                                        }`}
+                                    className={`px-2 py-1 rounded-md flex items-center justify-center ${risk.color}`}
                                 >
                                     {risk.icon}
                                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import {
     LineChart,
     Line,
@@ -16,31 +17,45 @@ type Props = {
 
 export default function TrendLineChart({ data }: Props) {
     const safeData =
-        Array.isArray(data) && data.length > 0
-            ? data
-            : [
-                { day: "Mon", value: 10 },
-                { day: "Tue", value: 20 },
-                { day: "Wed", value: 15 },
-                { day: "Thu", value: 30 },
-                { day: "Fri", value: 25 },
-            ];
+  Array.isArray(data) && data.length > 0
+    ? data
+    : [
+        { day: "Sun", value: 20 },
+        { day: "Mon", value: 100 },
+        { day: "Tue", value: 70 },
+        { day: "Wed", value: 100 },
+        { day: "Thu", value: 120 },
+        { day: "Fri", value: 160 },
+        { day: "Sat", value: 10 },
+      ];
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm h-[366px] w-full">
 
             {/* HEADER */}
             <div className="flex justify-between mb-4">
-                <p className="text-sm text-gray-500 font-medium">
-                    ROPA Trend
-                </p>
+                <div className="flex items-center gap-2 relative group">
+                    <p className="text-sm text-gray-500 font-medium">
+                        ROPA Trend
+                    </p>
+                    {/* INFO ICON */}
+                    <Info
+                        size={14}
+                        className="text-gray-400 cursor-pointer"
+                    />
+
+                    {/* TOOLTIP */}
+                    <div className="font-prompt absolute left-0 top-6 w-[220px] text-xs border border-gray-300 bg-gray-100 text-black px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                        แผนภูมิเส้นแสดงแนวโน้มจำนวนรายการ ROPA ที่เพิ่มเข้าสู่ระบบ
+                    </div>
+                </div>
             </div>
 
             {/* CHART */}
             <div className="w-full h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
 
-                    <LineChart data={safeData}>
+                    <LineChart data={safeData} margin={{ top: 5, right: 10, left: -35, bottom: 0 }}>
 
                         {/* GRID (soft + modern) */}
                         <CartesianGrid
@@ -55,6 +70,7 @@ export default function TrendLineChart({ data }: Props) {
                             tick={{ fill: "#9CA3AF", fontSize: 12 }}
                             axisLine={false}
                             tickLine={false}
+                            padding={{ left: 0, right: 2 }}
                         />
 
                         <YAxis
