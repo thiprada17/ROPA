@@ -191,8 +191,15 @@ const role =
         ? (localStorage.getItem("role") as "DPO" | "User" | "Viewer" | "Admin")
         : undefined;
 
+const trimLegalBasis = (text: string) => {
+    // ตัด ( ออกทุกอย่างหลังจากนั้น
+    const idx = text.indexOf("(");
+    if (idx !== -1) return text.slice(0, idx).trim();
+    return text.trim();
+};
+
 export default function DetailCard({ item, onClose, role, existingComments, onStatusChange, onAddComment }: DetailCardProps) {
-    
+
     const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
     const [showMenu, setShowMenu] = useState(false);
     const [isApprovingEdit, setIsApprovingEdit] = useState(role === "DPO");
@@ -398,9 +405,11 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                     >
                         {item.legal?.basis?.length ? (
                             item.legal.basis.length > 1 ? (
-                                item.legal.basis.map((l, i) => <Tag key={i} label={l} />)
+                                item.legal.basis.map((l, i) => (
+                                    <Tag key={i} label={trimLegalBasis(l)} />
+                                ))
                             ) : (
-                                <span>{item.legal.basis[0]}</span>
+                                <span>{trimLegalBasis(item.legal.basis[0])}</span>
                             )
                         ) : (
                             <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>

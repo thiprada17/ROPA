@@ -58,56 +58,56 @@ export default function RopaPage() {
     start: { year: "", month: "", day: "" },
     end: { year: "", month: "", day: "" },
   });
-  const [detailWidth, setDetailWidth] = useState<number>(400);
+  const [detailWidth, setDetailWidth] = useState(420);
 
   const handleRowClick = async (item: RopaItem) => {
-  setSelectedItem(item);
+    setSelectedItem(item);
 
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await fetch(
-      `http://localhost:8000/api/form/activity/${item.id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(
+        `http://localhost:8000/api/form/activity/${item.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const detailData = await res.json();
+
+      if (!res.ok) {
+        throw new Error(detailData.detail || "โหลดรายละเอียดไม่สำเร็จ");
       }
-    );
 
-    const detailData = await res.json();
+      setSelectedItem((prev) => ({
+        ...item,
+        ...(prev ?? {}),
+        ...detailData,
 
-    if (!res.ok) {
-      throw new Error(detailData.detail || "โหลดรายละเอียดไม่สำเร็จ");
+        parties:
+          detailData.parties?.length
+            ? detailData.parties
+            : item.parties,
+
+        legal:
+          detailData.legal ?? item.legal,
+
+        retention:
+          detailData.retention ?? item.retention,
+
+        transfer:
+          detailData.transfer ?? item.transfer,
+
+        security:
+          detailData.security ?? item.security,
+
+        processors:
+          detailData.processors ?? item.processors,
+      }));
+    } catch (err) {
+      console.error("fetch detail error:", err);
     }
-
-    setSelectedItem((prev) => ({
-      ...item,
-      ...(prev ?? {}),
-      ...detailData,
-
-      parties:
-        detailData.parties?.length
-          ? detailData.parties
-          : item.parties,
-
-      legal:
-        detailData.legal ?? item.legal,
-
-      retention:
-        detailData.retention ?? item.retention,
-
-      transfer:
-        detailData.transfer ?? item.transfer,
-
-      security:
-        detailData.security ?? item.security,
-
-      processors:
-        detailData.processors ?? item.processors,
-    }));
-  } catch (err) {
-    console.error("fetch detail error:", err);
-  }
-};
+  };
   const ref = useRef<HTMLDivElement>(null);
 
   // ================= FETCH BACKEND =================
@@ -136,7 +136,7 @@ export default function RopaPage() {
           throw new Error(
             result.detail || result.error || "โหลดข้อมูล ROPA ไม่สำเร็จ",
           );
-        
+
         console.log("ROPA RAW TEXT:", text);
         console.log("ROPA RESULT:", result);
         console.log("IS ARRAY:", Array.isArray(result));
@@ -284,11 +284,11 @@ export default function RopaPage() {
     selectedStatus.length +
     selectedRisks.length +
     (retention.start.year ||
-    retention.start.month ||
-    retention.start.day ||
-    retention.end.year ||
-    retention.end.month ||
-    retention.end.day
+      retention.start.month ||
+      retention.start.day ||
+      retention.end.year ||
+      retention.end.month ||
+      retention.end.day
       ? 1
       : 0);
 
@@ -306,23 +306,44 @@ export default function RopaPage() {
   const initResize = (e: React.MouseEvent) => {
     const startX = e.clientX;
     const startW = detailWidth;
+    const containerWidth = window.innerWidth;
+
     const onMove = (e: MouseEvent) => {
-      const w = Math.min(800, Math.max(300, startW + (startX - e.clientX)));
-      setDetailWidth(w);
+      const dx = startX - e.clientX;
+      const newW = startW + dx;
+
+      // min 280px, max 60% ของหน้าจอ
+      const minW = 280;
+      const maxW = containerWidth * 0.6;
+
+      setDetailWidth(Math.min(maxW, Math.max(minW, newW)));
     };
+
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
     };
+
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   };
+
+  // เพิ่ม useEffect นี้ใน RopaPage
+  useEffect(() => {
+    const handleResize = () => {
+      const maxW = window.innerWidth * 0.6;
+      setDetailWidth(prev => Math.min(prev, maxW));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
 
   return (
     <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
       {/* ================= Sidebar ================= */}
       <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
-        <Sidebar userEmail="" userName=""/>
+        <Sidebar userEmail="" userName="" />
       </aside>
 
       {/* ================= Main ================= */}
@@ -474,7 +495,14 @@ export default function RopaPage() {
 
         {/* BODY */}
         <div className="flex flex-1 overflow-hidden text-[12px] px-10 pb-6 gap-0">
-          <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]">
+          {/* <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]"> */}
+          <div
+            className="flex flex-col overflow-hidden"
+            style={{
+              flex: 1,
+              minWidth: selectedItem ? "320px" : "auto",
+            }}
+          >
             <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
               {loading ? (
                 <div className="text-center text-gray-400 py-6">
@@ -526,16 +554,23 @@ export default function RopaPage() {
             </div>
           </div>
 
+          {/* Resize handle */}
           {selectedItem && (
             <div
-              className="w-1 cursor-col-resize bg-gray-200"
+              className="w-1.5 cursor-col-resize bg-gray-200 hover:bg-blue-300 transition flex-shrink-0 mx-0.5"
               onMouseDown={initResize}
             />
           )}
+
+          {/* Detail card */}
           {selectedItem && (
             <div
               className="flex-shrink-0 rounded-xl overflow-hidden shadow"
-              style={{ width: detailWidth }}
+              style={{
+                width: detailWidth,
+                minWidth: "280px",
+                maxWidth: "60vw",
+              }}
             >
               <DetailCard
                 item={selectedItem}
