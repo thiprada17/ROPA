@@ -1,5 +1,4 @@
 "use client";
-
 import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 

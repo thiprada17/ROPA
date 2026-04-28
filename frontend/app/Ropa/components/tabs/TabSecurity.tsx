@@ -1,18 +1,26 @@
+// app\Ropa\components\tabs\TabSecurity.tsx
 "use client";
+import { Shield } from "lucide-react";
 import { RopaItem } from "../../types/ropa";
 
+// tab: security
 export default function TabSecurity({
   item,
+  RenderValue,
   BulletRow,
+  InfoRow,
+  InfoRowPlain,
 }: {
   item: RopaItem;
+  RenderValue: any;
   BulletRow: any;
+  InfoRow: any;
+  InfoRowPlain: any;
 }) {
+  // security ของ item
   const securityRows: any[] = Array.isArray(item.security) ? item.security : [];
-  const step6Rows: any[] = Array.isArray(item.step6?.securityRows)
-    ? item.step6.securityRows
-    : [];
-  const allRows = step6Rows.length > 0 ? step6Rows : securityRows;
+
+  const allRows = securityRows; 
 
   const labels = [
     "มาตรการเชิงองค์กร",

@@ -19,7 +19,7 @@ export async function sendOtpEmail(to, otp) {
         subject: 'OTP',
         html: `
       <div style="font-family: sans-serif; max-width: 400px;">
-        <h2>รีเซ็ตรหัสผ่าน ...คิดไม่ออก</h2>
+        <h2>รีเซ็ตรหัสผ่าน</h2>
         <p>รหัส OTP ของคุณคือ:</p>
         <h1 style="letter-spacing: 8px; color: #6366f1;">${otp}</h1>
         <p>รหัสนี้จะหมดอายุใน <strong>5 นาที</strong></p>

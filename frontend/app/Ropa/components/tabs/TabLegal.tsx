@@ -1,6 +1,6 @@
 // app/Ropa/components/tabs/TabLegal.tsx
 "use client";
-import { RopaItem } from "../DetailCard";
+import { RopaItem } from "../../types/ropa";
 
 export default function TabLegal({
   item,

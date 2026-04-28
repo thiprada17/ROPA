@@ -1,23 +1,27 @@
 // app/components/Sidebar.tsx
 "use client";
 
-import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness, UserLock, Settings, LogOut, User} from "lucide-react";
+import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness,
+  UserLock, Settings, LogOut, User, UserRoundCog, UserStar
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
-  { icon: ShieldPlus, href: "/Form", label: "CREATE ROPA" },
+  { icon: ShieldPlus, href: "/form", label: "CREATE ROPA" },
   { icon: ShieldAlert, href: "/Ropa", label: "ROPA" },
   { icon: Scale, href: "/legal", label: "LEGAL" },
+  { icon: UserRoundCog, href: "/admin", label: "ADMIN" },
+  { icon: UserStar, href: "/dpo", label: "DPO" },
 ];
 
 const userItems = [
   { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
   { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
   { icon: Settings, href: "/settings", label: "SETTING" },
-  { icon: LogOut, href: "/logout", label: "LOG OUT", rotate: true },
+  { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
 ];
 
 interface SidebarProps {
@@ -34,105 +38,132 @@ export default function Sidebar({
 
   const isActive = (href: string) => pathname?.startsWith(href);
 
-  // กด icon / logo / profile ตอน collapsed จะเปิด expand นะคับ อันนี้มั้ยไม่รุ
-  const handleOpen = () => {
-    if (!expanded) setExpanded(true);
-  };
-
   return (
     <div className="font-gabarito">
       {/* Overlay */}
       {expanded && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-30"
+          className="fixed inset-0 bg-black/30 z-30"
           onClick={() => setExpanded(false)}
         />
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 bottom-0 z-40 bg-[#4B5666] flex flex-col py-3
-          transition-all duration-300 ease-in-out
-          ${expanded ? "w-52" : "w-16"}
+          transition-[width] duration-300 ease-in-out overflow-hidden
+          ${expanded ? "w-52" : "w-16 cursor-pointer"}
         `}
+        onClick={() => { if (!expanded) setExpanded(true); }}
       >
-        {/* Logo */}
-        <button
-          onClick={handleOpen}
-          className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto"
-        >
+        {/* logo อยู่นิ่ง w-10 h-10 ตรงกลาง w-16 เสมอ */}
+        <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto flex-shrink-0">
           LOGO
-        </button>
+        </div>
 
-        {/* ส่วน MENU */}
-        <span className="text-gray-400 text-[10px] font-semibold px-5 mb-1">
-          MENU
-        </span>
+        {/* MENU label */}
+        <div className="flex items-center mb-1 h-5">
+          {/* กล่อง icon-width นิ่ง */}
+          <div className="w-16 flex-shrink-0 flex items-center justify-center">
+            <span className={`text-gray-400 text-[10px] font-semibold whitespace-nowrap
+            transition-all duration-300 overflow-hidden
+          `}>
+              MENU
+            </span>
+          </div>
 
-        {/* Menu items */}
+        </div>
+
+        {/* menu items */}
         <nav className="flex flex-col flex-1">
           {menuItems.map(({ icon: Icon, href, label }) => (
             <Link
               key={href}
-              href={expanded ? href : "#"} 
-              className={`flex items-center px-3 py-2 rounded-md text-white hover:bg-white/5 transition-colors ${expanded ? "justify-start gap-3 mb-3" : "justify-center gap-3 mb-3"
-                } ${isActive(href) ? "bg-white/10" : ""}`}
-              onClick={() => expanded && setExpanded(false)}
+              href={href}
+              className={`flex items-center mb-1 rounded-md text-white
+                hover:bg-white/10 transition-colors
+                ${isActive(href) ? "bg-white/10" : ""}
+              `}
+              onClick={(e) => {
+                if (!expanded) {
+                  e.preventDefault();
+                } else {
+                  setExpanded(false);
+                }
+              }}
             >
-              <Icon size={20} onClick={handleOpen} />
-              {expanded && <span>{label}</span>}
+              {/* icon zone */}
+              <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
+                <Icon size={22} />
+              </div>
+              {/* label slide ออกมา */}
+              <span className={`text-sm whitespace-nowrap overflow-hidden
+                transition-all duration-300
+                ${expanded ? "opacity-100 max-w-xs" : "opacity-0 max-w-0"}
+              `}>
+                {label}
+              </span>
             </Link>
           ))}
 
-          {/* ไอเส้น */}
-          <div className="h-px bg-[#E7E7E7] my-2 mx-3" />
+          <div className="h-px bg-white/20 my-2 mx-3" />
         </nav>
 
-        {/* ส่วน USER */}
-        <span className="text-gray-400 text-[10px] font-semibold px-5 mb-1">
-          USER
-        </span>
+        {/* USER label */}
+        <div className="flex items-center mb-1 h-5">
+          <div className="w-16 flex-shrink-0 flex items-center justify-center">
+            <span className={`text-gray-400 text-[10px] font-semibold whitespace-nowrap
+            transition-all duration-300 overflow-hidden
+          `}>
+              USER
+            </span>
+          </div>
+        </div>
 
-        {/* User items */}
-        <nav className="flex flex-col px-0">
+        {/* user items */}
+        <nav className="flex flex-col">
           {userItems.map(({ icon: Icon, href, label, rotate }) => (
             <Link
               key={href}
-              href={expanded ? href : "#"} // navigation only when expanded
-              className={`flex items-center px-3 py-2 rounded-md text-white hover:bg-white/5 transition-colors ${expanded ? "justify-start gap-3 mb-3" : "justify-center gap-3 mb-3"
-                }`}
-              onClick={() => expanded && setExpanded(false)}
+              href={href}
+              className={`flex items-center mb-1 rounded-md text-white
+                hover:bg-white/10 transition-colors
+              `}
+              onClick={(e) => {
+                if (!expanded) {
+                  e.preventDefault();
+                } else {
+                  setExpanded(false);
+                }
+              }}
             >
-              <Icon size={20} className={rotate ? "rotate-180" : ""} onClick={handleOpen} />
-              {expanded && <span>{label}</span>}
+              <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
+                <Icon size={22} className={rotate ? "rotate-180" : ""} />
+              </div>
+              <span className={`text-sm whitespace-nowrap overflow-hidden
+                transition-all duration-300
+                ${expanded ? "opacity-100 max-w-xs" : "opacity-0 max-w-0"}
+              `}>
+                {label}
+              </span>
             </Link>
           ))}
 
-          {/* เส้นอีกแล้ว */}
-          <div className="h-px bg-[#E7E7E7] my-2 mx-3" />
+          <div className="h-px bg-white/20 my-2 mx-3" />
         </nav>
 
-        {/* Profile */}
-        <div
-          className={`flex items-center mt-2 ${expanded ? "justify-start gap-3 px-3" : "justify-center"
-            }`}
-        >
-          <div
-            className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center flex-shrink-0"
-            onClick={handleOpen}
-          >
-            <User size={20} className="text-white" />
-          </div>
-          {expanded && (
-            <div className="overflow-hidden">
-              <p className="text-white text-[11px] font-medium truncate">
-                {userName}
-              </p>
-              <p className="text-gray-400 text-[10px] truncate">
-                {userEmail}
-              </p>
+        {/* profile */}
+        <div className="flex items-center mt-2">
+          <div className="w-16 flex-shrink-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center">
+              <User size={20} className="text-white" />
             </div>
-          )}
+          </div>
+          <div className={`overflow-hidden transition-all duration-300
+            ${expanded ? "opacity-100 max-w-xs" : "opacity-0 max-w-0"}
+          `}>
+            <p className="text-white text-[11px] font-medium whitespace-nowrap">{userName}</p>
+            <p className="text-gray-400 text-[10px] whitespace-nowrap">{userEmail}</p>
+          </div>
         </div>
       </div>
     </div>

@@ -319,14 +319,17 @@ export default function RopaPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
+    <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
       {/* ================= Sidebar ================= */}
       <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
-        <Sidebar userName="test" userEmail="test@example.com" />
+        <Sidebar userEmail="" userName=""/>
       </aside>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* HEADER */}
+      {/* ================= Main ================= */}
+      {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}
+      <main className="flex-1 flex flex-col overflow-hidden text-[12px] ">
+        {/* ฝั่งซ้ายโรป้า */}
+        {/*  Filter bar ให้มันอยู่บนสุด เต็มความกว้าง */}
         <div className="px-10 pt-6 pb-4 shrink-0">
           <div className="mb-3">
             <Breadcrumb items={breadcrumbItems} />

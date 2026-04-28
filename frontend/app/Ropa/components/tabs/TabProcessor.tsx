@@ -1,6 +1,7 @@
 // app/Ropa/components/tabs/TabProcessor.tsx
 "use client";
-import { RopaItem, display } from "../DetailCard";
+import { display } from "../DetailCard";
+import { RopaItem } from "../../types/ropa"
 
 export default function TabProcessor({ item, BulletRow, InfoRowPlain }: {
   item: RopaItem; BulletRow: any; InfoRowPlain: any; RenderValue?: any; InfoRow?: any;
