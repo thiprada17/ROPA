@@ -1114,6 +1114,8 @@ async def getRopaList(request: Request):
                 [row.get("department_id") for row in department_rows if row.get("department_id")]
             )
             access_names = [strip_department_prefix(n) for n in access_names]
+            created_by_name = await get_username(activity.get("created_by"))
+            updated_by_name = await get_username(activity.get("updated_by"))
             result.append({
                 "id": activity_id,
                 "activity": activity_name,
