@@ -32,11 +32,11 @@ item,
                     </span>
                 </div>
 
-        {/* <textarea
+        <textarea
           readOnly
-          value={item.dataDescription ?? ""}
+          value={step2?.description ?? ""}
           className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] resize-none"
-        /> */}
+        />
       </div>
 
       <InfoRowPlain label="ประเภทของข้อมูล">

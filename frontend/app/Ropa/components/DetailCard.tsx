@@ -433,7 +433,8 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
 
                 {/* tabs bar */}
                 <div className="border-b border-gray-100">
-                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none">
+                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none scroll-smooth"
+                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}>
                         {tabs.map((t) => (
                             <button
                                 key={t.key}
