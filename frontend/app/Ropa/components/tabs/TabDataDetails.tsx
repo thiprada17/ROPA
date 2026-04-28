@@ -4,19 +4,21 @@ import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 
 export default function TabDataDetails({
-    item,
-    RenderValue,
-    BulletRow,
-    InfoRowPlain,
+item,
+  RenderValue,
+  BulletRow,
+  InfoRowPlain,
+  InfoRow,
 }: {
-    item: RopaItem;
-    RenderValue: any;
-    BulletRow: any;
-    InfoRowPlain: any;
+  item: RopaItem;
+  RenderValue: any;
+  BulletRow: any;
+  InfoRowPlain: any;
+  InfoRow: any;
 }) {
+    const step1 = item.step2;
     return (
         <div className="space-y-2">
-
             <InfoRowPlain label="ประเภทข้อมูลส่วนบุคคล">
                 <RenderValue value={item.dataCategories} />
             </InfoRowPlain>
@@ -30,29 +32,28 @@ export default function TabDataDetails({
                     </span>
                 </div>
 
-                <textarea
-                    readOnly
-                    value={item.dataDescription ?? ""}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] resize-none"
-                />
-            </div>
+        {/* <textarea
+          readOnly
+          value={item.dataDescription ?? ""}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] resize-none"
+        /> */}
+      </div>
 
-            <InfoRowPlain label="ประเภทของข้อมูล">
-                <RenderValue value={item.dataTypes} />
-            </InfoRowPlain>
+      <InfoRowPlain label="ประเภทของข้อมูล">
+        <RenderValue value={step2?.dataType ? [step2.dataType] : []} />
+      </InfoRowPlain>
 
-            <InfoRowPlain label="เจ้าของข้อมูล">
-                <RenderValue value={item.dataSubjects} />
-            </InfoRowPlain>
+      <InfoRowPlain label="เจ้าของข้อมูล">
+        <span className="text-[11px]">{item.dataOwner ?? item.step1?.dataOwner ?? "ไม่มีข้อมูล"}</span>
+      </InfoRowPlain>
 
-            <InfoRowPlain label="วิธีที่ได้มาซึ่งข้อมูล">
-                <RenderValue value={item.acquisitionMethods} />
-            </InfoRowPlain>
+      <InfoRowPlain label="วิธีที่ได้มาซึ่งข้อมูล">
+        <RenderValue value={step2?.methods} />
+      </InfoRowPlain>
 
-            <InfoRowPlain label="แหล่งที่ได้มาซึ่งข้อมูล">
-                <RenderValue value={item.dataSources} />
-            </InfoRowPlain>
-
-        </div>
-    );
+      <InfoRowPlain label="แหล่งที่ได้มาซึ่งข้อมูล">
+        <RenderValue value={step2?.dataSource ? [step2.dataSource] : []} />
+      </InfoRowPlain>
+    </div>
+  );
 }

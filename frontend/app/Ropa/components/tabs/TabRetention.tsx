@@ -1,6 +1,5 @@
 // app/Ropa/components/tabs/TabRetention.tsx
 "use client";
-import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 
 // tab: retention

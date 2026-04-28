@@ -1,7 +1,7 @@
 // app/Ropa/components/tabs/TabProcessor.tsx
 "use client";
 import { display } from "../DetailCard";
-import { RopaItem } from "../../types/ropa";
+import { RopaItem } from "../../types/ropa"
 
 export default function TabProcessor({
     item,
