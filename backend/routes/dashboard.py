@@ -1,7 +1,17 @@
 from fastapi import APIRouter, Request
-from controllers.dashboardController import *
+from controllers.dashboardController import (
+    getDashboardSummary,
+    getDashboardTotal,
+    getDashboardApproval,
+    getDashboardDonut,
+    getDashboardTrend,
+    getDashboardComparison,
+    getDashboardActivities,
+    getDashboardRawList,
+)
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
 
 @router.get("/summary")
 async def summary(request: Request):

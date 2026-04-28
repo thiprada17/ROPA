@@ -4,9 +4,17 @@ import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { ChevronDown, Info } from "lucide-react";
 
+type RawItem = {
+    risk: string;
+    parties?: string[];
+    legal?: {
+        basis?: string[];
+    };
+};
+
 type Props = {
-  dataSource: any[];
-  selectedDept: string[];
+    dataSource: RawItem[];
+    selectedDept: string[];
 };
 
 type FilterType = "risk" | "department" | "legal";

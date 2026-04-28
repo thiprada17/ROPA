@@ -27,10 +27,12 @@ export default function DashboardPage() {
   const [rawList, setRawList] = useState<any[]>([]);
   const [comparison, setComparison] = useState<Dept[]>([]);
   const [trend, setTrend] = useState<{ day: string; value: number }[]>([]);
+
   // ================= FILTER STATE =================
   // เลือกช่วงเวลา
   const [range, setRange] = useState("1W");
 
+  // เก็บ department ที่เลือก (multi-select)
   const [selectedDept, setSelectedDept] = useState<string[]>([]);
 
   const deptOptions = Array.from(
@@ -109,7 +111,7 @@ export default function DashboardPage() {
                   onChange={(val) => {
                     // ถ้าเลือกครบทุก option
                     if (val.length === deptOptions.length) {
-                      setSelectedDept([]);
+                      setSelectedDept([]); // 👉 reset เป็น All Department
                     } else {
                       setSelectedDept(val);
                     }
@@ -155,7 +157,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="col-span-4">
-                <TrendLineChart data={trend} />
+               <TrendLineChart data={trend} />
               </div>
             </div>
           </div>

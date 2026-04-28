@@ -37,8 +37,8 @@ export default function ApprovalCard({ total, growth }: Props) {
       <div className="flex items-center gap-2">
         <div
           className={`px-2 py-0.5 rounded-[12px] text-[12px] font-medium flex items-center
-        ${isPositive ? "bg-[#ACE5D1] text-[#1C635A]" : "bg-[#F0AFBE] text-[#BD263F]"}
-    `}
+${isPositive ? "bg-[#ACE5D1] text-[#1C635A]" : "bg-[#F0AFBE] text-[#BD263F]"}
+`}
         >
           <MoveUp className={isPositive ? "" : "rotate-180"} size={14} />
           {Math.abs(growth)}%
