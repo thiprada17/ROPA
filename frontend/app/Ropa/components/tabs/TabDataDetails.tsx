@@ -16,11 +16,11 @@ item,
   InfoRowPlain: any;
   InfoRow: any;
 }) {
-    const step1 = item.step2;
+    const step2 = item.step2;
     return (
         <div className="space-y-2">
             <InfoRowPlain label="ประเภทข้อมูลส่วนบุคคล">
-                <RenderValue value={item.dataCategories} />
+                <RenderValue value={step2?.categories} />
             </InfoRowPlain>
 
             {/* sub section */}

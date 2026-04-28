@@ -12,16 +12,17 @@ import {
 import MultiSelect from "@/app/components/MultiSelect";
 
 export default function FilterModal({
-    open,
-    onClose,
-    selected,      
-    setSelected, 
-    selectedStatus,
-    setSelectedStatus,
-    selectedRisks,
-    setSelectedRisks,
-    retention,
-    setRetention,
+  open,
+  onClose,
+  selected,
+  setSelected,
+  departmentOptions = [],
+  selectedStatus,
+  setSelectedStatus,
+  selectedRisks,
+  setSelectedRisks,
+  retention,
+  setRetention,
 }: any) {
     // =========================
     // STATE & REF
@@ -101,7 +102,7 @@ export default function FilterModal({
                         ฝ่ายที่เกี่ยวข้อง
                     </p>
                     <MultiSelect
-                        options={["HR", "IT", "Marketing", "Sales", "Training", "Finance"]}
+                        options={departmentOptions}
                         selected={selected}
                         onChange={setSelected}
                         placeholder="เลือกแผนก..."

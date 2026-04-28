@@ -2,6 +2,11 @@
 import { useEffect, useState, useRef } from "react";
 import { CheckCircle, MessageSquareText } from "lucide-react";
 
+interface Comment {
+  username: string;
+  text: string;
+}
+
 interface TabApproveProps {
   itemId: string; // id ของกิจกรรม
   currentStatus: string;
@@ -10,12 +15,7 @@ interface TabApproveProps {
   isEditingFromParent?: boolean;
   onEditingChange?: (v: boolean) => void;
   onUpdateStatus: (status: string, comments?: Comment[]) => void;
-  onAddComment?: (itemId: string, comment: {username: string; text: string}) => void;
-}
-
-interface Comment {
-  username: string;
-  text: string;
+  onAddComment?: (itemId: string, comment: Comment) => void;
 }
 
 export default function TabApprove({ 

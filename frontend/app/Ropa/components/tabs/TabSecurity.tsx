@@ -1,60 +1,64 @@
-// app/Ropa/components/tabs/TabSecurity.tsx
+// app\Ropa\components\tabs\TabSecurity.tsx
 "use client";
 import { Shield } from "lucide-react";
-import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
 
 // tab: security
-
 export default function TabSecurity({
-    item,
-    RenderValue,
-    BulletRow,
-    InfoRow,
+  item,
+  RenderValue,
+  BulletRow,
+  InfoRow,
+  InfoRowPlain,
 }: {
-    item: RopaItem;
-    RenderValue: any;
-    BulletRow: any;
-    InfoRow: any;
-}
-) {
-    const security = item.security;
+  item: RopaItem;
+  RenderValue: any;
+  BulletRow: any;
+  InfoRow: any;
+  InfoRowPlain: any;
+}) {
+  // security ของ item
+  const securityRows: any[] = Array.isArray(item.security) ? item.security : [];
 
-    if (!security || security == null) {
-        return <p className="text-[11px] text-[#A6A6A6] italic">ไม่มีข้อมูล</p>;
-    }
+  const allRows = securityRows; 
 
-    
-    return (
-        <div className="space-y-3">
-            {/* หัวข้อ */}
-            <p className="text-[11px] text-[#A6A6A6]">นโยบายการเก็บรักษาข้อมูลส่วนบุคคล</p>
+  const labels = [
+    "มาตรการเชิงองค์กร",
+    "มาตรการเชิงเทคนิค",
+    "มาตรการทางกายภาพ",
+    "การควบคุมการเข้าถึงข้อมูล",
+    "การกำหนดหน้าที่ความรับผิดชอบของผู้ใช้งาน",
+    "มาตรการตรวจสอบย้อนหลัง",
+  ];
 
-            <BulletRow label="มาตรการเชิงองค์กร" indent>
-                 <span>{display(security.organizational)}</span>
-            </BulletRow>
-
-            <BulletRow label="มาตรการเชิงเทคนิค" indent>
-                <span>{display(security.technical)}</span>
-            </BulletRow>
-
-            <BulletRow label="มาตรการทางกายภาพ" indent>
-                <span>{display(security.physical)}</span>
-            </BulletRow>
-
-            <BulletRow label="การควบคุมการเข้าถึงข้อมูล" indent>
-                <span>{display(security.accessType)}</span>
-            </BulletRow>
-
-            <BulletRow label="การกำหนดหน้าที่ความรับผิดชอบของผู้ใช้งาน" indent>
-                <span>{display(security.responsibility_def)}</span>
-            </BulletRow>
-
-            <BulletRow label="มาตรการตรวจสอบย้อนหลัง" indent>
-                <span>{display(security.audit_trail)}</span>
-            </BulletRow>
-
-
-        </div>
-    );
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-[#A6A6A6]">
+        นโยบายการเก็บรักษาข้อมูลส่วนบุคคล
+      </p>
+      {labels.map((label) => {
+        const found = allRows.find((r) => r.name === label || r.type === label);
+        return (
+          <BulletRow
+            key={label}
+            label={label}
+            indent
+            labelClassName={found ? "text-[#1C1B1F]" : "text-[#A6A6A6]"}
+          >
+            {found ? (
+              found.detail ? (
+                <span className="text-[11px] text-[#1C1B1F]">
+                  {found.detail}
+                </span>
+              ) : null
+            ) : (
+              <span className="text-[11px] text-[#A6A6A6] italic">
+                ไม่มีข้อมูล
+              </span>
+            )}
+          </BulletRow>
+        );
+      })}
+    </div>
+  );
 }

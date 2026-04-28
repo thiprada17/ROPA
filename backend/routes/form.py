@@ -5,7 +5,9 @@ from controllers.formController import (
     updateForm,
     getActivityById,
     getRopaList,
+    ropaDB,
 )
+from datetime import datetime
 
 router = APIRouter()
 
@@ -29,7 +31,16 @@ async def update(activityId: str, request: Request):
 async def get_activity(activityId: str):
     return await getActivityById(activityId)
 
-
-@router.get("/")
+@router.get("/ropa")
 async def ropa_list(request: Request):
     return await getRopaList(request)
+
+@router.put("/ropa/{activityId}/status")
+async def update_status(activityId: str, request: Request):
+    body = await request.json()
+    status = body.get("status", "").lower()
+    ropaDB().table("processing_activities").update({
+        "approval_status": status,
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("id", activityId).execute()
+    return {"message": "Status updated"}

@@ -1,5 +1,6 @@
 export interface RopaItem {
   id: string;
+  owner_name?: string;
 
   // Step 1
   activity: string;
@@ -8,12 +9,25 @@ export interface RopaItem {
   dataOwner?: string;
   parties: string[];
 
-  // Step 2
-  dataDescription?: string;
-  dataCategories?: string[];
-  dataTypes?: string[];
-  acquisitionMethods?: string[];
-  dataSources?: string[];
+  // Step 1 detail 
+  step1?: {
+    dataOwner?: string;
+    processActivity?: string;
+    processActivityName?: string;
+    processingPurpose?: string;
+    departmentId?: string;
+    departmentName?: string;
+  };
+
+  // Step 2 
+  step2?: {
+    dataClass?: string;
+    description?: string;
+    categories?: string[];
+    dataType?: string;
+    methods?: string[];
+    dataSource?: string;
+  };
 
   // Step 3
   legal?: {
@@ -25,14 +39,24 @@ export interface RopaItem {
     };
   };
 
+  // Step 3 detail 
+  step3?: {
+    primaryBases?: string[];
+    supplementaryBases?: string[];
+    minorConsent?: {
+      under10?: string;
+      age10to20?: string;
+    };
+  };
+
   // Step 4
   transfer?: {
-    is_transfer?: string;
+    is_transfer?: boolean | null;
     destination_country?: string | null;
     affiliated_company?: string | null;
     transfer_method?: string | null;
-    protection_standards?: string[] | null;
-    exceptions?: string[] | null;
+    protection_standard?: string | null;
+    exceptions?: string[];
   };
 
   // Step 5
@@ -42,33 +66,38 @@ export interface RopaItem {
     retentionPeriod: string;
     department?: string[];
     deletionMethod?: string;
-
     usage_purpose?: string[] | null;
     denialNote?: string | null;
   };
 
   // Step 6
   security?: {
-    organizational?: string;
-    technical?: string;
-    physical?: string;
-    accessType?: string;
-    responsibility_def?: string;
-    audit_trail?: string;
-  };
-
-  // Processor
-  processors?: {
+    id: string;
+    activity_id: string;
+    measures_id: string;
     name: string;
-    address?: string;
-    security?: {
-      organizational?: string;
-      technical?: string;
-      physical?: string;
-      accessType?: string;
-      responsibility_def?: string;
-      audit_trail?: string;
+    detail?: string | null;
+  }[];
+
+  // Step 7
+  processors?: {
+    id: string;
+    activity_id?: string;
+    processor_id?: string;
+    access_type?: string | null;
+    data_category_accessed?: string | null;
+    note?: string | null;
+    processors?: {
+      id: string;
+      name: string;
+      address?: string | null;
     };
+    processor_security_measures?: {
+      id: string;
+      activity_processor_id: string;
+      type: string;
+      detail?: string | null;
+    }[];
   }[];
 
   // UI
