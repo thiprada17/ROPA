@@ -85,9 +85,9 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-[24px] font-semibold">Dashboard</h1>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 item-center">
               {/* ================= RANGE SELECT ================= */}
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <select
                   className="appearance-none border border-[#616872] rounded-[6px] px-3 py-1 pr-8 text-sm"
                   value={range}
@@ -104,7 +104,8 @@ export default function DashboardPage() {
               </div>
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
-              <div className="min-w-[180px] max-w-[600px]">
+              {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
+                            <div className="w-[180px] flex-shrink-0">
                 <MultiSelect
                   options={deptOptions}
                   selected={selectedDept}
@@ -126,8 +127,9 @@ export default function DashboardPage() {
           {/* ================= CONTENT ================= */}
           <div className="flex flex-col gap-6">
             {/* TOP CARDS */}
-            <div className="flex justify-between">
-              <div className="w-[240px] flex flex-col gap-[28px]">
+            {/* <div className="flex justify-between"> */}
+            <div className="flex justify-between items-stretch h-[307px]">
+              <div className="w-[240px] flex flex-col gap-[28px] flex-shrink-0">
                 <TotalRopaCard
                   total={totalData.total}
                   newCount={totalData.newCount}
@@ -138,11 +140,11 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div className="w-[292px]">
+              <div className="w-[292px] flex-shrink-0">
                 <ActivityCard activities={activities} />
               </div>
 
-              <div className="w-[509px]">
+              <div className="w-[509px] flex-shrink-0">
                 <OverallDonutCard
                   dataSource={rawList}
                   selectedDept={selectedDept}

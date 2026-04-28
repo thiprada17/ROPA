@@ -5,16 +5,16 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { ChevronDown, Info } from "lucide-react";
 
 type RawItem = {
-    risk: string;
-    parties?: string[];
-    legal?: {
-        basis?: string[];
-    };
+  risk: string;
+  parties?: string[];
+  legal?: {
+    basis?: string[];
+  };
 };
 
 type Props = {
-    dataSource: RawItem[];
-    selectedDept: string[];
+  dataSource: RawItem[];
+  selectedDept: string[];
 };
 
 type FilterType = "risk" | "department" | "legal";
@@ -168,13 +168,18 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
     );
   };
 
+  // แสดงสูงสุด 5 รายการใน leg เพื่อไม่ให้ล้น card
+  const visibleData = chartData.slice(0, 5);
+  const hiddenCount = chartData.length - visibleData.length;
+
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm h-[307px] flex flex-col">
+    // <div className="bg-white rounded-2xl p-5 shadow-sm h-[307px] flex flex-col">
+    <div className="bg-white rounded-2xl p-5 shadow-sm h-[307px] flex flex-col overflow-hidden">
       {/* =========================
           HEADER SECTION
           - title + dropdown filter
       ========================= */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
         <div className="flex items-center gap-2 relative group">
           <p className="text-sm text-gray-500 ml-6">Overall</p>
           {/* INFO ICON */}
@@ -187,7 +192,7 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
         </div>
 
         {/* FILTER DROPDOWN */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <select
             className="appearance-none border border-[#616872] rounded-[6px] px-3 py-1 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#616872]"
             value={filter}
@@ -207,11 +212,11 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
           BODY SECTION
           - donut chart + legend
       ========================= */}
-      <div className="flex items-center gap-[22px] flex-1">
+      <div className="flex items-center gap-[22px] flex-1 min-h-0 overflow-hidden">
         {/* =========================
             DONUT CHART WRAPPER
         ========================= */}
-        <div className="w-[200px] h-[200px] flex items-center justify-center">
+        <div className="w-[200px] h-[200px] flex-shrink-0 flex items-center justify-center">
           <PieChart width={240} height={240}>
             {/* PIE CHART */}
             <Pie
@@ -236,15 +241,15 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
             LEGEND SECTION
             - label + percent
         ========================= */}
-        <div className="space-y-3 w-full pl-2 flex flex-col justify-center">
+        {/* <div className="space-y-3 w-full pl-2 flex flex-col justify-center">
           {chartData.map((d) => {
             // percent per category
             const percent = total ? ((d.value / total) * 100).toFixed(1) : "0";
 
             return (
-              <div key={d.name} className="flex items-center justify-between">
-                {/* LEFT: color + label */}
-                <div className="flex items-center gap-2 ml-2">
+              <div key={d.name} className="flex items-center justify-between"> */}
+        {/* LEFT: color + label */}
+        {/* <div className="flex items-center gap-2 ml-2">
                   <span
                     className="w-3 h-3 rounded-full"
                     style={{
@@ -254,10 +259,10 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
                   <span className="text-[#616872] text-[12px] font-medium">
                     {d.name}
                   </span>
-                </div>
+                </div> */}
 
-                {/* RIGHT: percentage */}
-                <span className="flex items-center gap-[2px] shrink-0 mr-8">
+        {/* RIGHT: percentage */}
+        {/* <span className="flex items-center gap-[2px] shrink-0 mr-8">
                   <span className="text-black text-[16px] font-semibold">
                     {percent}
                   </span>
@@ -266,6 +271,46 @@ export default function OverallDonutCard({ dataSource, selectedDept }: Props) {
               </div>
             );
           })}
+        </div>
+      </div>
+    </div>
+  );
+} */}
+
+        <div className="flex flex-col justify-center gap-y-2.5 flex-1 min-w-0 overflow-hidden pr-2">
+          {visibleData.map((d) => {
+            const percent = total ? ((d.value / total) * 100).toFixed(1) : "0";
+            return (
+              <div key={d.name} className="flex items-center justify-between gap-2 min-w-0">
+                {/* LEFT: dot + label (truncate ถ้ายาวเกิน) */}
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: colorMap[d.name] }}
+                  />
+                  <span
+                    className="text-[#616872] text-[12px] font-medium truncate"
+                    title={d.name}  // แสดง full text เมื่อ hover
+                  >
+                    {d.name}
+                  </span>
+                </div>
+
+                {/* RIGHT: percentage — fixed width ไม่ขยับ */}
+                <span className="flex items-center gap-[2px] flex-shrink-0 w-[52px] justify-end">
+                  <span className="text-black text-[16px] font-semibold leading-none">
+                    {percent}
+                  </span>
+                  <span className="text-black text-sm font-semibold">%</span>
+                </span>
+              </div>
+            );
+          })}
+
+          {/* แสดงว่ายังมีรายการที่ซ่อนอยู่อีก */}
+          {hiddenCount > 0 && (
+            <p className="text-[11px] text-gray-400 ml-5">+{hiddenCount} more</p>
+          )}
         </div>
       </div>
     </div>
