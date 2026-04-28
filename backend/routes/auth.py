@@ -135,10 +135,8 @@ def reset_password(body: ResetPasswordSchema):
     }
 
 
-# login (เรียกใช้ของเดิม)
 from controllers.authController import login
 
 @router.post("/login")
 async def login_route(request: Request):
-    print("🔥 HIT LOGIN ROUTE")
     return await login(request)

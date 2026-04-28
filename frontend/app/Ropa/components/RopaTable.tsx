@@ -23,6 +23,14 @@ export default function RopaTable({
     statusMap,
     badgeBase,
 }: Props) {
+
+    const formatRetention = (text: string) => {
+        if (!text) return text;
+        
+        return text
+            .replace(/(\d+)/g, (num) => String(Number(num)))
+    };
+
     return (
         <>
             {/* header */}
@@ -116,7 +124,7 @@ export default function RopaTable({
 
                             <div>
                                 <span className="px-4 text-[#1C1B1F]">
-                                    {item.retention.retentionPeriod}
+                                    {formatRetention(item.retention.retentionPeriod)}
                                 </span>
                             </div>
 

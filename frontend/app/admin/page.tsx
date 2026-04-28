@@ -97,8 +97,23 @@ export default function AdminPage() {
         fetchUsers();
     }, []);
 
-    const handleSave = () => {
-        fetchUsers();
+    // const handleSave = () => {
+    //     fetchUsers();
+    // };
+    const handleSave = (data: Partial<UserData>) => {
+        if (modal?.mode === "create") {
+            // create fetchUsers เพื่อเอาข้อมูลใหม่จาก API
+            fetchUsers();
+        } else if (modal?.mode === "edit" && modal?.user) {
+            // edit update เฉพาะ row นั้น ไม่ต้อง refetch ทั้งหมด
+            setUsers(prev =>
+                prev.map(u =>
+                    u.id === modal.user!.id
+                        ? { ...u, ...data }
+                        : u
+                )
+            );
+        }
     };
 
     const handleDelete = (id: string) => setUsers(prev => prev.filter(u => u.id !== id));
