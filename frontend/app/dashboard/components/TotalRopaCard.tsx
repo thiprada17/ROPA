@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive } from "lucide-react";
+import { Archive, Info } from "lucide-react";
 
 type Props = {
     total: number;
@@ -12,8 +12,21 @@ export default function TotalRopaCard({ total, newCount }: Props) {
         <div className="bg-white rounded-2xl p-5 shadow-sm w-[240px] h-[139px] flex flex-col justify-between">
             {/* TOP ROW (title + icon) */}
             <div className="flex items-start justify-between mb-1">
-                {/* title */}
-                <p className="text-sm text-gray-500 font-[12px] ">Total ROPA</p>
+                <div className="flex items-center gap-2 relative group">
+                    {/* title */}
+                    <p className="text-sm text-gray-500 font-[12px] ">Total ROPA</p>
+
+                    {/* INFO ICON */}
+                    <Info
+                        size={14}
+                        className="text-gray-400 cursor-pointer"
+                    />
+
+                    {/* TOOLTIP */}
+                    <div className="font-prompt absolute left-0 top-6 w-[220px] text-xs border border-gray-300 bg-gray-100 text-black px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                        แสดงจำนวนรายการ ROPA ทั้งหมด
+                    </div>
+                </div>
                 {/* icon top right */}
                 <Archive size={26} className="text-[#000000]" />
             </div>

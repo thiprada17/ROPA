@@ -29,6 +29,8 @@ const headers = [
     "บทบาทผู้เข้าถึงข้อมูล", "สถานะการล็อกบัญชี", "สถานะบัญชี", ""
 ];
 
+const isHashed = (pw: string) => pw.startsWith("$2b$") || pw.startsWith("$2a$");
+
 interface Props {
     data: UserData[];
     onRowClick: (user: UserData) => void;
@@ -46,7 +48,7 @@ export default function UserTable({ data, onRowClick }: Props) {
                         style={{ gridTemplateColumns: col }}
                     >
                         {headers.map((h, i) => (
-                            <div key={i} className={`px-2 py-[20px] rounded-[6px] ${h ? "bg-[#03369D] text-white" : ""}`}>
+                            <div key={i} className={`px-2 py-[11px] rounded-[6px] ${h ? "bg-[#03369D] text-white" : ""}`}>
                                 {h}
                             </div>
                         ))}
@@ -70,13 +72,17 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     {/* Email */}
                                     <div className="truncate text-[12px] text-gray-600 pr-2">{item.email}</div>
 
-                                    {/* Password — plain text ตามภาพ */}
-                                    <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div>
+                                    {/* Password plain text ตามภาพ */}
+                                    {/* <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div> */}
+                                    <div className="truncate text-[12px] text-gray-600 pr-2" 
+                                    title={isHashed(item.password) ? "Password hidden" : item.password}>
+                                        {isHashed(item.password) ? "********" : item.password}
+                                    </div>
 
                                     {/* เบอร์โทร */}
                                     <div className="text-gray-600 text-[12px]">{item.phone}</div>
 
-                                    {/* ที่อยู่ — truncate พร้อม tooltip */}
+                                    {/* ที่อยู่ truncate พร้อม tooltip */}
                                     <div className="truncate text-gray-500 pr-1 text-[12px]" title={item.team}>
                                         มม.เกาะรังสิต...
                                     </div>

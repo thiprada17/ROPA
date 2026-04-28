@@ -41,26 +41,112 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
     const handleSave = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:8000/api/admin/users", {
-                method: "POST",
+
+
+            if (!form.fullName?.trim()) {
+                alert("กรุณากรอกชื่อ-นามสกุล");
+                return;
+            }
+
+            if (!form.email?.trim()) {
+                alert("กรุณากรอก Email");
+                return;
+            }
+
+            if (mode === "create" && !form.password?.trim()) {
+                alert("กรุณากรอก Password");
+                return;
+            }
+
+            if (!form.department) {
+                alert("กรุณาเลือกฝ่าย");
+                return;
+            }
+
+            if (!form.role) {
+                alert("กรุณาเลือกสิทธิ์");
+                return;
+            }
+
+            const payload: any = { ...form };
+
+            if (mode === "edit" && !payload.password) {
+                delete payload.password;
+            }
+
+            let url = "";
+            let method = "";
+
+            if (mode === "create") {
+                url = "http://localhost:8000/api/admin/users";
+                method = "POST"
+            } else {
+                url = `http://localhost:8000/api/admin/edit/${user?.id}`;
+                method = "PUT"
+            }
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(form),
-            });
+                body: JSON.stringify(payload),
+            })
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Create failed");
 
-            onSave(data.user); // trigger fetchUsers ใน parent
+            if (!res.ok) throw new Error(data.detail || "Save failed");
+
+            // onSave(data.user);
+            if (mode === "edit") {
+                const matchedDept = departmentsData.find((d: any) => d.id === form.department);
+                onSave({
+                    fullName: form.fullName,
+                    email: form.email,
+                    phone: form.phone,
+                    position: form.position,
+                    department: matchedDept?.department_name || form.department,
+                    team: form.team,
+                    role: form.role,
+                    lockStatus: form.lockStatus,
+                    accountStatus: form.accountStatus,
+                });
+            }
+            else {
+                onSave(data.user);
+            }
+
             onClose();
 
         } catch (err: any) {
-            console.error(err);
-            alert(err.message);
+            console.error(err)
+            alert(err.message)
         }
     };
+
+    const handleDelete = async (id: string) => {
+        try {
+            const user_id = id
+            const token = localStorage.getItem("token");
+            const res = await fetch(
+                `http://localhost:8000/api/admin/delete/${user_id}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            const data = res.json()
+
+            console.log(data)
+
+
+        } catch (error) {
+            console.log('delete user error: ' + error)
+        }
+    }
 
     const [departmentsData, setDepartmentsData] = useState<any[]>([]);
 
@@ -82,6 +168,18 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
 
                 setDepartmentsData(data);
 
+                if (user?.department) {
+                    const matched = data.find(
+                        (d: any) =>
+                            d.id === user.department ||
+                            d.department_name === user.department
+                    );
+                    if (matched) {
+                        set("department", matched.id);
+                    }
+                }
+
+
             } catch (err) {
                 console.error(err);
             }
@@ -90,9 +188,10 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
         fetchDepartments();
     }, []);
 
+
     return (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full sm:w-[75vw] max-h-[90vh] overflow-y-auto my-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-[600px] sm:w-[75vw] max-h-[calc(100vh-2rem)] overflow-y-auto my-auto ml-[64px] sm:ml-[16px]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-[14px] font-semibold text-gray-800">
@@ -191,7 +290,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-4 border-t sticky bottom-0 bg-white">
                     {mode === "edit" && onDelete && user ? (
                         <button
-                            onClick={() => { onDelete(user.id); onClose(); }}
+                            onClick={() => { handleDelete(user.id); onDelete(user.id); onClose(); }}
                             className="flex items-center gap-1.5 text-[12px] text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition"
                         >
                             <Trash2 size={14} /> Delete User
@@ -202,7 +301,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                             Clear
                         </button>
                         <button onClick={handleSave} className="text-[12px] px-5 py-2 bg-[#03369D] text-white rounded-lg hover:bg-[#02287d] transition font-medium">
-                            {mode === "create" ? "Create" : "Create"}
+                            {mode === "create" ? "Create" : "Save"}
                         </button>
                     </div>
                 </div>
