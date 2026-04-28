@@ -192,6 +192,7 @@ const role =
         : undefined;
 
 export default function DetailCard({ item, onClose, role, existingComments, onStatusChange, onAddComment }: DetailCardProps) {
+    
     const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
     const [showMenu, setShowMenu] = useState(false);
     const [isApprovingEdit, setIsApprovingEdit] = useState(false);

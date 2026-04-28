@@ -886,7 +886,8 @@ async def getActivityById(activityId: str):
                 "usagePurpose": retention.get("usage_purpose") if retention else "",
                 "refusalNote": retention.get("denial_note") if retention else "",
             },
-
+            
+            "security": security_with_names,
             "step6": {
                 "securityRows": security_with_names,
             },
@@ -1069,6 +1070,37 @@ async def getRopaList(request: Request):
                 [],
             )
 
+            measure_ids = [
+                row.get("measures_id")
+                for row in security_rows
+                if row.get("measures_id")
+            ]
+
+            measure_map = {}
+
+            if measure_ids:
+                measure_rows = safe_data(
+                    lookupDB().table("security_measures")
+                    .select("id, name")
+                    .in_("id", measure_ids)
+                    .execute(),
+                    [],
+                )
+
+                measure_map = {
+                    row["id"]: row["name"]
+                    for row in measure_rows
+                    if row.get("id")
+                }
+
+            security_with_names = [
+                {
+                    **row,
+                    "name": measure_map.get(row.get("measures_id"), ""),
+                    }
+                for row in security_rows
+            ]
+
             processor_rows = safe_data(
                 ropaDB().table("activity_processors")
                 .select("""
@@ -1162,7 +1194,7 @@ async def getRopaList(request: Request):
                     "denialNote": retention.get("denial_note") if retention else None,
                 },
 
-                "security": security_rows,
+                "security": security_with_names,
                 "processors": processor_rows,
                 "risk": "Stable",
                 "status": status,
