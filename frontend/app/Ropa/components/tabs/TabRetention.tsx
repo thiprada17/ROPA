@@ -59,8 +59,8 @@ export default function TabRetention({
 
       {/* department */}
       <BulletRow label="สิทธิและวิธีการเข้าถึงข้อมูลส่วนบุคคล" indent>
-        {(item.step5?.accessRight ?? retention.department ?? []).length > 0 ? (
-          (item.step5?.accessRight ?? retention.department ?? []).map(
+        {(item.retention?.department ?? retention.department ?? []).length > 0 ? (
+          (item.retention?.department ?? retention.department ?? []).map(
             (d: string, i: number) => <Tag key={i} label={d} />,
           )
         ) : (
