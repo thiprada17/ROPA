@@ -22,6 +22,7 @@ export interface RopaItem {
   // Step 2 
   step2?: {
     dataClass?: string;
+    description?: string;
     categories?: string[];
     dataType?: string;
     methods?: string[];
