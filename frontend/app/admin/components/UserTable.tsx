@@ -29,6 +29,8 @@ const headers = [
     "บทบาทผู้เข้าถึงข้อมูล", "สถานะการล็อกบัญชี", "สถานะบัญชี", ""
 ];
 
+const isHashed = (pw: string) => pw.startsWith("$2b$") || pw.startsWith("$2a$");
+
 interface Props {
     data: UserData[];
     onRowClick: (user: UserData) => void;
@@ -71,7 +73,11 @@ export default function UserTable({ data, onRowClick }: Props) {
                                     <div className="truncate text-[12px] text-gray-600 pr-2">{item.email}</div>
 
                                     {/* Password — plain text ตามภาพ */}
-                                    <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div>
+                                    {/* <div className="truncate text-[12px] text-gray-600 pr-2">{item.password}</div> */}
+                                    <div className="truncate text-[12px] text-gray-600 pr-2" 
+                                    title={isHashed(item.password) ? "Password hidden" : item.password}>
+                                        {isHashed(item.password) ? "********" : item.password}
+                                    </div>
 
                                     {/* เบอร์โทร */}
                                     <div className="text-gray-600 text-[12px]">{item.phone}</div>

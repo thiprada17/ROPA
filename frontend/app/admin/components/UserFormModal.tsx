@@ -283,7 +283,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
                             Clear
                         </button>
                         <button onClick={handleSave} className="text-[12px] px-5 py-2 bg-[#03369D] text-white rounded-lg hover:bg-[#02287d] transition font-medium">
-                            {mode === "create" ? "Create" : "Create"}
+                            {mode === "create" ? "Create" : "Save"}
                         </button>
                     </div>
                 </div>
