@@ -69,6 +69,7 @@ export default function FormPage() {
       dataType: string;
       methods: string[];
       dataSource: string;
+      description: string;
     };
     step3: {
       primaryBases: string[];
@@ -117,6 +118,7 @@ export default function FormPage() {
       dataType: "",
       methods: [],
       dataSource: "",
+      description: ""
     },
     step3: {
       primaryBases: [],
