@@ -13,21 +13,79 @@ import {
 
 type Props = {
     data: { day: string; value: number }[];
+    selectedDept: string[];
+    deptOptions: { label: string; value: string }[];
 };
 
-export default function TrendLineChart({ data }: Props) {
+export default function TrendLineChart({ data, selectedDept, deptOptions }: Props) {
     const safeData =
-  Array.isArray(data) && data.length > 0
-    ? data
-    : [
-        { day: "Sun", value: 20 },
-        { day: "Mon", value: 100 },
-        { day: "Tue", value: 70 },
-        { day: "Wed", value: 100 },
-        { day: "Thu", value: 120 },
-        { day: "Fri", value: 160 },
-        { day: "Sat", value: 10 },
-      ];
+        Array.isArray(data) && data.length > 0
+            ? data
+            : [
+                { day: "Sun", value: 20 },
+                { day: "Mon", value: 100 },
+                { day: "Tue", value: 70 },
+                { day: "Wed", value: 100 },
+                { day: "Thu", value: 120 },
+                { day: "Fri", value: 160 },
+                { day: "Sat", value: 10 },
+            ];
+
+
+    const BASE_PALETTE = [
+        "#F0AFBE",
+        "#F3E3AE",
+        "#B5DDD8",
+        "#D1E7F0",
+        "#E5D4F3",
+        "#F7C8A0",
+        "#CDE7C9",
+        "#D6D6F5",
+    ];
+
+    const isAllSelected =
+        selectedDept.length === 0 ||
+        selectedDept.length === deptOptions.length;
+
+    const combinedData = safeData.map((d) => {
+        const newItem: any = { day: d.day };
+
+        if (isAllSelected) {
+            newItem.value = d.value;
+        } else {
+            selectedDept.forEach((dept, index) => {
+                newItem[dept] = d.value * (1 + index * 0.08);
+            });
+        }
+
+        return newItem;
+    });
+
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (!active || !payload?.length) return null;
+
+        return (
+            <div className="bg-white shadow-md border rounded-lg px-3 py-2 text-sm">
+                {/* day */}
+                <p className="font-semibold text-gray-800 mb-1">
+                    {label}
+                </p>
+
+                {payload.map((p: any, i: number) => (
+                    <p key={i} className="text-black">
+                        <span
+                            className="inline-block w-2 h-2 rounded-full mr-2"
+                            style={{ backgroundColor: p.color }}
+                        />
+                        {p.name}:{" "}
+                        <span className="font-semibold">
+                            {p.value}
+                        </span>
+                    </p>
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm h-[366px] w-full">
@@ -55,7 +113,7 @@ export default function TrendLineChart({ data }: Props) {
             <div className="w-full h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
 
-                    <LineChart data={safeData} margin={{ top: 5, right: 10, left: -35, bottom: 0 }}>
+                    <LineChart data={combinedData} margin={{ top: 5, right: 10, left: -35, bottom: 0 }}>
 
                         {/* GRID (soft + modern) */}
                         <CartesianGrid
@@ -82,25 +140,34 @@ export default function TrendLineChart({ data }: Props) {
                         {/* TOOLTIP (clean card style) */}
                         <Tooltip
                             cursor={{ stroke: "#E5E7EB", strokeWidth: 1 }}
-                            contentStyle={{
-                                backgroundColor: "#fff",
-                                border: "1px solid #E5E7EB",
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-                            }}
+                            content={<CustomTooltip />}
                         />
 
                         {/* LINE (main visual) */}
-                        <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#3B82F6"
-                            strokeWidth={3}
-                            dot={{ r: 4, fill: "#3B82F6" }}
-                            activeDot={{ r: 6 }}
-                            animationDuration={900}
-                        />
+                        {isAllSelected ? (
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#3B82F6" 
+                                strokeWidth={3}
+                                dot={{ r: 4, fill: "#3B82F6" }}
+                                activeDot={{ r: 6 }}
+                                animationDuration={900}
+                            />
+                        ) : (
+                            selectedDept.map((dept, index) => (
+                                <Line
+                                    key={dept}
+                                    type="monotone"
+                                    dataKey={dept}  
+                                    stroke={BASE_PALETTE[index % BASE_PALETTE.length]}
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: BASE_PALETTE[index % BASE_PALETTE.length] }}
+                                    activeDot={{ r: 6 }}
+                                    animationDuration={900}
+                                />
+                            ))
+                        )}
 
                     </LineChart>
 

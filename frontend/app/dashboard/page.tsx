@@ -9,7 +9,7 @@ import TrendLineChart from "./components/TrendLineChart";
 import Sidebar from "../components/Sidebar";
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import MultiSelect from "../components/MultiSelect";
+import DeptMultiSelect from "./components/DeptMultiSelect";
 
 // ================= TYPE =================
 type Dept = {
@@ -119,19 +119,13 @@ export default function DashboardPage() {
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
               {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
-              <div className="w-[180px] flex-shrink-0">
-                <MultiSelect
+              <div className="min-w-[180px] max-w-[800px]">
+                <DeptMultiSelect
                   options={deptOptions}
                   selected={selectedDept}
-                  onChange={(val) => {
-                    if (val.length === deptOptions.length) {
-                      setSelectedDept([]);
-                    } else {
-                      setSelectedDept(val);
-                    }
-                  }}
+                  onChange={(val) => setSelectedDept(val.length === deptOptions.length ? [] : val)}
                   placeholder="All Department"
-                  className="!min-h-[30px] !h-[30px] px-3 py-1 text-sm border-[#616872] !rounded-[6px] text-black"
+                  maxVisible={3}
                 />
               </div>
             </div>
@@ -172,7 +166,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="col-span-4">
-                <TrendLineChart data={trend} />
+                <TrendLineChart
+                  data={trend}
+                  selectedDept={selectedDept}
+                  deptOptions={deptOptions}
+                />
               </div>
             </div>
           </div>
