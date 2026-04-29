@@ -27,6 +27,7 @@ export interface Step2FormData {
   dataType: string; // uuid
   methods: string[]; // uuid[]
   dataSource: string; // uuid
+  description: string;
 }
 
 interface StepProps {
@@ -48,6 +49,7 @@ export default function Step2DataType({
   dataTypes = [],
   acquisitionMethods = [],
   dataSources = [],
+  
 }: StepProps) {
   const radioOptions = [
     "ข้อมูลผู้สมัครงาน",
@@ -139,6 +141,19 @@ export default function Step2DataType({
           <p className="text-red-500 text-[10px] mt-1">กรุณาเลือกประเภทข้อมูล</p>
         )}
       </div>
+
+      <div className="mt-3">
+      <label className="text-sm text-[#1a3a8f] block mb-1">
+        รายละเอียดข้อมูล (ถ้ามี)
+      </label>
+      <textarea
+        value={formData.description}
+        onChange={(e) => updateField("description", e.target.value)}
+        rows={3}
+        className="w-full border border-gray-200 rounded-md p-2.5 text-sm text-gray-700 outline-none focus:border-[#1a3a8f] resize-none"
+        placeholder="ระบุรายละเอียด..."
+      />
+    </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="mt-[16px]">

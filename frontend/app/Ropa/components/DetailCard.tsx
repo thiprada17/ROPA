@@ -191,21 +191,24 @@ const role =
         ? (localStorage.getItem("role") as "DPO" | "User" | "Viewer" | "Admin")
         : undefined;
 
+const trimLegalBasis = (text: string) => {
+    // ตัด ( ออกทุกอย่างหลังจากนั้น
+    const idx = text.indexOf("(");
+    if (idx !== -1) return text.slice(0, idx).trim();
+    return text.trim();
+};
+
 export default function DetailCard({ item, onClose, role, existingComments, onStatusChange, onAddComment }: DetailCardProps) {
-    
+
     const [activeTab, setActiveTab] = useState<Tab>("dataDetails");
     const [showMenu, setShowMenu] = useState(false);
-    const [isApprovingEdit, setIsApprovingEdit] = useState(false);
+    const [isApprovingEdit, setIsApprovingEdit] = useState(role === "DPO");
     const [approveStatus, setApproveStatus] = useState(item?.status ?? "");
     const [approveComments, setApproveComments] = useState<{ username: string; text: string }[]>([]);
 
     const currentUser = typeof window !== "undefined"
         ? { username: localStorage.getItem("username") ?? undefined, email: localStorage.getItem("email") ?? undefined }
         : undefined;
-
-    useEffect(() => {
-        if (item) setActiveTab("dataDetails");
-    }, [item?.id]);
 
     useEffect(() => {
         const handleClickOutside = () => setShowMenu(false);
@@ -216,10 +219,17 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
     }, [showMenu]);
 
     useEffect(() => {
-        setApproveStatus(item?.status ?? "");
-        setApproveComments([]);
-        setIsApprovingEdit(false);
-    }, [item?.id]);
+        if (item) {
+            if (role === "DPO") {
+                setActiveTab("approve");
+                setIsApprovingEdit(true);
+                setApproveComments(existingComments ?? []);
+            } else {
+                setActiveTab("dataDetails");
+                setIsApprovingEdit(false);
+            }
+        }
+    }, [item?.id, role, existingComments]);
 
     if (!item) return null;
 
@@ -276,6 +286,13 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
         });
     }
 
+    {/* click outside ปิดเมนู */ }
+    useEffect(() => {
+        const handleClickOutside = () => setShowMenu(false);
+        if (showMenu) window.addEventListener("click", handleClickOutside);
+        return () => window.removeEventListener("click", handleClickOutside);
+    }, [showMenu]);
+
     return (
         <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden font-prompt text-[12px]">
             {/* top toolbar */}
@@ -299,41 +316,34 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
 
                     {/* dropdown */}
                     {showMenu && (
-                        role === "DPO" ? (
-                            <button onClick={() => { setActiveTab("approve"); setIsApprovingEdit(true); }}>
-                                แก้ไขสถานะ
-                            </button>
-                        ) : (
-                            <>
-                                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-50">
+                        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-50">
+                            {role === "DPO" ? (
+                                <button
+                                    className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100"
+                                    onClick={() => {
+                                        setActiveTab("approve");                      // เปิดแท็บ Approve
+                                        setIsApprovingEdit(true);                      // เปิดโหมดแก้ไข
+                                        setApproveComments(existingComments ?? []);    // โหลด comment ปัจจุบัน
+                                        setShowMenu(false);                            // ปิดเมนู
+                                    }}>
+                                    แก้ไขสถานะ
+                                </button>
+                            ) : (
+                                <>
                                     <button
-                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100"
-                                        onClick={() => {
-                                            console.log("edit activity");
-                                            setShowMenu(false);
-                                        }}
-                                    >
-                                        <Link href="/form">
-                                            <div className="flex flex-col-2 gap-2">
-                                                <Pencil size={14} /> แก้ไขกิจกรรม
-                                            </div>
+                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-100 flex items-center gap-2"
+                                        onClick={() => { setShowMenu(false); }}>
+                                        <Link href="/form" className="flex items-center gap-2">
+                                            <Pencil size={14} /> แก้ไขกิจกรรม
                                         </Link>
                                     </button>
-
-                                    <button
-                                        className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500"
-                                        onClick={() => {
-                                            console.log("delete activity");
-                                            setShowMenu(false);
-                                        }}
-                                    >
-                                        <div className="flex flex-col-2 gap-2">
-                                            <Trash2 size={14} /> ลบกิจกรรม
-                                        </div>
+                                    <button className="w-full text-left px-3 py-2 text-[12px] hover:bg-red-50 text-red-500 flex items-center gap-2"
+                                        onClick={() => { console.log("delete activity"); setShowMenu(false); }}>
+                                        <Trash2 size={14} /> ลบกิจกรรม
                                     </button>
-                                </div>
-                            </>
-                        )
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -395,9 +405,11 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                     >
                         {item.legal?.basis?.length ? (
                             item.legal.basis.length > 1 ? (
-                                item.legal.basis.map((l, i) => <Tag key={i} label={l} />)
+                                item.legal.basis.map((l, i) => (
+                                    <Tag key={i} label={trimLegalBasis(l)} />
+                                ))
                             ) : (
-                                <span>{item.legal.basis[0]}</span>
+                                <span>{trimLegalBasis(item.legal.basis[0])}</span>
                             )
                         ) : (
                             <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
@@ -421,7 +433,8 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
 
                 {/* tabs bar */}
                 <div className="border-b border-gray-100">
-                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none">
+                    <div className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none scroll-smooth"
+                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}>
                         {tabs.map((t) => (
                             <button
                                 key={t.key}
@@ -505,10 +518,13 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                             itemId={item.id}
                             currentStatus={approveStatus}
                             currentUser={currentUser}
-                            existingComments={existingComments}
+                            existingComments={approveComments}
                             isEditingFromParent={isApprovingEdit}
                             onEditingChange={setIsApprovingEdit}
-                            onAddComment={onAddComment}
+                            onAddComment={(itemId, comment) => {
+                                setApproveComments(prev => [...prev, comment]);
+                                onAddComment?.(itemId, comment);
+                            }}
                             onUpdateStatus={(status, comments) => {
                                 fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
                                     method: "PUT",
@@ -522,7 +538,7 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                                         setApproveStatus(status);
                                         if (comments) setApproveComments(comments);
                                         setIsApprovingEdit(false);
-                                        onStatusChange?.(item.id, status); // ← แจ้ง parent
+                                        onStatusChange?.(item.id, status);
                                         alert("อัปเดตสถานะเรียบร้อย");
                                     })
                                     .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
