@@ -5,6 +5,7 @@ import { CircleArrowLeft } from "lucide-react";
 import StepContent from "./components/StepContent";
 import ProgressBar from "./components/ProgressBar";
 import Sidebar from "../components/Sidebar";
+import { Suspense } from "react";
 
 // import validate function ของแต่ละ step
 import { validateStep1 } from "./components/steps/Step1Activity";
@@ -53,7 +54,7 @@ type Errors<FormData> = {
   };
 };
 
-export default function FormPage() {
+function FormPageContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditingProcessor, setIsEditingProcessor] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -532,5 +533,13 @@ export default function FormPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FormPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FormPageContent />
+    </Suspense>
   );
 }
