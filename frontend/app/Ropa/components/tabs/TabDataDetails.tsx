@@ -47,6 +47,11 @@ export default function TabDataDetails({
     safeItem.dataClass ||
     "";
 
+  const otherText = step2?.otherText || safeItem.otherText || "";
+
+  const displayDataClass =
+    dataClass === "อื่นๆ" && otherText ? `อื่นๆ: ${otherText}` : dataClass;
+
   const description =
     step2?.description ||
     step2?.dataDetail ||
@@ -90,7 +95,7 @@ export default function TabDataDetails({
   return (
     <div className="space-y-2">
       <InfoRowPlain label="ประเภทข้อมูลส่วนบุคคล">
-        <RenderValue value={dataClass ? [dataClass] : []} />
+        <RenderValue value={displayDataClass ? [displayDataClass] : []} />
       </InfoRowPlain>
 
       <div className="ml-4 space-y-1">
