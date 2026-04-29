@@ -119,7 +119,7 @@ export default function DashboardPage() {
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
               {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
-              <div className="w-[180px] flex-shrink-0">
+              <div className="min-w-[180px] max-w-[800px] w-fit">
                 <MultiSelect
                   options={deptOptions}
                   selected={selectedDept}
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                     }
                   }}
                   placeholder="All Department"
-                  className="!min-h-[30px] !h-[30px] px-3 py-1 text-sm border-[#616872] !rounded-[6px] text-black"
+                  className="w-full min-w-[180px] max-w-[320px] !min-h-[30px] !h-[30px] px-3 py-1 text-sm border-[#616872] !rounded-[6px] text-black"
                 />
               </div>
             </div>
@@ -172,7 +172,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="col-span-4">
-                <TrendLineChart data={trend} />
+                <TrendLineChart
+                  data={trend}
+                  selectedDept={selectedDept}
+                  deptOptions={deptOptions}
+                />
               </div>
             </div>
           </div>
