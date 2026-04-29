@@ -386,9 +386,9 @@ if (loadingOptions) return <LoadingScreen message="กำลังโหลด�
 };
 
   return (
-    <div className="flex min-h-screen bg-[#F2F4F7]">
-      <Sidebar />
-      <div className="ml-16 flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
+    <div className="flex min-h-screen bg-gray-100">
+      {/* <Sidebar /> */}
+      <div className="flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
         <div className="w-full max-w-[1000px] mb-10">
           <ProgressBar steps={steps} currentStep={currentStep} />
         </div>
