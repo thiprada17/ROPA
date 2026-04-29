@@ -68,6 +68,13 @@ function normalizeStepErrors<T extends Record<string, any>>(
   return result as Record<keyof T, boolean>;
 }
 
+function toLookupOptions(options: Option[] = []) {
+  return options.map((opt) => ({
+    id: opt.value,
+    name: opt.label,
+  }));
+}
+
 export default function StepContent<FormDataType extends Record<string, any>>({
   step,
   formData,
@@ -96,10 +103,10 @@ export default function StepContent<FormDataType extends Record<string, any>>({
     <Step2DataType
       formData={formData["step2"]}
       errors={normalizeStepErrors(errors["step2"])}
-      dataCategories={options.dataCategories}
-      dataTypes={options.dataTypes}
-      acquisitionMethods={options.acquisitionMethods}
-      dataSources={options.dataSources}
+      dataCategories={toLookupOptions(options.dataCategories)}
+      dataTypes={toLookupOptions(options.dataTypes)}
+      acquisitionMethods={toLookupOptions(options.acquisitionMethods)}
+      dataSources={toLookupOptions(options.dataSources)}
       updateField={(f, v) => updateField("step2" as keyof FormDataType, f, v)}
     />
   );
