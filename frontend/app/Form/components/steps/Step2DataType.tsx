@@ -49,7 +49,6 @@ export default function Step2DataType({
   dataTypes = [],
   acquisitionMethods = [],
   dataSources = [],
-  
 }: StepProps) {
   const radioOptions = [
     "ข้อมูลผู้สมัครงาน",
@@ -58,11 +57,25 @@ export default function Step2DataType({
     "อื่นๆ",
   ];
 
-  const dataTypeNameById = new Map(dataTypes.map((item) => [item.id, item.name]));
-  const dataTypeIdByName = new Map(dataTypes.map((item) => [item.name, item.id]));
+  console.log("STEP2 props:", {
+  dataCategories,
+  dataTypes,
+  acquisitionMethods,
+  dataSources,
+});
+  const dataTypeNameById = new Map(
+    dataTypes.map((item) => [item.id, item.name]),
+  );
+  const dataTypeIdByName = new Map(
+    dataTypes.map((item) => [item.name, item.id]),
+  );
 
-  const dataSourceNameById = new Map(dataSources.map((item) => [item.id, item.name]));
-  const dataSourceIdByName = new Map(dataSources.map((item) => [item.name, item.id]));
+  const dataSourceNameById = new Map(
+    dataSources.map((item) => [item.id, item.name]),
+  );
+  const dataSourceIdByName = new Map(
+    dataSources.map((item) => [item.name, item.id]),
+  );
 
   const selectedDataTypeName = formData.dataType
     ? dataTypeNameById.get(formData.dataType) || ""
@@ -92,6 +105,13 @@ export default function Step2DataType({
     value: item.id,
   }));
 
+  const resolveNames = (values: string[] | undefined, optionList: any[]) => {
+    if (!values) return [];
+    return values.map((v) => {
+      const found = optionList?.find((o: any) => o.id === v || o.value === v);
+      return found?.name ?? found?.label ?? v;
+    });
+  };
   return (
     <div className="space-y-6 font-prompt">
       <div>
@@ -105,7 +125,10 @@ export default function Step2DataType({
           </span>
 
           {radioOptions.map((opt) => (
-            <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+            <label
+              key={opt}
+              className="flex items-center gap-1.5 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="dataClass"
@@ -138,22 +161,24 @@ export default function Step2DataType({
         </div>
 
         {errors.dataClass && (
-          <p className="text-red-500 text-[10px] mt-1">กรุณาเลือกประเภทข้อมูล</p>
+          <p className="text-red-500 text-[10px] mt-1">
+            กรุณาเลือกประเภทข้อมูล
+          </p>
         )}
       </div>
 
       <div className="mt-3">
-      <label className="text-sm text-[#1a3a8f] block mb-1">
-        รายละเอียดข้อมูล (ถ้ามี)
-      </label>
-      <textarea
-        value={formData.description}
-        onChange={(e) => updateField("description", e.target.value)}
-        rows={3}
-        className="w-full border border-gray-200 rounded-md p-2.5 text-sm text-gray-700 outline-none focus:border-[#1a3a8f] resize-none"
-        placeholder="ระบุรายละเอียด..."
-      />
-    </div>
+        <label className="text-sm text-[#1a3a8f] block mb-1">
+          รายละเอียดข้อมูล (ถ้ามี)
+        </label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => updateField("description", e.target.value)}
+          rows={3}
+          className="w-full border border-gray-200 rounded-md p-2.5 text-sm text-gray-700 outline-none focus:border-[#1a3a8f] resize-none"
+          placeholder="ระบุรายละเอียด..."
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="mt-[16px]">

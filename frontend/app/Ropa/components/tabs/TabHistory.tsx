@@ -1,7 +1,7 @@
 "use client";
 import { display } from "../DetailCard";
 import { RopaItem } from "../../types/ropa";
-import { Pencil, Plus , Calendar, Clock} from "lucide-react";
+import { Pencil, Plus, Calendar, Clock } from "lucide-react";
 
 export default function TabHistory({
   item,
@@ -24,13 +24,23 @@ export default function TabHistory({
   const formatDate = (raw: string) => {
     if (!raw || raw === "-") return "-";
     const d = new Date(raw);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return d.toLocaleDateString("en-GB", {
+      timeZone: "Asia/Bangkok",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   const formatTime = (raw: string) => {
     if (!raw || raw === "-") return "-";
     const d = new Date(raw);
-    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   // แยก Today / Yesterday / Earlier ตาม date จริง
@@ -38,7 +48,9 @@ export default function TabHistory({
     if (!raw || raw === "-") return "Earlier";
     const d = new Date(raw);
     const now = new Date();
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
+    );
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     return "Earlier";
@@ -56,11 +68,16 @@ export default function TabHistory({
   const renderCard = (h: any, i: number) => {
     const isEdit = h.action === "edit";
     return (
-      <div key={i} className="border border-gray-200 rounded-xl p-3 space-y-2 bg-white">
+      <div
+        key={i}
+        className="border border-gray-200 rounded-xl p-3 space-y-2 bg-white"
+      >
         {/* edit/create */}
         <div className="flex items-center gap-2 text-[11px] text-[#1C1B1F]">
           {isEdit ? <Pencil size={12} /> : <Plus size={12} />}
-          <span>{isEdit ? "Edit by:" : "Create by:"} {h.by}</span>
+          <span>
+            {isEdit ? "Edit by:" : "Create by:"} {h.by}
+          </span>
         </div>
         {/* date */}
         <div className="flex items-center gap-2 text-[11px] text-[#1C1B1F]">
@@ -85,7 +102,7 @@ export default function TabHistory({
             <p className="text-[11px] text-[#A6A6A6]">{group}</p>
             {grouped[group].map(renderCard)}
           </div>
-        ) : null
+        ) : null,
       )}
     </div>
   );
