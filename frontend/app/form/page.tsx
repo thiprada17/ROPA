@@ -161,7 +161,7 @@ export default function FormPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("https://ropa-server.onrender.com/api/form/options", {
+        const res = await fetch("http://localhost:8000/api/form/options", {
           headers: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -247,7 +247,7 @@ export default function FormPage() {
         return;
       }
 
-      const res = await fetch("https://ropa-server.onrender.com/api/form/submit", {
+      const res = await fetch("http://localhost:8000/api/form/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

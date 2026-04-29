@@ -526,7 +526,7 @@ export default function DetailCard({ item, onClose, role, existingComments, onSt
                                 onAddComment?.(itemId, comment);
                             }}
                             onUpdateStatus={(status, comments) => {
-                                fetch(`https://ropa-server.onrender.com/api/form/ropa/${item.id}/`, {
+                                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
                                     method: "PUT",
                                     headers: {
                                         "Content-Type": "application/json",
