@@ -7,7 +7,7 @@ import OverallDonutCard from "./components/OverallDonutCard";
 import ComparisonBarChart from "./components/ComparisonBarChart";
 import TrendLineChart from "./components/TrendLineChart";
 import Sidebar from "../components/Sidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import DeptMultiSelect from "./components/DeptMultiSelect";
 
@@ -88,6 +88,94 @@ export default function DashboardPage() {
 
     fetchDashboard();
   }, [range]);
+
+  // ================= FILTERED DATA =================
+  // ใช้ rawList เป็น source หลัก เพื่อให้ทุก card/chart กรองตาม department เดียวกัน
+  const filteredRawList = useMemo(() => {
+    if (selectedDept.length === 0) return rawList;
+
+    return rawList.filter((item) =>
+      selectedDept.includes(item.ownerDepartment),
+    );
+  }, [rawList, selectedDept]);
+
+  const filteredTotalData = useMemo(() => {
+    return {
+      total: filteredRawList.length,
+      newCount: filteredRawList.length,
+    };
+  }, [filteredRawList]);
+
+  const filteredApprovalData = useMemo(() => {
+    const approved = filteredRawList.filter(
+      (item) => item.status === "Complete",
+    ).length;
+
+    return {
+      total: approved,
+      growth:
+        filteredRawList.length > 0
+          ? Number(((approved / filteredRawList.length) * 100).toFixed(1))
+          : 0,
+    };
+  }, [filteredRawList]);
+
+  const filteredActivities = useMemo(() => {
+    return filteredRawList.map((item) => ({
+      id: item.id,
+      activity: item.activity,
+      parties: item.parties ?? [],
+      risk: item.risk,
+      date: item.submittedAt ?? "",
+    }));
+  }, [filteredRawList]);
+
+  const filteredComparison = useMemo(() => {
+    const map: Record<string, Dept> = {};
+
+    filteredRawList.forEach((item) => {
+      const dept = item.ownerDepartment || "Unknown";
+
+      if (!map[dept]) {
+        map[dept] = {
+          name: dept,
+          critical: 0,
+          atRisk: 0,
+          stable: 0,
+          safe: 0,
+        };
+      }
+
+      if (item.risk === "Critical") map[dept].critical += 1;
+      else if (item.risk === "At Risk") map[dept].atRisk += 1;
+      else if (item.risk === "Safe") map[dept].safe += 1;
+      else map[dept].stable += 1;
+    });
+
+    return Object.values(map);
+  }, [filteredRawList]);
+
+  const filteredTrend = useMemo(() => {
+    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const map: Record<string, number> = {};
+
+    filteredRawList.forEach((item) => {
+      const raw = item.submittedAt;
+      if (!raw) return;
+
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime())) return;
+
+      const key = labels[date.getDay()];
+      map[key] = (map[key] || 0) + 1;
+    });
+
+    return labels.map((day) => ({
+      day,
+      value: map[day] || 0,
+    }));
+  }, [filteredRawList]);
+
   // ================= UI =================
   return (
     <div className="flex h-screen overflow-hidden">
@@ -123,8 +211,12 @@ export default function DashboardPage() {
                 <DeptMultiSelect
                   options={deptOptions}
                   selected={selectedDept}
-                  onChange={(val) => setSelectedDept(val.length === deptOptions.length ? [] : val)}
-                  placeholder="All Department"
+                  onChange={(val) =>
+                    setSelectedDept(
+                      val.length === deptOptions.length ? [] : val,
+                    )
+                  }
+                  placeholder="All Departments"
                   maxVisible={3}
                 />
               </div>
@@ -138,23 +230,23 @@ export default function DashboardPage() {
             <div className="flex justify-between items-stretch h-[307px]">
               <div className="w-[240px] flex flex-col gap-[28px] flex-shrink-0">
                 <TotalRopaCard
-                  total={totalData.total}
-                  newCount={totalData.newCount}
+                  total={filteredTotalData.total}
+                  newCount={filteredTotalData.newCount}
                 />
                 <ApprovalCard
-                  total={approvalData.total}
-                  growth={approvalData.growth}
+                  total={filteredApprovalData.total}
+                  growth={filteredApprovalData.growth}
                 />
               </div>
 
               <div className="w-[292px] flex-shrink-0">
-                <ActivityCard activities={activities} />
+                <ActivityCard activities={filteredActivities} />
               </div>
 
               <div className="w-[509px] flex-shrink-0">
                 <OverallDonutCard
-                  dataSource={rawList}
-                  selectedDept={selectedDept}
+                  dataSource={filteredRawList}
+                  selectedDept={[]}
                 />
               </div>
             </div>
@@ -162,12 +254,12 @@ export default function DashboardPage() {
             {/* CHARTS */}
             <div className="grid grid-cols-12 gap-6">
               <div className="col-span-8">
-                <ComparisonBarChart data={comparison} />
+                <ComparisonBarChart data={filteredComparison} />
               </div>
 
               <div className="col-span-4">
                 <TrendLineChart
-                  data={trend}
+                  data={filteredTrend}
                   selectedDept={selectedDept}
                   deptOptions={deptOptions}
                 />

@@ -271,13 +271,10 @@ async def resolve_step1_refs(step1, user_id=None):
     activity_row = await get_activity_name_row(step1.get("processActivity"))
     activity_name_id = activity_row.get("id") if activity_row else None
 
-    department_id = await get_department_id(step1.get("departmentId") or step1.get("department"))
+    department_id = await get_user_department_id(user_id)
 
     if not department_id and activity_row:
         department_id = activity_row.get("department_id")
-
-    if not department_id:
-        department_id = await get_user_department_id(user_id)
 
     return activity_name_id, department_id
 
@@ -468,13 +465,67 @@ async def find_latest_activity_processor_id(activity_id, processor_id):
     row = first_row(res)
     return row.get("id") if row else None
 
+async def get_owner_access_right_id(owner_department_id):
+    if not owner_department_id:
+        return None
 
-async def insert_activity_departments(activity_id, access_rights):
+    dept = first_row(
+        authDB().table("departments")
+        .select("department_name")
+        .eq("id", owner_department_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not dept:
+        return None
+
+    dept_name = dept.get("department_name")
+    if not dept_name:
+        return None
+
+    access_name_map = {
+        "IT": "ฝ่าย IT",
+        "HR": "ฝ่าย HR",
+        "SALES": "ฝ่ายขาย",
+        "SALES": "ฝ่ายขาย",
+        "MARKETING": "ฝ่ายการตลาด",
+        "PR": "ฝ่ายประชาสัมพันธ์",
+    }
+
+    possible_names = [
+        dept_name,
+        dept_name.upper(),
+        dept_name.capitalize(),
+        f"ฝ่าย {dept_name}",
+        access_name_map.get(dept_name.upper()),
+    ]
+
+    possible_names = [name for name in possible_names if name]
+
+    res = (
+        lookupDB().table("access_rights")
+        .select("id, name")
+        .in_("name", possible_names)
+        .limit(1)
+        .execute()
+    )
+
+    row = first_row(res)
+    return row.get("id") if row else None
+
+
+async def insert_activity_departments(activity_id, access_rights, owner_department_id):
+    access_rights = normalize_array(access_rights)
+
+    owner_access_right_id = await get_owner_access_right_id(owner_department_id)
+
+    if owner_access_right_id and owner_access_right_id not in access_rights:
+        access_rights.append(owner_access_right_id)
+
     if not access_rights:
         return
-    print("access_rights input:", access_rights)
 
-    # แปลงชื่อ → id จาก lookup.access_rights
     access_ids = await get_many_lookup_ids_by_names(
         "access_rights",
         access_rights
@@ -487,7 +538,7 @@ async def insert_activity_departments(activity_id, access_rights):
         {
             "activity_id": activity_id,
             "department_id": access_id,
-            "access_type": "owner"
+            "access_type": "owner",
         }
         for access_id in access_ids
     ]
@@ -544,8 +595,9 @@ async def insert_step_relations(activity_id, step2, step3, step4, step5, step6, 
     await insert_legal_bases(activity_id, step3)
 
     await insert_activity_departments(
-    activity_id,
-    step5.get("accessRight")
+        activity_id,
+        step5.get("accessRight"),
+        department_id
     )
 
     await insert_minor_consent(activity_id, step3)
