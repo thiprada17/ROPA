@@ -6,10 +6,10 @@ import ActivityCard from "./components/ActivityCard";
 import OverallDonutCard from "./components/OverallDonutCard";
 import ComparisonBarChart from "./components/ComparisonBarChart";
 import TrendLineChart from "./components/TrendLineChart";
-import Sidebar from "../components/Sidebar";
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import DeptMultiSelect from "./components/DeptMultiSelect";
+import LoadingScreen from "../components/Loading";
 
 // ================= TYPE =================
 type Dept = {
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [deptOptions, setDeptOptions] = useState<
     { label: string; value: string }[]
   >([]);
+  const [loading, setLoading] = useState(true);
 
   // ================= FILTER STATE =================
   // เลือกช่วงเวลา
@@ -83,6 +84,8 @@ export default function DashboardPage() {
         setDeptOptions(rawJson.departments ?? []);
       } catch (err) {
         console.error("fetchDashboard error:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -127,53 +130,56 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          {loading ? (
+            <LoadingScreen message="กำลังโหลด Dashboard..." fullScreen={false} />
+          ) : (
+            // {/* ================= CONTENT ================= */}
+            <div className="flex flex-col gap-6">
+              {/* TOP CARDS */}
+              <div className="grid grid-cols-12 gap-6 min-h-[307px]">
+                {/* Total + Approval */}
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
+                  <TotalRopaCard
+                    total={totalData.total}
+                    newCount={totalData.newCount}
+                  />
+                  <ApprovalCard
+                    total={approvalData.total}
+                    growth={approvalData.growth}
+                  />
+                </div>
 
-          {/* ================= CONTENT ================= */}
-          <div className="flex flex-col gap-6">
-            {/* TOP CARDS */}
-            <div className="grid grid-cols-12 gap-6 min-h-[307px]">
-              {/* Total + Approval */}
-              <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
-                <TotalRopaCard
-                  total={totalData.total}
-                  newCount={totalData.newCount}
-                />
-                <ApprovalCard
-                  total={approvalData.total}
-                  growth={approvalData.growth}
-                />
+                {/* Activity */}
+                <div className="col-span-12 md:col-span-3">
+                  <ActivityCard activities={activities} />
+                </div>
+
+                {/* Overall Donut */}
+                <div className="col-span-12 md:col-span-6">
+                  <OverallDonutCard
+                    dataSource={rawList}
+                    selectedDept={selectedDept}
+                  />
+                </div>
               </div>
 
-              {/* Activity */}
-              <div className="col-span-12 md:col-span-3">
-                <ActivityCard activities={activities} />
-              </div>
+              {/* CHARTS */}
+              <div className="grid grid-cols-12 gap-6">
+                <div className="col-span-12 lg:col-span-8">
+                  <ComparisonBarChart data={comparison} />
+                </div>
 
-              {/* Overall Donut */}
-              <div className="col-span-12 md:col-span-6">
-                <OverallDonutCard
-                  dataSource={rawList}
-                  selectedDept={selectedDept}
-                />
+                {/* TrendLineChart — min-w ป้องกันบีบเกิน */}
+                <div className="col-span-12 lg:col-span-4 min-w-0">
+                  <TrendLineChart
+                    data={trend}
+                    selectedDept={selectedDept}
+                    deptOptions={deptOptions}
+                  />
+                </div>
               </div>
             </div>
-
-            {/* CHARTS */}
-            <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12 lg:col-span-8">
-                <ComparisonBarChart data={comparison} />
-              </div>
-
-              {/* TrendLineChart — min-w ป้องกันบีบเกิน */}
-              <div className="col-span-12 lg:col-span-4 min-w-0">
-                <TrendLineChart
-                  data={trend}
-                  selectedDept={selectedDept}
-                  deptOptions={deptOptions}
-                />
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

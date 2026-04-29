@@ -21,7 +21,7 @@ import Breadcrumb from "../Ropa/components/Breadcrumb";
 import DetailCard from "../Ropa/components/DetailCard";
 import FilterModal from "../Ropa/components/FilterModal";
 import { RopaItem } from "../Ropa/types/ropa";
-
+import LoadingScreen from "../components/Loading";
 
 export default function DpoPage() {
   const breadcrumbItems = [
@@ -359,9 +359,7 @@ export default function DpoPage() {
               {/* Body */}
               <div className="flex flex-col gap-1">
                 {loading ? (
-                  <div className="text-center text-gray-400 py-8">
-                    กำลังโหลดข้อมูล...
-                  </div>
+                  <LoadingScreen message="กำลังโหลดข้อมูล ROPA..." fullScreen={false} />
                 ) : apiError ? (
                   <div className="text-center text-red-500 py-8">
                     {apiError}
