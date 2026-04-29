@@ -6,6 +6,7 @@ from controllers.formController import (
     getActivityById,
     getRopaList,
     ropaDB,
+    deleteForm,
 )
 from datetime import datetime
 
@@ -22,25 +23,34 @@ async def submit(request: Request):
     return await submitForm(request)
 
 
-@router.put("/{activityId}")
-async def update(activityId: str, request: Request):
-    return await updateForm(activityId, request)
+@router.get("/ropa")
+async def ropa_list(request: Request):
+    return await getRopaList(request)
+
+
+@router.put("/ropa/{activityId}/status")
+async def update_status(activityId: str, request: Request):
+    body = await request.json()
+    status = body.get("status", "").lower()
+
+    ropaDB().table("processing_activities").update({
+        "approval_status": status,
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("id", activityId).execute()
+
+    return {"message": "Status updated"}
 
 
 @router.get("/activity/{activityId}")
 async def get_activity(activityId: str):
     return await getActivityById(activityId)
 
-@router.get("/ropa")
-async def ropa_list(request: Request):
-    return await getRopaList(request)
 
-@router.put("/ropa/{activityId}/status")
-async def update_status(activityId: str, request: Request):
-    body = await request.json()
-    status = body.get("status", "").lower()
-    ropaDB().table("processing_activities").update({
-        "approval_status": status,
-        "updated_at": datetime.utcnow().isoformat(),
-    }).eq("id", activityId).execute()
-    return {"message": "Status updated"}
+@router.put("/activity/{activityId}")
+async def update_activity(activityId: str, request: Request):
+    return await updateForm(activityId, request)
+
+
+@router.delete("/activity/{activityId}")
+async def delete_activity(activityId: str):
+    return await deleteForm(activityId)

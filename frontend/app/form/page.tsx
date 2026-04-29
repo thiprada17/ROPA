@@ -14,7 +14,7 @@ import { validateStep4 } from "./components/steps/Step4Transfer";
 import { ProcessorData } from "./components/steps/Step7Processor";
 import { validateStep5 } from "./components/steps/Step5Retention";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; 
+import { useRouter, useSearchParams } from "next/navigation";
 import LoadingScreen from "../components/Loading";
 
 type Option = {
@@ -38,13 +38,19 @@ type FormOptions = {
   retentionStorageMethods: { id: string; name: string }[];
   usagePurposes: { id: string; name: string }[];
   accessRights: { id: string; name: string }[];
-  departments: { id: string; department_name: string; description?: string | null }[];
+  departments: {
+    id: string;
+    name: string;
+    label?: string;
+    value?: string;
+    description?: string | null;
+  }[];
 };
 
 type Errors<FormData> = {
   [K in keyof FormData]?: {
     [F in keyof FormData[K]]?: boolean;
-  }
+  };
 };
 
 export default function FormPage() {
@@ -56,6 +62,11 @@ export default function FormPage() {
   const [optionsError, setOptionsError] = useState("");
   const [formOptions, setFormOptions] = useState<FormOptions | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const mode = searchParams.get("mode");
+  const activityId = searchParams.get("id");
+  const isEditMode = mode === "edit" && !!activityId;
   interface FormData {
     step1: {
       dataOwner: string;
@@ -119,7 +130,7 @@ export default function FormPage() {
       dataType: "",
       methods: [],
       dataSource: "",
-      description: ""
+      description: "",
     },
     step3: {
       primaryBases: [],
@@ -186,10 +197,64 @@ export default function FormPage() {
     fetchOptions();
   }, []);
 
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchOldForm = async () => { //อยุ่นี่นะฝ้าย ข้อมูลฟอร์มเดิม
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          `http://localhost:8000/api/form/activity/${activityId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "โหลดข้อมูลเดิมไม่สำเร็จ");
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          step1: { ...prev.step1, ...(data.step1 || {}) },
+          step2: { ...prev.step2, ...(data.step2 || {}) },
+          step3: {
+            ...prev.step3,
+            ...(data.step3 || {}),
+            minorConsent: {
+              ...prev.step3.minorConsent,
+              ...(data.step3?.minorConsent || {}),
+            },
+          },
+          step4: { ...prev.step4, ...(data.step4 || {}) },
+          step5: { ...prev.step5, ...(data.step5 || {}) },
+          step6: {
+            selectedSecurity: data.step6?.selectedSecurity || {},
+            securityDetails: data.step6?.securityDetails || {},
+          },
+          step7: {
+            processors: data.step7?.processors || [],
+          },
+        }));
+      } catch (err: any) {
+        console.error("fetchOldForm error:", err);
+        alert(err.message || "โหลดข้อมูลเดิมไม่สำเร็จ");
+      }
+    };
+
+    fetchOldForm();
+  }, [isEditMode, activityId]);
+
   const updateField = <K extends keyof FormData, F extends keyof FormData[K]>(
     stepKey: K,
     field: F,
-    value: FormData[K][F]
+    value: FormData[K][F],
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -198,7 +263,10 @@ export default function FormPage() {
 
     setErrors((prev) => ({
       ...prev,
-      [stepKey]: { ...(prev[stepKey] || {}), [field]: false } as Errors<FormData>[K],
+      [stepKey]: {
+        ...(prev[stepKey] || {}),
+        [field]: false,
+      } as Errors<FormData>[K],
     }));
   };
 
@@ -241,17 +309,23 @@ export default function FormPage() {
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("user_id");
 
       if (!token) {
         alert("Please login to proceed.");
         return;
       }
 
-      const res = await fetch("http://localhost:8000/api/form/submit", {
-        method: "POST",
+      const url = isEditMode
+        ? `http://localhost:8000/api/form/activity/${activityId}`
+        : "http://localhost:8000/api/form/submit";
+
+      const res = await fetch(url, {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(userId ? { "x-user-id": userId } : {}),
         },
         body: JSON.stringify(formData),
       });
@@ -259,9 +333,13 @@ export default function FormPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Form submitted successfully!");
+        alert(
+          isEditMode
+            ? "Form updated successfully!"
+            : "Form submitted successfully!",
+        );
         console.log("SUCCESS:", data);
-        router.push('/Ropa')
+        router.push("/Ropa");
       } else {
         alert(`Submission failed: ${data.error || "Unknown error"}`);
         console.error("SUBMIT ERROR:", data);
@@ -321,74 +399,59 @@ export default function FormPage() {
     "Processor",
   ];
 
-if (loadingOptions) return <LoadingScreen message="กำลังโหลดฟอร์ม..." />;
-
+  if (loadingOptions) return <LoadingScreen message="กำลังโหลดฟอร์ม..." />;
 
   if (optionsError || !formOptions) {
-    return <div className="p-10 text-red-500">{optionsError || "Failed to load form options."}</div>;
+    return (
+      <div className="p-10 text-red-500">
+        {optionsError || "Failed to load form options."}
+      </div>
+    );
   }
+  const toOption = (x: any) => ({
+  id: x.id,
+  name: x.name,
+  label: x.label ?? x.name,
+  value: x.value ?? x.id,
+});
 
   const mappedOptions = {
   departments: formOptions.departments.map((d) => ({
-    label: d.department_name,
-    value: d.id,
+    id: d.id,
+    name: d.name,
+    label: d.label ?? d.name,
+    value: d.value ?? d.id,
   })),
+
   activityNames: formOptions.activityNames.map((a) => ({
+    id: a.id,
+    name: a.name,
     label: a.name,
     value: a.id,
   })),
-  purposes: formOptions.purposes.map((p) => ({
-    label: p.name,
-    value: p.id,
-  })),
 
-  dataCategories: formOptions.dataCategories,
-  dataTypes: formOptions.dataTypes,
-  acquisitionMethods: formOptions.acquisitionMethods,
-  dataSources: formOptions.dataSources,
+  purposes: formOptions.purposes.map(toOption),
 
-  legalBases: formOptions.legalBases.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  deletionMethods: formOptions.deletionMethods.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  transferMethods: formOptions.transferMethods.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  protectionStandards: formOptions.protectionStandards.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  legalExemptions: formOptions.legalExemptions.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  retentionStorageTypes: formOptions.retentionStorageTypes.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  retentionStorageMethods: formOptions.retentionStorageMethods.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  usagePurposes: formOptions.usagePurposes.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
-  accessRights: formOptions.accessRights.map((x) => ({
-    label: x.name,
-    value: x.id,
-  })),
+  dataCategories: formOptions.dataCategories.map(toOption),
+  dataTypes: formOptions.dataTypes.map(toOption),
+  acquisitionMethods: formOptions.acquisitionMethods.map(toOption),
+  dataSources: formOptions.dataSources.map(toOption),
+
+  legalBases: formOptions.legalBases.map(toOption),
+  deletionMethods: formOptions.deletionMethods.map(toOption),
+  transferMethods: formOptions.transferMethods.map(toOption),
+  protectionStandards: formOptions.protectionStandards.map(toOption),
+  legalExemptions: formOptions.legalExemptions.map(toOption),
+  retentionStorageTypes: formOptions.retentionStorageTypes.map(toOption),
+  retentionStorageMethods: formOptions.retentionStorageMethods.map(toOption),
+  usagePurposes: formOptions.usagePurposes.map(toOption),
+  accessRights: formOptions.accessRights.map(toOption),
 };
 
   return (
-    <div className="flex min-h-screen bg-[#F2F4F7]">
-      <Sidebar />
-      <div className="ml-16 flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
+    <div className="flex min-h-screen bg-gray-100">
+      {/* <Sidebar /> */}
+      <div className="flex-1 flex flex-col items-center justify-center py-12 px-8 min-h-screen">
         <div className="w-full max-w-[1000px] mb-10">
           <ProgressBar steps={steps} currentStep={currentStep} />
         </div>
@@ -442,8 +505,12 @@ if (loadingOptions) return <LoadingScreen message="กำลังโหลด�
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-gabarito">
               <div className="bg-white p-6 rounded-[15px] shadow-lg max-w-sm text-center">
                 <p className="mb-4 text-sm">
-                  you have unsaved changes in the processor details. Are you sure you want to{" "}
-                  {nextAction === "prev" ? "go back" : "proceed to the next step"} without saving?
+                  you have unsaved changes in the processor details. Are you
+                  sure you want to{" "}
+                  {nextAction === "prev"
+                    ? "go back"
+                    : "proceed to the next step"}{" "}
+                  without saving?
                 </p>
                 <div className="flex justify-around mt-4">
                   <button
