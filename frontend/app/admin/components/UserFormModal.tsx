@@ -78,10 +78,10 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
             let method = "";
 
             if (mode === "create") {
-                url = "http://localhost:8000/api/admin/users";
+                url = "https://ropa-server.onrender.com/api/admin/users";
                 method = "POST"
             } else {
-                url = `http://localhost:8000/api/admin/edit/${user?.id}`;
+                url = `https://ropa-server.onrender.com/api/admin/edit/${user?.id}`;
                 method = "PUT"
             }
 
@@ -130,7 +130,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
             const user_id = id
             const token = localStorage.getItem("token");
             const res = await fetch(
-                `http://localhost:8000/api/admin/delete/${user_id}`, {
+                `https://ropa-server.onrender.com/api/admin/delete/${user_id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export default function UserFormModal({ mode, user, onClose, onSave, onDelete }:
             try {
                 const token = localStorage.getItem("token");
 
-                const res = await fetch("http://localhost:8000/api/admin/departments", {
+                const res = await fetch("https://ropa-server.onrender.com/api/admin/departments", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

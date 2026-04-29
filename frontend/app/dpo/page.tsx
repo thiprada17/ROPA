@@ -72,7 +72,7 @@ export default function DpoPage() {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("กรุณา login ก่อน");
-        const res = await fetch("http://localhost:8000/api/form/ropa", {
+        const res = await fetch("https://ropa-server.onrender.com/api/form/ropa", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
