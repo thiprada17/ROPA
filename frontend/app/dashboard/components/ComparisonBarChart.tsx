@@ -12,8 +12,16 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
+type ComparisonData = {
+    name: string;
+    atRisk: number;
+    critical: number;
+    safe: number;
+    stable: number;
+};
+
 type Props = {
-    data: any[];
+    data: ComparisonData[];
 };
 
 export default function ComparisonBarChart({ data }: Props) {
@@ -24,10 +32,10 @@ export default function ComparisonBarChart({ data }: Props) {
     // - ใช้ให้ตรงกับ donut chart เพื่อให้ UX consistent
     // =========================
     const COLORS = {
-        atRisk: "#F3E3AE",
         critical: "#F0AFBE",
-        safe: "#B5DDD8",
+        atRisk: "#F3E3AE",
         stable: "#D1E7F0",
+        safe: "#B5DDD8",
     };
 
     // =========================
@@ -96,26 +104,24 @@ export default function ComparisonBarChart({ data }: Props) {
                 {/* STATIC LEGEND (match dashboard UI) */}
                 <div className="flex gap-6 text-sm text-gray-600">
 
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-[#F3E3AE]" />
-                        At Risk
-                    </div>
+
 
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-[#F0AFBE]" />
                         Critical
                     </div>
-
                     <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-[#B5DDD8]" />
-                        Safe
+                        <span className="w-3 h-3 rounded-full bg-[#F3E3AE]" />
+                        At Risk
                     </div>
-
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-[#D1E7F0]" />
                         Stable
                     </div>
-
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-[#B5DDD8]" />
+                        Safe
+                    </div>
                 </div>
             </div>
 

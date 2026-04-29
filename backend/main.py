@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import auth, admin, form, dpo
+from routes import auth, admin, form, dashboard
+from routes import dpo
 
 app = FastAPI(
     title="My API",
@@ -19,6 +20,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(admin.router, prefix="/api/admin")
 app.include_router(form.router, prefix="/api/form")
+app.include_router(dashboard.router, prefix="/api")
+
 app.include_router(dpo.router, prefix="/api/dpo")
 
 @app.get("/")
