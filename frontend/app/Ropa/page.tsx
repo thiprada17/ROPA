@@ -35,6 +35,7 @@ export default function RopaPage() {
   const [data, setData] = useState<RopaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
+  const [formOptions, setFormOptions] = useState<any>(null);
 
   const [role, setRole] = useState<"DPO" | "User" | "Admin" | "Viewer" | undefined>(undefined);
   
@@ -79,7 +80,7 @@ export default function RopaPage() {
         `http://localhost:8000/api/form/activity/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       const detailData = await res.json();
@@ -93,25 +94,17 @@ export default function RopaPage() {
         ...(prev ?? {}),
         ...detailData,
 
-        parties:
-          detailData.parties?.length
-            ? detailData.parties
-            : item.parties,
+        parties: detailData.parties?.length ? detailData.parties : item.parties,
 
-        legal:
-          detailData.legal ?? item.legal,
+        legal: detailData.legal ?? item.legal,
 
-        retention:
-          detailData.retention ?? item.retention,
+        retention: detailData.retention ?? item.retention,
 
-        transfer:
-          detailData.transfer ?? item.transfer,
+        transfer: detailData.transfer ?? item.transfer,
 
-        security:
-          detailData.security ?? item.security,
+        security: detailData.security ?? item.security,
 
-        processors:
-          detailData.processors ?? item.processors,
+        processors: detailData.processors ?? item.processors,
       }));
     } catch (err) {
       console.error("fetch detail error:", err);
@@ -293,11 +286,11 @@ export default function RopaPage() {
     selectedStatus.length +
     selectedRisks.length +
     (retention.start.year ||
-      retention.start.month ||
-      retention.start.day ||
-      retention.end.year ||
-      retention.end.month ||
-      retention.end.day
+    retention.start.month ||
+    retention.start.day ||
+    retention.end.year ||
+    retention.end.month ||
+    retention.end.day
       ? 1
       : 0);
 
@@ -341,12 +334,37 @@ export default function RopaPage() {
   useEffect(() => {
     const handleResize = () => {
       const maxW = window.innerWidth * 0.6;
-      setDetailWidth(prev => Math.min(prev, maxW));
+      setDetailWidth((prev) => Math.min(prev, maxW));
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+  const fetchOptions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("http://localhost:8000/api/form/options", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "โหลด options ไม่สำเร็จ");
+      }
+
+      setFormOptions(data);
+    } catch (err) {
+      console.error("fetchOptions error:", err);
+    }
+  };
+
+  fetchOptions();
+}, []);
 
   return (
     <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
@@ -517,8 +535,11 @@ export default function RopaPage() {
                 <div className="text-center text-gray-400 py-6">
                   กำลังโหลดข้อมูล...
                 </div> */}
-                {loading ? (
-  <LoadingScreen message="กำลังโหลดข้อมูล ROPA..." fullScreen={false} />
+              {loading ? (
+                <LoadingScreen
+                  message="กำลังโหลดข้อมูล ROPA..."
+                  fullScreen={false}
+                />
               ) : apiError ? (
                 <div className="text-center text-red-500 py-6">{apiError}</div>
               ) : (
@@ -584,10 +605,15 @@ export default function RopaPage() {
               }}
             >
               <DetailCard
-                item={selectedItem}
-                onClose={() => setSelectedItem(null)}
-                role={role}
-              />
+  item={selectedItem}
+  onClose={() => setSelectedItem(null)}
+  role={role}
+  formOptions={formOptions}
+  onDelete={(itemId) => {
+    setData((prev) => prev.filter((x) => x.id !== itemId));
+    setSelectedItem(null);
+  }}
+/>
             </div>
           )}
         </div>

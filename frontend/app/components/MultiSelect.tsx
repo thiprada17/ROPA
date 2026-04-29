@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 
 type Option = {
-  label: string;
-  value: string;
+  id?: string;
+  name?: string;
+  label?: string;
+  value?: string;
 };
 
 interface MultiSelectProps {
-  label?: string; // label เป็น optional
+  label?: string;
   options: Option[];
   selected?: string[];
   onChange: (val: string[]) => void;
@@ -20,7 +22,7 @@ interface MultiSelectProps {
 
 export default function MultiSelect({
   label,
-  options,
+  options = [],
   selected = [],
   onChange,
   placeholder = "เลือก...",
@@ -32,11 +34,18 @@ export default function MultiSelect({
   const ref = useRef<HTMLDivElement>(null);
   const selectId = label ? label.replace(/\s+/g, "-").toLowerCase() : "";
 
+  const normalizedOptions = options
+    .map((o: any) => ({
+      label: o.label ?? o.name ?? "",
+      value: o.value ?? o.id ?? "",
+    }))
+    .filter((o) => o.label && o.value);
+
   const toggle = (val: string) => {
     onChange(
       selected.includes(val)
         ? selected.filter((s) => s !== val)
-        : [...selected, val]
+        : [...selected, val],
     );
   };
 
@@ -48,7 +57,9 @@ export default function MultiSelect({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const selectedOptions = options.filter((o) => selected.includes(o.value));
+  const selectedOptions = normalizedOptions.filter((o) =>
+    selected.includes(o.value),
+  );
 
   return (
     <div ref={ref} className="relative">
@@ -122,7 +133,7 @@ export default function MultiSelect({
 
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
-          {options.map((opt) => (
+          {normalizedOptions.map((opt) => (
             <div
               key={opt.value}
               onClick={() => toggle(opt.value)}
@@ -141,11 +152,16 @@ export default function MultiSelect({
                   </svg>
                 )}
               </div>
-              {opt.label}
+              <span>{opt.label}</span>
             </div>
           ))}
+
+          {normalizedOptions.length === 0 && (
+            <div className="px-3 py-2 text-sm text-gray-400">ไม่มีตัวเลือก</div>
+          )}
         </div>
       )}
+
       {error && <p className="text-red-500 text-xs mt-1 px-2">กรุณาเลือกข้อมูล</p>}
     </div>
   );

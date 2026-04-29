@@ -21,10 +21,10 @@ interface StepContentProps<FormDataType extends Record<string, any>> {
   options: {
   activityNames: Option[];
   purposes: Option[];
-  dataCategories: LookupOption[];
-  dataTypes: LookupOption[];
-  acquisitionMethods: LookupOption[];
-  dataSources: LookupOption[];
+  dataCategories: Option[];
+  dataTypes: Option[];
+  acquisitionMethods: Option[];
+  dataSources: Option[];
   legalBases: Option[];
   departments: Option[];
   transferMethods: Option[];

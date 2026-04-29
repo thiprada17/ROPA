@@ -14,9 +14,13 @@ const securityMeasures = [
 ];
 
 export interface ProcessorData {
-  id: number;
+  id: number | string;
+  processorId?: string;
   name: string;
-  address: string[];
+  address: string[] | string;
+  accessType?: string | null;
+  dataCategoryAccessed?: string | null;
+  note?: string | null;
   securitySelected: Record<string, boolean>;
   securityDetails: Record<string, string>;
 }
@@ -26,6 +30,35 @@ const emptyDraft = () => ({
   address: [] as string[],
   securitySelected: {} as Record<string, boolean>,
   securityDetails: {} as Record<string, string>,
+});
+
+const normalizeAddress = (value: any): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((line) => String(line))
+      .filter((line) => line.trim() !== "");
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "");
+  }
+
+  return [];
+};
+
+const normalizeProcessor = (p: any, index: number): ProcessorData => ({
+  id: p?.id ?? p?.processorId ?? `processor-${index}`,
+  processorId: p?.processorId,
+  name: p?.name ?? "",
+  address: normalizeAddress(p?.address),
+  accessType: p?.accessType ?? null,
+  dataCategoryAccessed: p?.dataCategoryAccessed ?? null,
+  note: p?.note ?? null,
+  securitySelected: p?.securitySelected ?? {},
+  securityDetails: p?.securityDetails ?? {},
 });
 
 type Draft = ReturnType<typeof emptyDraft>;
@@ -50,11 +83,19 @@ function SecuritySection({ d, setD }: { d: Draft; setD: (v: Draft) => void }) {
                 type="checkbox"
                 checked={!!d.securitySelected[item]}
                 onChange={() =>
-                  setD({ ...d, securitySelected: { ...d.securitySelected, [item]: !d.securitySelected[item] } })
+                  setD({
+                    ...d,
+                    securitySelected: {
+                      ...d.securitySelected,
+                      [item]: !d.securitySelected[item],
+                    },
+                  })
                 }
                 className="accent-[#1a3a8f] w-4 h-4"
               />
-              <span className={`text-sm ${d.securitySelected[item] ? "text-[#1a3a8f] font-medium" : "text-gray-500"}`}>
+              <span
+                className={`text-sm ${d.securitySelected[item] ? "text-[#1a3a8f] font-medium" : "text-gray-500"}`}
+              >
                 {item}
               </span>
             </label>
@@ -62,7 +103,13 @@ function SecuritySection({ d, setD }: { d: Draft; setD: (v: Draft) => void }) {
               <textarea
                 value={d.securityDetails[item] || ""}
                 onChange={(e) =>
-                  setD({ ...d, securityDetails: { ...d.securityDetails, [item]: e.target.value } })
+                  setD({
+                    ...d,
+                    securityDetails: {
+                      ...d.securityDetails,
+                      [item]: e.target.value,
+                    },
+                  })
                 }
                 placeholder="รายละเอียด(ถ้ามี)"
                 rows={3}
@@ -83,16 +130,24 @@ interface Step7ProcessorProps {
 }
 
 export default function Step7Processor(props: Step7ProcessorProps) {
-  // const [processors, setProcessors] = useState<ProcessorData[]>([]);
   const { processors, updateProcessors } = props;
+  const safeProcessors = Array.isArray(processors)
+    ? processors.map((p, index) => normalizeProcessor(p, index))
+    : [];
   const setProcessors = updateProcessors;
+  // const [processors, setProcessors] = useState<ProcessorData[]>([]);
   // const setProcessors = (v: ProcessorData[]) => updateField("processors", v);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [editDraft, setEditDraft] = useState<Draft | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [draftErrors, setDraftErrors] = useState<{ name?: boolean; address?: boolean }>({});
+  const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(
+    null,
+  );
+  const [draftErrors, setDraftErrors] = useState<{
+    name?: boolean;
+    address?: boolean;
+  }>({});
 
   const handleAddNew = () => {
     setDraft(emptyDraft());
@@ -101,22 +156,34 @@ export default function Step7Processor(props: Step7ProcessorProps) {
     setDraftErrors({});
   };
   const validateRequiredFields = (d: Draft) => {
-    const nonEmptyAddresses = d.address.filter(line => line.trim() !== "");
+    const nonEmptyAddresses = d.address.filter((line) => line.trim() !== "");
     return {
       name: !d.name.trim(),
       address: nonEmptyAddresses.length === 0,
     };
   };
   // ตรวจสอบว่ามีการแก้ไขจริงหรือไม่
-  function isDraftModified(draft: Draft, original?: Draft) {
+  function isDraftModified(draft: Draft, original?: Draft | ProcessorData) {
     if (!draft) return false;
     if (!original) return !isDraftEmpty(draft); // เพิ่มใหม่ consider modified ถ้าไม่ว่าง
     // เปรียบเทียบ field ทั้งหมด
     if (draft.name.trim() !== original.name.trim()) return true;
-    if (draft.address.join("\n") !== original.address.join("\n")) return true;
+    if (
+      draft.address.join("\n") !== normalizeAddress(original.address).join("\n")
+    ) {
+      return true;
+    }
     for (const key of securityMeasures) {
-      if ((draft.securitySelected[key] || false) !== (original.securitySelected[key] || false)) return true;
-      if ((draft.securityDetails[key] || "") !== (original.securityDetails[key] || "")) return true;
+      if (
+        (draft.securitySelected[key] || false) !==
+        (original.securitySelected[key] || false)
+      )
+        return true;
+      if (
+        (draft.securityDetails[key] || "") !==
+        (original.securityDetails[key] || "")
+      )
+        return true;
     }
     return false;
   }
@@ -133,8 +200,13 @@ export default function Step7Processor(props: Step7ProcessorProps) {
     if (errors.name || errors.address) return;
     // บันทึก draft
     const name = draft.name.trim() || "Processor สักคน";
-    const cleanedAddress = draft.address.map(line => line.trim()).filter(line => line !== "");
-    setProcessors([...processors, { id: Date.now(), ...draft, name, address: cleanedAddress }]);    // reset
+    const cleanedAddress = draft.address
+      .map((line) => line.trim())
+      .filter((line) => line !== "");
+    setProcessors([
+      ...safeProcessors,
+      { id: Date.now(), ...draft, name, address: cleanedAddress },
+    ]);
     setDraft(null);
     setDraftErrors({});
   };
@@ -171,12 +243,16 @@ export default function Step7Processor(props: Step7ProcessorProps) {
       }
     } else {
       setExpandedId(p.id);
-      setEditDraft({ ...p }); // load ข้อมูลเดิมเข้า draft
+      setEditDraft({
+        ...p,
+        address: normalizeAddress(p.address),
+        securitySelected: p.securitySelected ?? {},
+        securityDetails: p.securityDetails ?? {},
+      }); // load ข้อมูลเดิมเข้า draft
     }
   };
 
-
-  const handleSaveEdit = (id: number) => {
+  const handleSaveEdit = (id: number | string) => {
     if (!editDraft) return;
 
     const errors = validateRequiredFields(editDraft);
@@ -186,16 +262,25 @@ export default function Step7Processor(props: Step7ProcessorProps) {
     }
 
     const name = editDraft.name.trim() || "Processor สักคน";
-    const cleanedAddress = editDraft.address.map(line => line.trim()).filter(line => line !== "");
+    const cleanedAddress = editDraft.address
+      .map((line) => line.trim())
+      .filter((line) => line !== "");
 
-    setProcessors(processors.map(p => p.id === id ? { ...p, ...editDraft, name, address: cleanedAddress } : p)); setExpandedId(null);
+    setProcessors(
+      safeProcessors.map((p) =>
+        p.id === id ? { ...p, ...editDraft, name, address: cleanedAddress } : p,
+      ),
+    );
     setEditDraft(null);
     setDraftErrors({});
   };
 
-  const handleDeleteProcessor = (id: number) => {
-    setProcessors(processors.filter(p => p.id !== id));
-    if (expandedId === id) { setExpandedId(null); setEditDraft(null); }
+  const handleDeleteProcessor = (id: number | string) => {
+    setProcessors(safeProcessors.filter((p) => p.id !== id));
+    if (expandedId === id) {
+      setExpandedId(null);
+      setEditDraft(null);
+    }
     setDeleteTargetId(null);
   };
 
@@ -205,9 +290,8 @@ export default function Step7Processor(props: Step7ProcessorProps) {
 
   return (
     <div className="space-y-4 font-prompt">
-
       {/* ปุ่ม Add */}
-      {(processors.length > 0 || draft) && (
+      {(safeProcessors.length > 0 || draft) && (
         <div className="flex justify-end">
           <button
             type="button"
@@ -220,7 +304,7 @@ export default function Step7Processor(props: Step7ProcessorProps) {
       )}
 
       {/* empty processor ปุ่มใหญ่กลางจอ */}
-      {processors.length === 0 && !draft && (
+      {safeProcessors.length === 0 && !draft && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <button
             type="button"
@@ -267,26 +351,32 @@ export default function Step7Processor(props: Step7ProcessorProps) {
               value={draft.name}
               onChange={(v) => {
                 setDraft({ ...draft, name: v });
-                if (draftErrors.name) setDraftErrors({ ...draftErrors, name: false });
+                if (draftErrors.name)
+                  setDraftErrors({ ...draftErrors, name: false });
               }}
               error={draftErrors.name}
             />
             <div>
               <label className="text-sm font-medium text-[#1a3a8f] block mb-1">
-                ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล <span className="text-red-500">*</span>
+                ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={draft.address.join("\n")}
                 onChange={(e) => {
                   setDraft({ ...draft, address: e.target.value.split("\n") });
-                  if (draftErrors.address) setDraftErrors({ ...draftErrors, address: false });
+                  if (draftErrors.address)
+                    setDraftErrors({ ...draftErrors, address: false });
                 }}
                 placeholder="กรอกที่อยู่แต่ละบรรทัด"
                 rows={4}
-                className={`h-[60px] w-full border rounded-lg px-3 py-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-blue-200 resize-none ${draftErrors.address ? "border-red-500" : "border-BLUE"
-                  }`}
+                className={`h-[60px] w-full border rounded-lg px-3 py-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-blue-200 resize-none ${
+                  draftErrors.address ? "border-red-500" : "border-BLUE"
+                }`}
               />
-              {draftErrors.address && <p className="text-red-500 text-xs mt-1">กรุณากรอกที่อยู่</p>}
+              {draftErrors.address && (
+                <p className="text-red-500 text-xs mt-1">กรุณากรอกที่อยู่</p>
+              )}
             </div>
             <hr className="border-gray-200" />
             <SecuritySection d={draft} setD={setDraft} />
@@ -295,18 +385,25 @@ export default function Step7Processor(props: Step7ProcessorProps) {
       )}
 
       {/* processor list */}
-      {processors.map((p) => {
+      {safeProcessors.map((p) => {
         const isOpen = expandedId === p.id;
         return (
-          <div key={p.id} className="border border-BLUE rounded-xl overflow-hidden shadow-md">
+          <div
+            key={p.id}
+            className="border border-BLUE rounded-xl overflow-hidden shadow-md"
+          >
             <div
               className="flex items-center justify-between px-5 py-3 bg-[#ECF0F9] cursor-pointer hover:bg-[#f8f9ff]"
               onClick={() => handleToggleExpand(p)}
             >
-              <span className="text-sm font-medium text-[#1a3a8f]">{p.name}</span>
-              {isOpen
-                ? <ChevronUp size={18} className="text-[#1a3a8f]" />
-                : <ChevronDown size={18} className="text-gray-400" />}
+              <span className="text-sm font-medium text-[#1a3a8f]">
+                {p.name}
+              </span>
+              {isOpen ? (
+                <ChevronUp size={18} className="text-[#1a3a8f]" />
+              ) : (
+                <ChevronDown size={18} className="text-gray-400" />
+              )}
             </div>
 
             {isOpen && editDraft && (
@@ -335,27 +432,36 @@ export default function Step7Processor(props: Step7ProcessorProps) {
                     value={editDraft.name}
                     onChange={(v) => {
                       setEditDraft({ ...editDraft, name: v });
-                      if (draftErrors.name) setDraftErrors({ ...draftErrors, name: !v.trim() }); // check real-time
+                      if (draftErrors.name)
+                        setDraftErrors({ ...draftErrors, name: !v.trim() }); // check real-time
                     }}
                     error={draftErrors.name}
                   />
 
                   <div>
                     <label className="text-sm font-medium text-[#1a3a8f] block mb-1">
-                      ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล <span className="text-red-500">*</span>
+                      ที่อยู่ผู้ประมวลผลข้อมูลส่วนบุคคล{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       value={editDraft.address.join("\n")}
                       onChange={(e) => {
                         const addressArr = e.target.value.split("\n");
                         setEditDraft({ ...editDraft, address: addressArr });
-                        setDraftErrors({ ...draftErrors, address: addressArr.length === 0 });
+                        setDraftErrors({
+                          ...draftErrors,
+                          address: addressArr.length === 0,
+                        });
                       }}
                       placeholder="กรอกที่อยู่แต่ละบรรทัด"
                       rows={4}
                       className={`h-[60px] w-full border rounded-lg px-3 py-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-blue-200 resize-none ${draftErrors.address ? "border-red-500" : "border-BLUE"}`}
                     />
-                    {draftErrors.address && <p className="text-red-500 text-xs mt-1">กรุณากรอกที่อยู่</p>}
+                    {draftErrors.address && (
+                      <p className="text-red-500 text-xs mt-1">
+                        กรุณากรอกที่อยู่
+                      </p>
+                    )}
                   </div>
                   <hr className="border-gray-200" />
                   <SecuritySection d={editDraft} setD={setEditDraft} />
@@ -371,7 +477,9 @@ export default function Step7Processor(props: Step7ProcessorProps) {
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 shadow-xl space-y-4 w-80">
             <p className="text-sm font-medium text-[#1a3a8f] text-center">
-              คุณยังไม่ได้กด Save<br />ต้องการออกโดยไม่บันทึกหรือไม่?
+              คุณยังไม่ได้กด Save
+              <br />
+              ต้องการออกโดยไม่บันทึกหรือไม่?
             </p>
             <div className="flex justify-center gap-3">
               <button
@@ -419,7 +527,6 @@ export default function Step7Processor(props: Step7ProcessorProps) {
           </div>
         </div>
       )}
-
     </div>
   );
 }
