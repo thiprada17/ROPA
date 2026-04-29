@@ -162,7 +162,7 @@ async def _get_enriched_activities():
         risk = calculate_risk_score(
             data_type_name=data_type_name,
             category_names=category_names,
-            legal_names=resolved_legal,
+            legal_names=primary_legal,
             is_transfer=bool(transfer and transfer.get("is_transfer")),
             protection_standard=transfer.get("protection_standard") if transfer else None,
             retention_period=retention.get("retention_period") if retention else "",
