@@ -7,6 +7,7 @@ import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness,
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
@@ -18,9 +19,9 @@ const menuItems = [
 ];
 
 const userItems = [
-  { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
-  { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
-  { icon: Settings, href: "/settings", label: "SETTING" },
+  // { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
+  // { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
+  // { icon: Settings, href: "/settings", label: "SETTING" },
   { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
 ];
 
@@ -56,8 +57,21 @@ export default function Sidebar({
         onClick={() => { if (!expanded) setExpanded(true); }}
       >
         {/* logo อยู่นิ่ง w-10 h-10 ตรงกลาง w-16 เสมอ */}
-        <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto flex-shrink-0">
+        {/* <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto flex-shrink-0">
           LOGO
+        </div> */}
+        <div
+          className={`mx-auto flex-shrink-0 transition-all duration-300
+    ${expanded ? "w-14 h-14 mb-1" : "w-10 h-10 mb-0.5"} 
+  `}
+        >
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            width={64}
+            height={64}
+            className="object-contain w-full h-full"
+          />
         </div>
 
         {/* MENU label */}
