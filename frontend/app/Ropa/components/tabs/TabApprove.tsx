@@ -18,9 +18,9 @@ interface TabApproveProps {
   onAddComment?: (itemId: string, comment: Comment) => void;
 }
 
-export default function TabApprove({ 
-  itemId, 
-  currentStatus, 
+export default function TabApprove({
+  itemId,
+  currentStatus,
   currentUser,
   existingComments = [],
   isEditingFromParent = false,
@@ -29,14 +29,16 @@ export default function TabApprove({
   onUpdateStatus }: TabApproveProps) {
   const [isEditing, setIsEditing] = useState(isEditingFromParent);
   const [status, setStatus] = useState(currentStatus); // Pending, Approved, Revision
-  const [comments, setComments] = useState<Comment[]>(existingComments);
   const [showInput, setShowInput] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComments, setNewComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const userLabel = currentUser?.username || currentUser?.email || "ผู้ใช้";
-  
+
   useEffect(() => {
     setIsEditing(isEditingFromParent);
   }, [isEditingFromParent]);
@@ -49,7 +51,7 @@ export default function TabApprove({
   const handleAddComment = () => {
     if (newComment.trim() === "") return;
     const comment = { username: userLabel, text: newComment.trim() };
-    setComments((prev) => [...prev, comment]);
+    setNewComments((prev) => [...prev, comment]);
     onAddComment?.(itemId, comment);
     setNewComment("");
     setShowInput(false);
@@ -57,18 +59,79 @@ export default function TabApprove({
 
   const handleUpdate = () => {
     // ถ้า Revision ต้องมี comment อย่างน้อย 1 อัน
-    if (status === "Revision" && comments.length === 0) {
+    if (status === "Revision" && comments.length === 0 && newComments.length === 0) {
       alert("กรุณาเพิ่ม comment อย่างน้อย 1 อันก่อนอัปเดตสถานะ");
       return;
     }
     setShowConfirm(true);
   };
 
-  const handleConfirm = () => {
-    onUpdateStatus(status, comments);
-    setShowConfirm(false);
-    setEditing(false);
+
+  const handleConfirm = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/dpo/approval", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          activity_id: itemId,
+          status: status,
+          comments: newComments,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.detail || "Update failed");
+      }
+
+      onUpdateStatus(status, comments);
+      setShowConfirm(false);
+      setEditing(false);
+
+    } catch (err) {
+      console.error(err);
+      alert("Update ไม่สำเร็จ");
+    }
   };
+
+  useEffect(() => {
+    if (!itemId) return;
+    setLoadingComments(true)
+    setNewComments([])
+    setComments([])
+    setNewComment("")       
+    setShowInput(false);     
+    setStatus(currentStatus)
+
+    let cancelled = false;
+
+    fetch(`http://localhost:8000/api/dpo/comment/get?activity_id=${itemId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        const mapped = data.map((d: any) => ({
+          username: d.username,
+          text: d.comment,
+        }));
+        setComments(mapped);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Load comments failed", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingComments(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [itemId, currentStatus]);
 
   return (
     <div className="space-y-2">
@@ -110,8 +173,28 @@ export default function TabApprove({
             </button>
           </div>
 
-          {comments.map((c, i) => (
-            <div key={i} className="flex items-start gap-2 bg-[#EEF2FF] rounded-lg px-3 py-1.5">
+          {/* Comments เก่า */}
+          {loadingComments ? (
+            <div className="flex flex-col gap-1.5">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-start gap-2 bg-[#EEF2FF] rounded-lg px-3 py-1.5 animate-pulse">
+                  <div className="h-3 w-16 bg-[#c7d2f7] rounded" />
+                  <div className="h-3 flex-1 bg-[#dde4fb] rounded" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            comments.map((c, i) => (
+              <div key={`old-${i}`} className="flex items-start gap-2 bg-[#EEF2FF] rounded-lg px-3 py-1.5">
+                <span className="text-[11px] font-semibold text-[#03369D] shrink-0">{c.username}</span>
+                <span className="text-[11px] text-gray-600 whitespace-pre-wrap break-all">{c.text}</span>
+              </div>
+            ))
+          )}
+
+          {/* Comments ใหม่ */}
+          {newComments.map((c, i) => (
+            <div key={`new-${i}`} className="flex items-start gap-2 bg-[#EEF2FF] rounded-lg px-3 py-1.5">
               <span className="text-[11px] font-semibold text-[#03369D] shrink-0">{c.username}</span>
               <span className="text-[11px] text-gray-600 whitespace-pre-wrap break-all">{c.text}</span>
             </div>

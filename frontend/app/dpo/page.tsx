@@ -38,7 +38,7 @@ export default function DpoPage() {
   const [apiError, setApiError] = useState("");
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
   const [detailWidth, setDetailWidth] = useState(420);
-  const [commentsMap, setCommentsMap] = useState<Record<string, {username: string; text: string}[]>>({});
+  const [commentsMap, setCommentsMap] = useState<Record<string, { username: string; text: string }[]>>({});
 
   // filters
   const [search, setSearch] = useState("");
@@ -99,10 +99,10 @@ export default function DpoPage() {
   const formatDate = (d: string) =>
     d
       ? new Date(d).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
       : "";
 
   const filtered = data.filter((item) => {
@@ -172,9 +172,13 @@ export default function DpoPage() {
   const initResize = (e: React.MouseEvent) => {
     const startX = e.clientX;
     const startW = detailWidth;
+    const containerWidth = window.innerWidth;
     const onMove = (e: MouseEvent) => {
       const dx = startX - e.clientX;
-      setDetailWidth(Math.min(800, Math.max(300, startW + dx)));
+      const newW = startW + dx;
+      const minW = 280;
+      const maxW = containerWidth * 0.6;
+      setDetailWidth(Math.min(maxW, Math.max(minW, newW)));
     };
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
@@ -184,6 +188,14 @@ export default function DpoPage() {
     document.addEventListener("mouseup", onUp);
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      const maxW = window.innerWidth * 0.6;
+      setDetailWidth(prev => Math.min(prev, maxW));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   return (
     <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
       <aside className="w-20 flex-shrink-0">
@@ -309,7 +321,10 @@ export default function DpoPage() {
         {/* Table + Detail */}
         <div className="flex flex-1 overflow-hidden px-10 pb-6 gap-0">
           {/* Table */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-[300px]">
+          <div
+            className="flex flex-col overflow-hidden"
+            style={{ flex: 1, minWidth: selectedItem ? "320px" : "auto" }}
+          >
             <div className="bg-white rounded-xl shadow p-3 flex-1 overflow-y-auto">
               {/* Header */}
               <div
@@ -474,7 +489,7 @@ export default function DpoPage() {
           {/* Resize handle */}
           {selectedItem && (
             <div
-              className="w-1 cursor-col-resize bg-gray-200 hover:bg-blue-300 transition mx-1"
+              className="w-1.5 cursor-col-resize bg-gray-200 hover:bg-blue-300 transition flex-shrink-0 mx-0.5"
               onMouseDown={initResize}
             />
           )}
@@ -483,7 +498,11 @@ export default function DpoPage() {
           {selectedItem && (
             <div
               className="flex-shrink-0 rounded-xl overflow-hidden shadow"
-              style={{ width: detailWidth }}
+              style={{
+                width: detailWidth,
+                minWidth: "280px",
+                maxWidth: "60vw",
+              }}
             >
               <DetailCard
                 item={selectedItem}

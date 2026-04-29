@@ -1,15 +1,12 @@
-// app\Ropa\components\tabs\TabSecurity.tsx
+// app/Ropa/components/tabs/TabSecurity.tsx
 "use client";
-import { Shield } from "lucide-react";
+
 import { RopaItem } from "../../types/ropa";
 
 // tab: security
 export default function TabSecurity({
   item,
-  RenderValue,
   BulletRow,
-  InfoRow,
-  InfoRowPlain,
 }: {
   item: RopaItem;
   RenderValue: any;
@@ -17,10 +14,7 @@ export default function TabSecurity({
   InfoRow: any;
   InfoRowPlain: any;
 }) {
-  // security ของ item
   const securityRows: any[] = Array.isArray(item.security) ? item.security : [];
-
-  const allRows = securityRows; 
 
   const labels = [
     "มาตรการเชิงองค์กร",
@@ -31,13 +25,27 @@ export default function TabSecurity({
     "มาตรการตรวจสอบย้อนหลัง",
   ];
 
+  const normalize = (text?: string | null) =>
+    String(text || "")
+      .trim()
+      .replace(/\s+/g, "");
+
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-[#A6A6A6]">
         นโยบายการเก็บรักษาข้อมูลส่วนบุคคล
       </p>
+
       {labels.map((label) => {
-        const found = allRows.find((r) => r.name === label || r.type === label);
+        const found = securityRows.find((r: any) => {
+          const rowName = normalize(r.name || r.type || "");
+          const labelName = normalize(label);
+
+          return rowName === labelName;
+        });
+
+        const detail = (found?.detail || "").trim();
+
         return (
           <BulletRow
             key={label}
@@ -46,10 +54,8 @@ export default function TabSecurity({
             labelClassName={found ? "text-[#1C1B1F]" : "text-[#A6A6A6]"}
           >
             {found ? (
-              found.detail ? (
-                <span className="text-[11px] text-[#1C1B1F]">
-                  {found.detail}
-                </span>
+              detail ? (
+                <span className="text-[11px] text-[#1C1B1F]">{detail}</span>
               ) : null
             ) : (
               <span className="text-[11px] text-[#A6A6A6] italic">
