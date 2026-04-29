@@ -24,7 +24,7 @@ import { RopaItem } from "../Ropa/types/ropa";
 
 const role =
   typeof window !== "undefined"
-    ? (localStorage.getItem("role") as "DPO" | "User")
+    ? (localStorage.getItem("role") as "DPO" | "User" | "Admin" | "Viewer")
     : undefined;
 
 export default function DpoPage() {
@@ -199,7 +199,7 @@ export default function DpoPage() {
   return (
     <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
       <aside className="w-20 flex-shrink-0">
-        <Sidebar userName="DPO User" userEmail="dpo@mail.com" />
+        <Sidebar userName="DPO User" userEmail="dpo@mail.com" role={role} />
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden">

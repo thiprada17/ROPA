@@ -18,6 +18,30 @@ const menuItems = [
   { icon: UserStar, href: "/dpo", label: "DPO" },
 ];
 
+// ฟังก์ชันกรองเมนูตาม role
+const getMenuByRole = (role?: string) => {
+  switch (role) {
+    case "Admin":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/admin", "/legal"].includes(item.href)
+      );
+    case "User":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/form", "/legal"].includes(item.href)
+      );
+    case "DPO":
+      return menuItems.filter(item =>
+        ["/dashboard", "/dpo", "/legal"].includes(item.href)
+      );
+    case "Viewer":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/legal"].includes(item.href)
+      );
+    default:
+      return []; // ถ้าไม่กำหนด role
+  }
+};
+
 const userItems = [
   // { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
   // { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
@@ -28,15 +52,17 @@ const userItems = [
 interface SidebarProps {
   userName?: string;
   userEmail?: string;
+  role?: "Admin" | "User" | "DPO" | "Viewer";
 }
 
 export default function Sidebar({
   userName = "NAME SURNAME",
   userEmail = "USER EMAIL",
+  role,
 }: SidebarProps) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
-
+  const FiltermenuItems = getMenuByRole(role);
   const isActive = (href: string) => pathname?.startsWith(href);
 
   return (
@@ -89,7 +115,7 @@ export default function Sidebar({
 
         {/* menu items */}
         <nav className="flex flex-col flex-1">
-          {menuItems.map(({ icon: Icon, href, label }) => (
+          {FiltermenuItems.map(({ icon: Icon, href, label }) => (
             <Link
               key={href}
               href={href}
