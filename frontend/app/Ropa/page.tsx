@@ -36,6 +36,7 @@ export default function RopaPage() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
   const [formOptions, setFormOptions] = useState<any>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const [role, setRole] = useState<"DPO" | "User" | "Admin" | "Viewer" | undefined>(undefined);
   
@@ -72,7 +73,7 @@ export default function RopaPage() {
 
   const handleRowClick = async (item: RopaItem) => {
     setSelectedItem(item);
-
+    setLoadingDetail(true);
     try {
       const token = localStorage.getItem("token");
 
@@ -108,7 +109,9 @@ export default function RopaPage() {
       }));
     } catch (err) {
       console.error("fetch detail error:", err);
-    }
+    } finally {
+    setLoadingDetail(false); 
+  }
   };
   const ref = useRef<HTMLDivElement>(null);
 
@@ -609,6 +612,7 @@ export default function RopaPage() {
   onClose={() => setSelectedItem(null)}
   role={role}
   formOptions={formOptions}
+  loadingDetail={loadingDetail}
   onDelete={(itemId) => {
     setData((prev) => prev.filter((x) => x.id !== itemId));
     setSelectedItem(null);

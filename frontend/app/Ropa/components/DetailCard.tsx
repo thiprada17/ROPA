@@ -35,6 +35,7 @@ import TabHistory from "./tabs/TabHistory";
 import TabApprove from "./tabs/TabApprove";
 import Link from "next/link";
 import { RopaItem } from "../types/ropa";
+import LoadingScreen from "@/app/components/Loading";
 
 const riskMap: Record<string, { color: string; icon: React.ReactNode }> = {
   Critical: {
@@ -164,6 +165,7 @@ export const display = (val?: string | string[] | null) => {
 interface DetailCardProps {
   item: RopaItem | null;
   onClose: () => void;
+  loadingDetail?: boolean;
   onDelete?: (itemId: string) => void;
   role?: "DPO" | "User" | "Admin" | "Viewer";
   existingComments?: { username: string; text: string }[];
@@ -193,10 +195,6 @@ const RenderValue = ({ value }: { value?: string[] }) => {
   );
 };
 
-const role =
-  typeof window !== "undefined"
-    ? (localStorage.getItem("role") as "DPO" | "User" | "Viewer" | "Admin")
-    : undefined;
 
 const trimLegalBasis = (text: string) => {
   // ตัด ( ออกทุกอย่างหลังจากนั้น
@@ -212,6 +210,7 @@ export default function DetailCard({
   existingComments,
   onStatusChange,
   onAddComment,
+  loadingDetail,
   onDelete,
   formOptions,
 }: DetailCardProps) {
@@ -433,7 +432,12 @@ export default function DetailCard({
             </span>
           </div>
         </div>
-
+    {loadingDetail ? (
+        <div className="flex items-center justify-center py-20">
+            <LoadingScreen message="กำลังโหลดรายละเอียด..." fullScreen={false} />
+        </div>
+        ) : (
+        <>
         {/* meta info */}
         <div className="px-5 border-b border-gray-100 pb-3">
           <InfoRow
@@ -617,6 +621,8 @@ export default function DetailCard({
             />
           )}
         </div>
+        </>
+  )}
       </div>
     </div>
   );
