@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
+// import Sidebar from "../components/Sidebar";
 import { Menu, X } from "lucide-react";
 
 const sections = [
@@ -133,9 +133,9 @@ export default function LegalPage() {
 
     return (
         <div className="flex h-screen bg-gray-100 font-prompt text-sm relative scroll-smooth">
-            <aside className="w-20 flex-shrink-0 p-6">
+            {/* <aside className="w-20 flex-shrink-0 p-6">
                 <Sidebar userName="User Legal" userEmail="legal@mail.com" />
-            </aside>
+            </aside> */}
 
             {/* main Content */}
             <main className="flex-1 overflow-y-auto p-8">

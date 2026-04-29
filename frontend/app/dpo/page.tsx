@@ -16,22 +16,30 @@ import {
   EllipsisVertical,
   Shield,
 } from "lucide-react";
-import Sidebar from "../components/Sidebar";
+// import Sidebar from "../components/Sidebar";
 import Breadcrumb from "../Ropa/components/Breadcrumb";
 import DetailCard from "../Ropa/components/DetailCard";
 import FilterModal from "../Ropa/components/FilterModal";
 import { RopaItem } from "../Ropa/types/ropa";
 
-const role =
-  typeof window !== "undefined"
-    ? (localStorage.getItem("role") as "DPO" | "User")
-    : undefined;
 
 export default function DpoPage() {
   const breadcrumbItems = [
     { label: <Shield size={16} />, href: "/" },
     { label: "DPO" },
   ];
+
+  const [role, setRole] = useState<"DPO" | "User" | "Admin" | "Viewer" | undefined>(undefined);
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role") as
+      | "DPO"
+      | "User"
+      | "Admin"
+      | "Viewer"
+      | null;
+    setRole(storedRole ?? undefined);
+  }, []);
 
   const [data, setData] = useState<RopaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,12 +205,11 @@ export default function DpoPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   return (
-    <div className="flex h-screen bg-gray-100 font-prompt text-[12px] overflow-hidden">
-      <aside className="w-20 flex-shrink-0">
-        <Sidebar userName="DPO User" userEmail="dpo@mail.com" />
-      </aside>
-
-      <main className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* <aside className="w-20 flex-shrink-0">
+        <Sidebar userName="DPO User" userEmail="dpo@mail.com" role={role} />
+      </aside> */}
+      <main className="flex-1 flex flex-col font-prompt text-[12px] overflow-hidden">
         {/* Toolbar */}
         <div className="px-10 pt-6 pb-4 shrink-0">
           <div className="mb-3">

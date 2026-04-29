@@ -29,16 +29,24 @@ import {
 } from "lucide-react";
 import LoadingScreen from "../components/Loading";
 
-const role =
-  typeof window !== "undefined"
-    ? (localStorage.getItem("role") as "DPO" | "User" | "Admin" | "Viewer")
-    : undefined;
 
 export default function RopaPage() {
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
   const [data, setData] = useState<RopaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
+
+  const [role, setRole] = useState<"DPO" | "User" | "Admin" | "Viewer" | undefined>(undefined);
+  
+    useEffect(() => {
+      const storedRole = localStorage.getItem("role") as
+        | "DPO"
+        | "User"
+        | "Admin"
+        | "Viewer"
+        | null;
+      setRole(storedRole ?? undefined);
+    }, []);
 
   const breadcrumbItems = [
     { label: <ShieldAlert size={16} />, href: "/" },
@@ -343,9 +351,9 @@ export default function RopaPage() {
   return (
     <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
       {/* ================= Sidebar ================= */}
-      <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
+      {/* <aside className="w-20 flex flex-col items-center py-4 flex-shrink-0">
         <Sidebar userEmail="" userName="" />
-      </aside>
+      </aside> */}
 
       {/* ================= Main ================= */}
       {/* <main className="flex-1 overflow-y-auto px-[120px] py-6"> */}

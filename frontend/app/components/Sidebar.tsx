@@ -6,7 +6,8 @@ import { LayoutDashboard, ShieldPlus, ShieldAlert, Scale, BriefcaseBusiness,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const menuItems = [
   { icon: LayoutDashboard, href: "/dashboard", label: "DASHBOARD" },
@@ -17,26 +18,66 @@ const menuItems = [
   { icon: UserStar, href: "/dpo", label: "DPO" },
 ];
 
-const userItems = [
-  { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
-  { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
-  { icon: Settings, href: "/settings", label: "SETTING" },
-  { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
-];
+// ฟังก์ชันกรองเมนูตาม role
+const getMenuByRole = (role?: string) => {
+  switch (role) {
+    case "Admin":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/admin", "/legal"].includes(item.href)
+      );
+    case "User":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/form", "/legal"].includes(item.href)
+      );
+    case "DPO":
+      return menuItems.filter(item =>
+        ["/dashboard", "/dpo", "/legal"].includes(item.href)
+      );
+    case "Viewer":
+      return menuItems.filter(item =>
+        ["/dashboard", "/Ropa", "/legal"].includes(item.href)
+      );
+    default:
+      return []; // ถ้าไม่กำหนด role
+  }
+};
 
-interface SidebarProps {
-  userName?: string;
-  userEmail?: string;
-}
+// const userItems = [
+//   { icon: BriefcaseBusiness, href: "/information", label: "INFORMATION" },
+//   { icon: UserLock, href: "/auditlog", label: "AUDIT LOG" },
+//   { icon: Settings, href: "/settings", label: "SETTING" },
+//   { icon: LogOut, href: "/login", label: "LOG OUT", rotate: true },
+// ];
 
-export default function Sidebar({
-  userName = "NAME SURNAME",
-  userEmail = "USER EMAIL",
-}: SidebarProps) {
+// interface SidebarProps {
+//   userName?: string;
+//   userEmail?: string;
+//   role?: "Admin" | "User" | "DPO" | "Viewer";
+// }
+
+export default function Sidebar() {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+  const [role, setRole] = useState<string | undefined>();
+  const [userName, setUserName] = useState("NAME SURNAME");
+  const [userEmail, setUserEmail] = useState("USER EMAIL");
 
+  useEffect(() => {
+    setRole(localStorage.getItem("role") ?? undefined);
+    setUserName(localStorage.getItem("username") ?? "NAME SURNAME");
+    setUserEmail(localStorage.getItem("email") ?? "USER EMAIL");
+  }, []);
+
+  const FiltermenuItems = getMenuByRole(role);
   const isActive = (href: string) => pathname?.startsWith(href);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    window.location.href = "/login";
+  };
 
   return (
     <div className="font-gabarito">
@@ -56,8 +97,21 @@ export default function Sidebar({
         onClick={() => { if (!expanded) setExpanded(true); }}
       >
         {/* logo อยู่นิ่ง w-10 h-10 ตรงกลาง w-16 เสมอ */}
-        <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto flex-shrink-0">
+        {/* <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white mb-4 mx-auto flex-shrink-0">
           LOGO
+        </div> */}
+        <div
+          className={`mx-auto flex-shrink-0 transition-all duration-300
+    ${expanded ? "w-14 h-14 mb-1" : "w-10 h-10 mb-0.5"} 
+  `}
+        >
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            width={64}
+            height={64}
+            className="object-contain w-full h-full"
+          />
         </div>
 
         {/* MENU label */}
@@ -75,7 +129,7 @@ export default function Sidebar({
 
         {/* menu items */}
         <nav className="flex flex-col flex-1">
-          {menuItems.map(({ icon: Icon, href, label }) => (
+          {FiltermenuItems.map(({ icon: Icon, href, label }) => (
             <Link
               key={href}
               href={href}
@@ -92,8 +146,8 @@ export default function Sidebar({
               }}
             >
               {/* icon zone */}
-              <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
-                <Icon size={22} />
+              <div className="w-16 flex-shrink-0 flex items-center justify-center py-4">
+                <Icon size={26} />
               </div>
               {/* label slide ออกมา */}
               <span className={`text-sm whitespace-nowrap overflow-hidden
@@ -121,7 +175,7 @@ export default function Sidebar({
 
         {/* user items */}
         <nav className="flex flex-col">
-          {userItems.map(({ icon: Icon, href, label, rotate }) => (
+          {/* {userItems.map(({ icon: Icon, href, label, rotate }) => (
             <Link
               key={href}
               href={href}
@@ -137,7 +191,7 @@ export default function Sidebar({
               }}
             >
               <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
-                <Icon size={22} className={rotate ? "rotate-180" : ""} />
+                <Icon size={26} className={rotate ? "rotate-180" : ""} />
               </div>
               <span className={`text-sm whitespace-nowrap overflow-hidden
                 transition-all duration-300
@@ -146,7 +200,18 @@ export default function Sidebar({
                 {label}
               </span>
             </Link>
-          ))}
+          ))} */}
+          <Link
+            href="#"
+            onClick={(e) => { e.preventDefault(); handleLogout(); }}
+            className="flex items-center mb-1 rounded-md text-white hover:bg-white/10 transition-colors"
+          >
+            <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
+              <LogOut size={26} className="rotate-180" />
+            </div>
+            <span className={`text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? "opacity-100 max-w-xs" : "opacity-0 max-w-0"}`}>LOG OUT</span>
+          </Link>
+
 
           <div className="h-px bg-white/20 my-2 mx-3" />
         </nav>
