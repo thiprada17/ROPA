@@ -40,6 +40,7 @@ interface StepProps {
   options: {
     activityNames: Option[];
     purposes: Option[];
+    departments: Option[];
   };
   updateField: (field: string, value: any) => void;
 }
