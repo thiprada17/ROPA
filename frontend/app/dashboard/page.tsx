@@ -91,12 +91,10 @@ export default function DashboardPage() {
   // ================= UI =================
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-
       <main className="flex-1 bg-[#F7F8FA] h-screen overflow-y-auto font-gabarito">
-        <div className="px-10 py-6 max-w-7xl ml-[180px] mr-[120px]">
+        <div className="px-6 py-6 max-w-7xl mx-auto">
           {/* ================= HEADER ================= */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-[24px] font-semibold">Dashboard</h1>
 
             <div className="flex gap-3 item-center">
@@ -118,7 +116,6 @@ export default function DashboardPage() {
               </div>
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
-              {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
               <div className="min-w-[180px] max-w-[800px]">
                 <DeptMultiSelect
                   options={deptOptions}
@@ -134,9 +131,9 @@ export default function DashboardPage() {
           {/* ================= CONTENT ================= */}
           <div className="flex flex-col gap-6">
             {/* TOP CARDS */}
-            {/* <div className="flex justify-between"> */}
-            <div className="flex justify-between items-stretch h-[307px]">
-              <div className="w-[240px] flex flex-col gap-[28px] flex-shrink-0">
+            <div className="grid grid-cols-12 gap-6 min-h-[307px]">
+              {/* Total + Approval */}
+              <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
                 <TotalRopaCard
                   total={totalData.total}
                   newCount={totalData.newCount}
@@ -147,11 +144,13 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div className="w-[292px] flex-shrink-0">
+              {/* Activity */}
+              <div className="col-span-12 md:col-span-3">
                 <ActivityCard activities={activities} />
               </div>
 
-              <div className="w-[509px] flex-shrink-0">
+              {/* Overall Donut */}
+              <div className="col-span-12 md:col-span-6">
                 <OverallDonutCard
                   dataSource={rawList}
                   selectedDept={selectedDept}
@@ -161,11 +160,12 @@ export default function DashboardPage() {
 
             {/* CHARTS */}
             <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-8">
+              <div className="col-span-12 lg:col-span-8">
                 <ComparisonBarChart data={comparison} />
               </div>
 
-              <div className="col-span-4">
+              {/* TrendLineChart — min-w ป้องกันบีบเกิน */}
+              <div className="col-span-12 lg:col-span-4 min-w-0">
                 <TrendLineChart
                   data={trend}
                   selectedDept={selectedDept}
