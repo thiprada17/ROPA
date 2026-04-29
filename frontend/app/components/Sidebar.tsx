@@ -106,8 +106,8 @@ export default function Sidebar({
               }}
             >
               {/* icon zone */}
-              <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
-                <Icon size={22} />
+              <div className="w-16 flex-shrink-0 flex items-center justify-center py-4">
+                <Icon size={26} />
               </div>
               {/* label slide ออกมา */}
               <span className={`text-sm whitespace-nowrap overflow-hidden
@@ -151,7 +151,7 @@ export default function Sidebar({
               }}
             >
               <div className="w-16 flex-shrink-0 flex items-center justify-center py-2">
-                <Icon size={22} className={rotate ? "rotate-180" : ""} />
+                <Icon size={26} className={rotate ? "rotate-180" : ""} />
               </div>
               <span className={`text-sm whitespace-nowrap overflow-hidden
                 transition-all duration-300
