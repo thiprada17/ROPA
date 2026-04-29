@@ -72,6 +72,7 @@ export default function RopaPage() {
         `http://localhost:8000/api/form/activity/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
       const detailData = await res.json();
