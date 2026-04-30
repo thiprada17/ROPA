@@ -50,7 +50,7 @@ export default function ResetPassword() {
         return;
       }
 
-      const res = await fetch("http://localhost:8000/api/auth/reset-password", {
+      const res = await fetch("https://ropa-server.onrender.com/api/auth/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

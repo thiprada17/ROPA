@@ -69,7 +69,7 @@ export default function TabApprove({
 
   const handleConfirm = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/dpo/approval", {
+      const res = await fetch("https://ropa-server.onrender.com/api/dpo/approval", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export default function TabApprove({
 
     let cancelled = false;
 
-    fetch(`http://localhost:8000/api/dpo/comment/get?activity_id=${itemId}`, {
+    fetch(`https://ropa-server.onrender.com/api/dpo/comment/get?activity_id=${itemId}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => res.json())

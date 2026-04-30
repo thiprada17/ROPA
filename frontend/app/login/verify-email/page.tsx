@@ -48,7 +48,7 @@ export default function VerifyEmail() {
     setOtp(Array(6).fill(""));
     inputsRef.current[0]?.focus();
 
-    await fetch("http://localhost:8000/api/auth/forget-password", {
+    await fetch("https://ropa-server.onrender.com/api/auth/forget-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -68,7 +68,7 @@ export default function VerifyEmail() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/verify-otp", {
+      const res = await fetch("https://ropa-server.onrender.com/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpValue }),

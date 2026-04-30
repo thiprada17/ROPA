@@ -27,7 +27,7 @@ export default function ResetPassword() {
     setErrors({});
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/forget-password", {
+      const res = await fetch("https://ropa-server.onrender.com/api/auth/forget-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

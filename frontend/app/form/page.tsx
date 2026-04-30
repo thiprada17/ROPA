@@ -267,7 +267,7 @@ function FormPageContent() {
               fromCache: true,
               data: cachedOptions,
             })
-          : fetch("http://localhost:8000/api/form/options", {
+          : fetch("https://ropa-server.onrender.com/api/form/options", {
               headers,
             }).then(async (res) => {
               const data = await res.json();
@@ -279,7 +279,7 @@ function FormPageContent() {
             });
 
         const oldFormPromise = isEditMode
-          ? fetch(`http://localhost:8000/api/form/activity/${activityId}`, {
+          ? fetch(`https://ropa-server.onrender.com/api/form/activity/${activityId}`, {
               headers,
             })
           : Promise.resolve(null);
@@ -428,8 +428,8 @@ function FormPageContent() {
       }
 
       const url = isEditMode
-        ? `http://localhost:8000/api/form/activity/${activityId}`
-        : "http://localhost:8000/api/form/submit";
+        ? `https://ropa-server.onrender.com/api/form/activity/${activityId}`
+        : "https://ropa-server.onrender.com/api/form/submit";
 
       const payload = {
         step1: formData.step1,
