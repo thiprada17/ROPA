@@ -30,7 +30,7 @@ export default function AdminPage() {
     ];
     // ================= FETCH =================
     useEffect(() => {
-        fetch("http://localhost:8000/api/admin/users/get")
+        fetch("https://ropa-server.onrender.com/api/admin/users/get")
             .then(res => res.json())
             .then(data => {
                 const formatted = data.map((u: any) => ({
@@ -73,7 +73,7 @@ export default function AdminPage() {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/admin/users/get");
+            const res = await fetch("https://ropa-server.onrender.com/api/admin/users/get");
             const data = await res.json();
             const formatted = data.map((u: any) => ({
                 id: u.id,

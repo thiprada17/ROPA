@@ -242,7 +242,7 @@ export default function DetailCard({
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:8000/api/form/activity/${item.id}`,
+        `https://ropa-server.onrender.com/api/form/activity/${item.id}`,
         {
           method: "DELETE",
           headers: {
@@ -601,7 +601,7 @@ export default function DetailCard({
                 onAddComment?.(itemId, comment);
               }}
               onUpdateStatus={(status, comments) => {
-                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
+                fetch(`https://ropa-server.onrender.com/api/form/ropa/${item.id}/`, {
                   method: "PUT",
                   headers: {
                     "Content-Type": "application/json",

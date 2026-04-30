@@ -81,7 +81,7 @@ export default function RopaPage() {
       const userId = localStorage.getItem("user_id");
 
       const res = await fetch(
-        `http://localhost:8000/api/form/activity/${item.id}`,
+        `https://ropa-server.onrender.com/api/form/activity/${item.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -149,7 +149,7 @@ export default function RopaPage() {
         if (!token) throw new Error("กรุณา login ก่อน");
 
         const res = await fetch(
-          "http://localhost:8000/api/form/ropa?page=1&pageSize=50",
+          "https://ropa-server.onrender.com/api/form/ropa?page=1&pageSize=50",
           {
             headers: {
               "Content-Type": "application/json",
@@ -448,7 +448,7 @@ export default function RopaPage() {
 
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:8000/api/form/options", {
+        const res = await fetch("https://ropa-server.onrender.com/api/form/options", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CircleArrowLeft } from "lucide-react";
 import StepContent from "./components/StepContent";
 import ProgressBar from "./components/ProgressBar";
+import Sidebar from "../components/Sidebar";
+import { Suspense } from "react";
 
 // import validate function ของแต่ละ step
 import { validateStep1 } from "./components/steps/Step1Activity";
@@ -58,7 +60,7 @@ type Errors<FormData> = {
   [K in keyof FormData]?: { [F in keyof FormData[K]]?: boolean };
 };
 
-export default function FormPage() {
+function FormPageContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditingProcessor, setIsEditingProcessor] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -265,7 +267,7 @@ export default function FormPage() {
               fromCache: true,
               data: cachedOptions,
             })
-          : fetch("http://localhost:8000/api/form/options", {
+          : fetch("https://ropa-server.onrender.com/api/form/options", {
               headers,
             }).then(async (res) => {
               const data = await res.json();
@@ -277,7 +279,7 @@ export default function FormPage() {
             });
 
         const oldFormPromise = isEditMode
-          ? fetch(`http://localhost:8000/api/form/activity/${activityId}`, {
+          ? fetch(`https://ropa-server.onrender.com/api/form/activity/${activityId}`, {
               headers,
             })
           : Promise.resolve(null);
@@ -426,8 +428,8 @@ export default function FormPage() {
       }
 
       const url = isEditMode
-        ? `http://localhost:8000/api/form/activity/${activityId}`
-        : "http://localhost:8000/api/form/submit";
+        ? `https://ropa-server.onrender.com/api/form/activity/${activityId}`
+        : "https://ropa-server.onrender.com/api/form/submit";
 
       const payload = {
         step1: formData.step1,
@@ -677,5 +679,13 @@ export default function FormPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FormPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FormPageContent />
+    </Suspense>
   );
 }

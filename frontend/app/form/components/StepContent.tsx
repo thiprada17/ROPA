@@ -13,6 +13,11 @@ type Option = {
   value: string;
 };
 
+export type LookupOption = {
+  id: string;
+  name: string;
+};
+
 interface StepContentProps<FormDataType extends Record<string, any>> {
   step: number;
   formData: FormDataType;
