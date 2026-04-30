@@ -80,13 +80,48 @@ export interface RopaItem {
   }[];
 
   // Step 7
+processors?: {
+  id: string;
+  activity_id?: string;
+  processor_id?: string;
+  access_type?: string | null;
+  accessType?: string | null;
+  data_category_accessed?: string | null;
+  dataCategoryAccessed?: string | null;
+  note?: string | null;
+  name?: string;
+  address?: string | null;
+  processorId?: string;
+  securitySelected?: Record<string, boolean>;
+  securityDetails?: Record<string, string>;
+  processors?: {
+    id: string;
+    name: string;
+    address?: string | null;
+  };
+  processor_security_measures?: {
+    id: string;
+    activity_processor_id: string;
+    type: string;
+    detail?: string | null;
+  }[];
+}[];
+
+step7?: {
   processors?: {
     id: string;
     activity_id?: string;
     processor_id?: string;
     access_type?: string | null;
+    accessType?: string | null;
     data_category_accessed?: string | null;
+    dataCategoryAccessed?: string | null;
     note?: string | null;
+    name?: string;
+    address?: string | null;
+    processorId?: string;
+    securitySelected?: Record<string, boolean>;
+    securityDetails?: Record<string, string>;
     processors?: {
       id: string;
       name: string;
@@ -99,6 +134,13 @@ export interface RopaItem {
       detail?: string | null;
     }[];
   }[];
+};
+
+    // Date
+  date?: string;
+  submitted_at?: string;
+  created_at?: string;
+  updated_at?: string;
 
   // UI
   risk: string;

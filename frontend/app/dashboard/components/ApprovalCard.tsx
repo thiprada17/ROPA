@@ -9,7 +9,8 @@ export default function ApprovalCard({ total, growth }: Props) {
   const isPositive = growth >= 0;
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm w-[240px] h-[139px] flex flex-col justify-between">
+    // <div className="bg-white rounded-2xl p-5 shadow-sm w-[240px] h-[139px] flex flex-col justify-between">
+    <div className="bg-white rounded-2xl p-5 shadow-sm w-full h-[139px] flex flex-col justify-between">
       {/* TOP ROW (title + icon) */}
       <div className="flex items-start justify-between ">
         <div className="flex items-center gap-2 relative group">

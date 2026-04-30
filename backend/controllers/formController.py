@@ -1,9 +1,22 @@
+import asyncio
+
 from fastapi import Request, HTTPException, security
 from lib.supabase import supabase
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
-
+# Cache ข้อมูล options จะได้ไม่ต้อง query ซ้ำๆ ง่ะ
+_OPTIONS_CACHE = {
+    "data": None,
+    "expired_at": None,
+}
+def cache_valid():
+    return (
+        _OPTIONS_CACHE["data"] is not None
+        and _OPTIONS_CACHE["expired_at"] is not None
+        and datetime.utcnow() < _OPTIONS_CACHE["expired_at"]
+    )
+    
 def ropaDB():
     return supabase.schema("ropa")
 
@@ -271,13 +284,10 @@ async def resolve_step1_refs(step1, user_id=None):
     activity_row = await get_activity_name_row(step1.get("processActivity"))
     activity_name_id = activity_row.get("id") if activity_row else None
 
-    department_id = await get_department_id(step1.get("departmentId") or step1.get("department"))
+    department_id = await get_user_department_id(user_id)
 
     if not department_id and activity_row:
         department_id = activity_row.get("department_id")
-
-    if not department_id:
-        department_id = await get_user_department_id(user_id)
 
     return activity_name_id, department_id
 
@@ -330,15 +340,12 @@ def extract_selected_security_values(step):
 
 
 async def build_security_rows(activity_id, step6):
-    print("step6 raw:", step6)
     selected_values = extract_selected_security_values(step6)
-    print("selected_values:", selected_values)
     detail_map = step6.get("securityDetails") or {}
     rows = []
 
     for value in selected_values:
         measure_id = await get_single_lookup_id_by_name("security_measures", value)
-        print(f"security lookup: '{value}' → {measure_id}")
         if not measure_id:
             continue
 
@@ -468,13 +475,67 @@ async def find_latest_activity_processor_id(activity_id, processor_id):
     row = first_row(res)
     return row.get("id") if row else None
 
+async def get_owner_access_right_id(owner_department_id):
+    if not owner_department_id:
+        return None
 
-async def insert_activity_departments(activity_id, access_rights):
+    dept = first_row(
+        authDB().table("departments")
+        .select("department_name")
+        .eq("id", owner_department_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not dept:
+        return None
+
+    dept_name = dept.get("department_name")
+    if not dept_name:
+        return None
+
+    access_name_map = {
+        "IT": "ฝ่าย IT",
+        "HR": "ฝ่าย HR",
+        "SALES": "ฝ่ายขาย",
+        "SALES": "ฝ่ายขาย",
+        "MARKETING": "ฝ่ายการตลาด",
+        "PR": "ฝ่ายประชาสัมพันธ์",
+    }
+
+    possible_names = [
+        dept_name,
+        dept_name.upper(),
+        dept_name.capitalize(),
+        f"ฝ่าย {dept_name}",
+        access_name_map.get(dept_name.upper()),
+    ]
+
+    possible_names = [name for name in possible_names if name]
+
+    res = (
+        lookupDB().table("access_rights")
+        .select("id, name")
+        .in_("name", possible_names)
+        .limit(1)
+        .execute()
+    )
+
+    row = first_row(res)
+    return row.get("id") if row else None
+
+
+async def insert_activity_departments(activity_id, access_rights, owner_department_id):
+    access_rights = normalize_array(access_rights)
+
+    owner_access_right_id = await get_owner_access_right_id(owner_department_id)
+
+    if owner_access_right_id and owner_access_right_id not in access_rights:
+        access_rights.append(owner_access_right_id)
+
     if not access_rights:
         return
-    print("access_rights input:", access_rights)
 
-    # แปลงชื่อ → id จาก lookup.access_rights
     access_ids = await get_many_lookup_ids_by_names(
         "access_rights",
         access_rights
@@ -487,7 +548,7 @@ async def insert_activity_departments(activity_id, access_rights):
         {
             "activity_id": activity_id,
             "department_id": access_id,
-            "access_type": "owner"
+            "access_type": "owner",
         }
         for access_id in access_ids
     ]
@@ -527,90 +588,150 @@ async def insert_legal_bases(activity_id, step3):
 
 
 async def insert_step_relations(activity_id, step2, step3, step4, step5, step6, step7, department_id):
-    category_ids = await get_many_lookup_ids_by_names("data_categories", step2.get("categories"))
-    if category_ids:
-        ropaDB().table("activity_data_categories").insert([
-            {"activity_id": activity_id, "data_categories_id": cid}
-            for cid in category_ids
-        ]).execute()
-
-    acquisition_ids = await get_many_lookup_ids_by_names("acquisition_method", step2.get("methods"))
-    if acquisition_ids:
-        ropaDB().table("activity_acquisition").insert([
-            {"activity_id": activity_id, "acquisition_method_id": aid}
-            for aid in acquisition_ids
-        ]).execute()
-
-    await insert_legal_bases(activity_id, step3)
-
-    await insert_activity_departments(
-    activity_id,
-    step5.get("accessRight")
+    # รอบ 1: lookup ทุกอย่างพร้อมกัน
+    (
+        category_ids,
+        acquisition_ids,
+        primary_ids,
+        supplementary_ids,
+        transfer_method_text,
+        protection_standard_text_parts,
+        legal_exemptions_text_parts,
+        storage_type_text_parts,
+        storage_method_text_parts,
+        deletion_method_text,
+        usage_purpose_text,
+        security_rows,
+        owner_access_right_id,
+    ) = await asyncio.gather(
+        get_many_lookup_ids_by_names("data_categories", step2.get("categories")),
+        get_many_lookup_ids_by_names("acquisition_method", step2.get("methods")),
+        get_many_lookup_ids_by_names("legal_bases", step3.get("primaryBases") or []),
+        get_many_lookup_ids_by_names("legal_bases", step3.get("supplementaryBases") or []),
+        get_single_lookup_name_by_value("transfer_methods", step4.get("transferMethod")),
+        get_many_lookup_names_by_values("protection_standards", step4.get("dataProtectionStandard") or []),
+        get_many_lookup_names_by_values("legal_exemptions", step4.get("legalExemption") or []),
+        get_many_lookup_names_by_values("retention_storage_types", step5.get("dataType") or []),
+        get_many_lookup_names_by_values("retention_storage_methods", step5.get("storageMethod") or []),
+        get_single_lookup_name_by_value("deletion_methods", step5.get("destructionMethod")),
+        get_single_lookup_name_by_value("usage_purposes", step5.get("usagePurpose")),
+        build_security_rows(activity_id, step6),
+        get_owner_access_right_id(department_id),
     )
 
-    await insert_minor_consent(activity_id, step3)
+    protection_standard_text = ", ".join(protection_standard_text_parts)
+    legal_exemptions_text    = ", ".join(legal_exemptions_text_parts)
+    storage_type_text        = ", ".join(storage_type_text_parts)
+    storage_method_text      = ", ".join(storage_method_text_parts)
 
-    transfer_method_text = await get_single_lookup_name_by_value("transfer_methods", step4.get("transferMethod"))
-    protection_standard_text = ", ".join(
-        await get_many_lookup_names_by_values("protection_standards", step4.get("dataProtectionStandard") or [])
+    # เตรียม access_rights
+    access_rights = normalize_array(step5.get("accessRight"))
+    if owner_access_right_id and owner_access_right_id not in access_rights:
+        access_rights.append(owner_access_right_id)
+    access_ids = await get_many_lookup_ids_by_names("access_rights", access_rights)
+
+    # รอบ 2: insert ทุกอย่างพร้อมกัน (ที่ไม่ depend กัน)
+    minor = step3.get("minorConsent") or {}
+    minor_parts = []
+    if minor.get("under10"):
+        minor_parts.append(f"under10: {minor.get('under10')}")
+    if minor.get("age10to20"):
+        minor_parts.append(f"age10to20: {minor.get('age10to20')}")
+
+    async def insert_categories():
+        if category_ids:
+            await asyncio.to_thread(lambda: ropaDB().table("activity_data_categories").insert([
+                {"activity_id": activity_id, "data_categories_id": cid}
+                for cid in category_ids
+            ]).execute())
+
+    async def insert_acquisitions():
+        if acquisition_ids:
+            await asyncio.to_thread(lambda: ropaDB().table("activity_acquisition").insert([
+                {"activity_id": activity_id, "acquisition_method_id": aid}
+                for aid in acquisition_ids
+            ]).execute())
+
+    async def insert_legal():
+        rows = []
+        rows += [{"activity_id": activity_id, "legal_bases_id": lid, "basis_type": "primary"} for lid in primary_ids]
+        rows += [{"activity_id": activity_id, "legal_bases_id": lid, "basis_type": "supplementary"} for lid in supplementary_ids]
+        if rows:
+            await asyncio.to_thread(lambda: ropaDB().table("activity_legal_bases").insert(rows).execute())
+
+    async def insert_departments():
+        if not access_ids:
+            return
+        rows = [{"activity_id": activity_id, "department_id": aid, "access_type": "owner"} for aid in access_ids]
+        await asyncio.to_thread(lambda: ropaDB().table("activity_departments").insert(rows).execute())
+
+    async def insert_minor():
+        if not minor_parts:
+            return
+        await asyncio.to_thread(lambda: ropaDB().table("minor_consent").insert({
+            "activity_id": activity_id,
+            "age_range": "mixed",
+            "description": " | ".join(minor_parts),
+        }).execute())
+
+    async def insert_transfer():
+        await asyncio.to_thread(lambda: ropaDB().table("international_transfers").insert({
+            "activity_id": activity_id,
+            "is_transfer": step4.get("hasTransferAbroad") == "มี",
+            "destination_country": step4.get("transferCountry") if step4.get("hasTransferAbroad") == "มี" else None,
+            "affiliated_company": step4.get("subsidiaryName") if step4.get("isToSubsidiary") == "ใช่" else None,
+            "transfer_method": transfer_method_text,
+            "protection_standard": protection_standard_text or None,
+            "exceptions": legal_exemptions_text or None,
+        }).execute())
+
+    async def insert_retention():
+        await asyncio.to_thread(lambda: ropaDB().table("retention_policies").insert({
+            "activity_id": activity_id,
+            "storage_type": storage_type_text or None,
+            "storage_method": storage_method_text or None,
+            "retention_period": build_retention_period_text(step5),
+            "deletion_method": deletion_method_text,
+            "usage_status": to_boolean_or_none(step5.get("usageStatus")),
+            "usage_purpose": usage_purpose_text,
+            "denial_note": step5.get("refusalNote"),
+        }).execute())
+
+    async def insert_security():
+        if security_rows:
+            await asyncio.to_thread(lambda: ropaDB().table("activity_security").insert(security_rows).execute())
+
+    await asyncio.gather(
+        insert_categories(),
+        insert_acquisitions(),
+        insert_legal(),
+        insert_departments(),
+        insert_minor(),
+        insert_transfer(),
+        insert_retention(),
+        insert_security(),
     )
-    legal_exemptions_text = ", ".join(
-        await get_many_lookup_names_by_values("legal_exemptions", step4.get("legalExemption") or [])
-    )
 
-    ropaDB().table("international_transfers").insert({
-        "activity_id": activity_id,
-        "is_transfer": step4.get("hasTransferAbroad") == "มี",
-        "destination_country": step4.get("transferCountry") if step4.get("hasTransferAbroad") == "มี" else None,
-        "affiliated_company": step4.get("subsidiaryName") if step4.get("isToSubsidiary") == "ใช่" else None,
-        "transfer_method": transfer_method_text,
-        "protection_standard": protection_standard_text or None,
-        "exceptions": legal_exemptions_text or None,
-    }).execute()
-
-    storage_type_text = ", ".join(
-        await get_many_lookup_names_by_values("retention_storage_types", step5.get("dataType") or [])
-    )
-    storage_method_text = ", ".join(
-        await get_many_lookup_names_by_values("retention_storage_methods", step5.get("storageMethod") or [])
-    )
-    deletion_method_text = await get_single_lookup_name_by_value("deletion_methods", step5.get("destructionMethod"))
-    usage_purpose_text = await get_single_lookup_name_by_value("usage_purposes", step5.get("usagePurpose"))
-
-    ropaDB().table("retention_policies").insert({
-        "activity_id": activity_id,
-        "storage_type": storage_type_text or None,
-        "storage_method": storage_method_text or None,
-        "retention_period": build_retention_period_text(step5),
-        "deletion_method": deletion_method_text,
-        "usage_status": to_boolean_or_none(step5.get("usageStatus")),
-        "usage_purpose": usage_purpose_text,
-        "denial_note": step5.get("refusalNote"),
-    }).execute()
-
-    security_rows = await build_security_rows(activity_id, step6)
-    if security_rows:
-        ropaDB().table("activity_security").insert(security_rows).execute()
-
+    # processors ต้องทำทีละอัน เพราะต้อง insert แล้วค่อย fetch id
     for processor in get_processors_from_step7(step7):
         processor_id = await create_processor(processor)
         if not processor_id:
             continue
 
-        ropaDB().table("activity_processors").insert({
+        await asyncio.to_thread(lambda: ropaDB().table("activity_processors").insert({
             "activity_id": activity_id,
             "processor_id": processor_id,
             "access_type": processor.get("accessType"),
             "data_category_accessed": processor.get("dataCategoryAccessed"),
             "note": processor.get("note"),
-        }).execute()
+        }).execute())
 
         activity_processor_id = await find_latest_activity_processor_id(activity_id, processor_id)
         if not activity_processor_id:
             continue
 
         selected_security = processor.get("securitySelected") or {}
-        security_details = processor.get("securityDetails") or {}
+        security_details  = processor.get("securityDetails") or {}
 
         processor_security_rows = [
             {
@@ -623,7 +744,7 @@ async def insert_step_relations(activity_id, step2, step3, step4, step5, step6, 
         ]
 
         if processor_security_rows:
-            ropaDB().table("processor_security_measures").insert(processor_security_rows).execute()
+            await asyncio.to_thread(lambda: ropaDB().table("processor_security_measures").insert(processor_security_rows).execute())
             
 async def get_username(user_id):
     if not user_id or not is_uuid(user_id):
@@ -634,27 +755,43 @@ async def get_username(user_id):
 
 async def getFormOptions(request: Request):
     try:
-        activity_names = safe_data(ropaDB().table("activity_name").select("id, name, department_id").order("name").execute(), [])
-        purposes = safe_data(lookupDB().table("usage_purposes").select("id, name").order("name").execute(), [])
-        data_categories = safe_data(lookupDB().table("data_categories").select("id, name").order("name").execute(), [])
-        data_types = safe_data(lookupDB().table("data_types").select("id, name").order("name").execute(), [])
-        acquisition_methods = safe_data(lookupDB().table("acquisition_method").select("id, name").order("name").execute(), [])
-        data_sources = safe_data(lookupDB().table("data_sources").select("id, name").order("name").execute(), [])
-        legal_bases = safe_data(lookupDB().table("legal_bases").select("id, name").order("name").execute(), [])
-        deletion_methods = safe_data(lookupDB().table("deletion_methods").select("id, name").order("name").execute(), [])
-        transfer_methods = safe_data(lookupDB().table("transfer_methods").select("id, name").order("name").execute(), [])
-        protection_standards = safe_data(lookupDB().table("protection_standards").select("id, name").order("name").execute(), [])
-        legal_exemptions = safe_data(lookupDB().table("legal_exemptions").select("id, name").order("name").execute(), [])
-        retention_storage_types = safe_data(lookupDB().table("retention_storage_types").select("id, name").order("name").execute(), [])
-        retention_storage_methods = safe_data(lookupDB().table("retention_storage_methods").select("id, name").order("name").execute(), [])
-        access_rights = safe_data(lookupDB().table("access_rights").select("id, name").order("name").execute(), [])
-        security_measures = safe_data(lookupDB().table("security_measures").select("id, name").order("name").execute(), [])
-        departments = safe_data(authDB().table("departments").select("id, department_name, description").order("department_name").execute(), [])
+        if cache_valid():
+            return _OPTIONS_CACHE["data"]
+
+        (
+            activity_names, purposes, data_categories, data_types,
+            acquisition_methods, data_sources, legal_bases, deletion_methods,
+            transfer_methods, protection_standards, legal_exemptions,
+            retention_storage_types, retention_storage_methods,
+            access_rights, security_measures, departments,
+        ) = await asyncio.gather(
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_name").select("id, name, department_id").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("usage_purposes").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("data_categories").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("data_types").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("acquisition_method").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("data_sources").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("legal_bases").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("deletion_methods").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("transfer_methods").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("protection_standards").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("legal_exemptions").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("retention_storage_types").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("retention_storage_methods").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("access_rights").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(lookupDB().table("security_measures").select("id, name").order("name").execute(), [])),
+            asyncio.to_thread(lambda: safe_data(authDB().table("departments").select("id, department_name, description").order("department_name").execute(), [])),
+        )
 
         def option(item):
-            return {"id": item["id"], "name": item["name"], "label": item["name"], "value": item["id"]}
+            return {
+                "id": item["id"],
+                "name": item["name"],
+                "label": item["name"],
+                "value": item["id"],
+            }
 
-        return {
+        result = {
             "activityNames": [
                 {
                     "id": item["id"],
@@ -692,6 +829,11 @@ async def getFormOptions(request: Request):
             ],
         }
 
+        _OPTIONS_CACHE["data"] = result
+        _OPTIONS_CACHE["expired_at"] = datetime.utcnow() + timedelta(minutes=10)
+
+        return result
+
     except Exception as err:
         print("getFormOptions error:", repr(err))
         raise HTTPException(status_code=500, detail=str(err))
@@ -702,8 +844,19 @@ async def submitForm(request: Request):
 
     state_user = getattr(request.state, "user", None)
     user_id = state_user.get("userId") if isinstance(state_user, dict) else None
+    
     if not user_id:
         user_id = request.headers.get("x-user-id")
+
+    if not user_id:
+        user_id = (
+            body.get("userId")
+            or body.get("createdBy")
+            or body.get("updatedBy")
+        )
+
+    if not user_id or not is_uuid(user_id):
+        raise HTTPException(status_code=401, detail={"error": "Cannot resolve user_id"})
 
     step1 = body.get("step1") or {}
     step2 = body.get("step2") or {}
@@ -718,18 +871,25 @@ async def submitForm(request: Request):
         if validation_errors:
             raise HTTPException(status_code=400, detail={"error": "Validation failed", "details": validation_errors})
 
-        activity_name_id, department_id = await resolve_step1_refs(step1, user_id)
-        purpose_text = await build_purpose_text(step1.get("processingPurpose"))
+        # lookup ทุกอย่างพร้อมกัน
+        (
+            (activity_name_id, department_id),
+            purpose_text,
+            data_type_id,
+            source_id,
+        ) = await asyncio.gather(
+            resolve_step1_refs(step1, user_id),
+            build_purpose_text(step1.get("processingPurpose")),
+            get_single_lookup_id_by_name("data_types", step2.get("dataType")),
+            get_single_lookup_id_by_name("data_sources", step2.get("dataSource")),
+        )
 
         if not activity_name_id:
             raise HTTPException(status_code=400, detail={"error": "Invalid processActivity"})
         if not department_id:
             raise HTTPException(status_code=400, detail={"error": "Cannot resolve department_id"})
 
-        data_type_id = await get_single_lookup_id_by_name("data_types", step2.get("dataType"))
-        source_id = await get_single_lookup_id_by_name("data_sources", step2.get("dataSource"))
-
-        ropaDB().table("processing_activities").insert({
+        await asyncio.to_thread(lambda: ropaDB().table("processing_activities").insert({
             "owner_name": step1.get("dataOwner"),
             "activity_name": activity_name_id,
             "department_id": department_id,
@@ -743,7 +903,7 @@ async def submitForm(request: Request):
             "submitted_at": datetime.utcnow().isoformat(),
             "updated_by": None,
             "updated_at": None,
-        }).execute()
+        }).execute())
 
         activity_id = await find_latest_activity_id(step1.get("dataOwner"), activity_name_id)
 
@@ -759,7 +919,6 @@ async def submitForm(request: Request):
     except Exception as err:
         print("submitForm error:", repr(err))
         raise HTTPException(status_code=500, detail=str(err))
-
 
 async def getActivityById(activityId: str):
     try:
@@ -777,94 +936,35 @@ async def getActivityById(activityId: str):
         if not activity:
             raise HTTPException(status_code=404, detail={"error": "Activity not found"})
 
-        activity_name_row = first_row(
-            ropaDB().table("activity_name")
-            .select("id, name, department_id")
-            .eq("id", activity.get("activity_name"))
-            .maybe_single()
-            .execute()
+        import asyncio
+        (
+            activity_name_row,
+            department_row,
+            categories,
+            acquisitions,
+            legal_rows,
+            department_rows,
+            minor_rows,
+            transfer_raw,
+            retention_raw,
+            security,
+            processors,
+        ) = await asyncio.gather(
+            asyncio.to_thread(lambda: first_row(ropaDB().table("activity_name").select("id, name, department_id").eq("id", activity.get("activity_name")).maybe_single().execute())),
+            asyncio.to_thread(lambda: first_row(authDB().table("departments").select("id, department_name").eq("id", activity.get("department_id")).maybe_single().execute())),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_data_categories").select("data_categories_id").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_acquisition").select("acquisition_method_id").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_legal_bases").select("*").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_departments").select("department_id").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("minor_consent").select("*").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: first_row(ropaDB().table("international_transfers").select("*").eq("activity_id", activityId).limit(1).execute())),
+            asyncio.to_thread(lambda: first_row(ropaDB().table("retention_policies").select("*").eq("activity_id", activityId).limit(1).execute())),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_security").select("*").eq("activity_id", activityId).execute(), [])),
+            asyncio.to_thread(lambda: safe_data(ropaDB().table("activity_processors").select("*, processors (*), processor_security_measures (*)").eq("activity_id", activityId).execute(), [])),
         )
-
-        department_row = first_row(
-            authDB().table("departments")
-            .select("id, department_name")
-            .eq("id", activity.get("department_id"))
-            .maybe_single()
-            .execute()
-        )
-
-        categories = safe_data(
-            ropaDB().table("activity_data_categories")
-            .select("data_categories_id")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        acquisitions = safe_data(
-            ropaDB().table("activity_acquisition")
-            .select("acquisition_method_id")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        legal_rows = safe_data(
-            ropaDB().table("activity_legal_bases")
-            .select("*")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        department_rows = safe_data(
-            ropaDB().table("activity_departments")
-            .select("department_id")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        minor_rows = safe_data(
-            ropaDB().table("minor_consent")
-            .select("*")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        transfer = first_row(
-            ropaDB().table("international_transfers")
-            .select("*")
-            .eq("activity_id", activityId)
-            .limit(1)
-            .execute()
-        )
-
-        retention = first_row(
-            ropaDB().table("retention_policies")
-            .select("*")
-            .eq("activity_id", activityId)
-            .limit(1)
-            .execute()
-        )
-
-        security = safe_data(
-            ropaDB().table("activity_security")
-            .select("*")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
-        processors = safe_data(
-            ropaDB().table("activity_processors")
-            .select("*, processors (*), processor_security_measures (*)")
-            .eq("activity_id", activityId)
-            .execute(),
-            [],
-        )
-
+        transfer = transfer_raw   
+        retention = retention_raw
+        
         minor_consent = {"under10": "", "age10to20": ""}
 
         for row in minor_rows:
@@ -1025,9 +1125,101 @@ async def getActivityById(activityId: str):
             }
             for p in processors
         ]
+        
+        primary_legal_ids = [
+            row.get("legal_bases_id")
+            for row in legal_rows
+            if row.get("basis_type") == "primary" and row.get("legal_bases_id")
+        ]
+
+        supplementary_legal_ids = [
+            row.get("legal_bases_id")
+            for row in legal_rows
+            if row.get("basis_type") == "supplementary" and row.get("legal_bases_id")
+        ]
+
+        primary_legal_names = await get_many_lookup_names_by_values(
+            "legal_bases",
+            primary_legal_ids,
+        )
+
+        supplementary_legal_names = await get_many_lookup_names_by_values(
+            "legal_bases",
+            supplementary_legal_ids,
+        )
+
+        legal_payload = {
+            "basis": primary_legal_names,
+            "secondaryCategory": supplementary_legal_names,
+            "minorConsent": minor_consent,
+        }
+
+        transfer_payload = {
+            "is_transfer": transfer.get("is_transfer") if transfer else None,
+            "destination_country": transfer.get("destination_country") if transfer else None,
+            "affiliated_company": transfer.get("affiliated_company") if transfer else None,
+            "transfer_method": transfer.get("transfer_method") if transfer else None,
+            "protection_standard": transfer.get("protection_standard") if transfer else None,
+            "exceptions": [
+                x.strip()
+                for x in str(transfer.get("exceptions") or "").split(",")
+                if x.strip()
+            ] if transfer else [],
+        }
+
+        storage_type_display = (
+            [
+                x.strip()
+                for x in str(retention.get("storage_type") or "").split(",")
+                if x.strip()
+            ]
+            if retention else []
+        )
+
+        storage_method_display = (
+            [
+                x.strip()
+                for x in str(retention.get("storage_method") or "").split(",")
+                if x.strip()
+            ]
+            if retention else []
+        )
+
+        access_right_display = await get_many_lookup_names_by_values(
+            "access_rights",
+            [
+                row.get("department_id")
+                for row in department_rows
+                if row.get("department_id")
+            ],
+        )
+
+        access_right_display = [
+            strip_department_prefix(name)
+            for name in access_right_display
+        ]
+
+        retention_payload = {
+            "storageType": storage_type_display,
+            "storageMethod": storage_method_display,
+            "retentionPeriod": retention_period_str,
+            "accessRight": access_right_display,
+            "deletionMethod": retention.get("deletion_method") if retention else "",
+            "usage_purpose": (
+                [retention.get("usage_purpose")]
+                if retention and retention.get("usage_purpose")
+                else []
+            ),
+            "denialNote": retention.get("denial_note") if retention else None,
+        }
 
         return {
             "id": activityId,
+            
+            "legal": legal_payload,
+            "transfer": transfer_payload,
+            "retention": retention_payload,
+            "processors": step7_processors,
 
             "step1": {
                 "dataOwner": activity.get("owner_name") or "",
@@ -1049,19 +1241,11 @@ async def getActivityById(activityId: str):
             },
 
             "step3": {
-                "primaryBases": [
-                    row.get("legal_bases_id")
-                    for row in legal_rows
-                    if row.get("basis_type") == "primary" and row.get("legal_bases_id")
-                ],
-                "supplementaryBases": [
-                    row.get("legal_bases_id")
-                    for row in legal_rows
-                    if row.get("basis_type") == "supplementary" and row.get("legal_bases_id")
-                ],
+                "primaryBases": primary_legal_ids,
+                "supplementaryBases": supplementary_legal_ids,
                 "minorConsent": minor_consent,
             },
-
+            
             "step4": {
                 "hasTransferAbroad": "มี" if transfer and transfer.get("is_transfer") else "ไม่มี",
                 "transferCountry": transfer.get("destination_country") if transfer else "",
@@ -1125,8 +1309,16 @@ async def updateForm(activityId: str, request: Request):
 
     state_user = getattr(request.state, "user", None)
     user_id = state_user.get("userId") if isinstance(state_user, dict) else None
+    
     if not user_id:
         user_id = request.headers.get("x-user-id")
+
+    if not user_id:
+        user_id = (
+            body.get("userId")
+            or body.get("updatedBy")
+            or body.get("createdBy")
+        )
 
     step1 = body.get("step1") or {}
     step2 = body.get("step2") or {}
@@ -1138,13 +1330,6 @@ async def updateForm(activityId: str, request: Request):
     
     print("EDIT activityId:", activityId)
     print("EDIT user_id:", user_id)
-    print("EDIT step1:", step1)
-    print("EDIT step2:", step2)
-    print("EDIT step3:", step3)
-    print("EDIT step4:", step4)
-    print("EDIT step5:", step5)
-    print("EDIT step6:", step6)
-    print("EDIT step7:", step7)
 
     try:
         if not is_uuid(activityId):
@@ -1377,11 +1562,9 @@ async def getRopaList(request: Request):
 
         def parse_minor_consent(minor_rows):
             minor_consent = {"under10": "", "age10to20": ""}
-
             for row in minor_rows:
                 age_range = row.get("age_range")
                 desc = row.get("description") or ""
-
                 if age_range == "under10":
                     minor_consent["under10"] = desc
                 elif age_range == "age10to20":
@@ -1390,12 +1573,10 @@ async def getRopaList(request: Request):
                     for part in desc.split("|"):
                         part = part.strip()
                         lower_part = part.lower()
-
                         if lower_part.startswith("under10:") or lower_part.startswith("under_10:"):
                             minor_consent["under10"] = part.split(":", 1)[1].strip()
                         elif lower_part.startswith("age10to20:") or lower_part.startswith("10_to_"):
                             minor_consent["age10to20"] = part.split(":", 1)[1].strip()
-
             return minor_consent
 
         def username_from_id(user_id, user_map):
@@ -1427,7 +1608,6 @@ async def getRopaList(request: Request):
             page_size = int(page_size or 20)
             page = max(page, 1)
             page_size = max(1, min(page_size, 100))
-
             start = (page - 1) * page_size
             end = start + page_size - 1
             query = query.range(start, end)
@@ -1438,246 +1618,87 @@ async def getRopaList(request: Request):
         if not activities:
             return []
 
-        activity_ids = unique_values([a.get("id") for a in activities])
+        activity_ids      = unique_values([a.get("id")            for a in activities])
         activity_name_ids = unique_values([a.get("activity_name") for a in activities])
-        department_ids = unique_values([a.get("department_id") for a in activities])
-        data_type_ids = unique_values([a.get("data_type_id") for a in activities])
-        source_ids = unique_values([a.get("source_id") for a in activities])
+        department_ids    = unique_values([a.get("department_id") for a in activities])
+        data_type_ids     = unique_values([a.get("data_type_id")  for a in activities])
+        source_ids        = unique_values([a.get("source_id")     for a in activities])
 
-        activity_name_map = {}
-        if activity_name_ids:
-            res = (
-                ropaDB().table("activity_name")
-                .select("id, name")
-                .in_("id", activity_name_ids)
-                .execute()
-            )
-            activity_name_map = map_rows_by_id(safe_data(res, []), "id", "name")
+        async def fetch_if(condition, fn):
+            return await asyncio.to_thread(fn) if condition else []
 
-        department_map = {}
-        if department_ids:
-            res = (
-                authDB().table("departments")
-                .select("id, department_name")
-                .in_("id", department_ids)
-                .execute()
-            )
-            department_map = map_rows_by_id(safe_data(res, []), "id", "department_name")
+        # รอบ 1: ดึงทุกตารางพร้อมกัน
+        (
+            _activity_names,
+            _departments,
+            _data_types,
+            _sources,
+            _retentions,
+            _transfers,
+            _legal_rows,
+            _access_rows,
+            _category_rows,
+            _acquisition_rows,
+        ) = await asyncio.gather(
+            fetch_if(activity_name_ids, lambda: safe_data(ropaDB().table("activity_name").select("id, name").in_("id", activity_name_ids).execute(), [])),
+            fetch_if(department_ids,    lambda: safe_data(authDB().table("departments").select("id, department_name").in_("id", department_ids).execute(), [])),
+            fetch_if(data_type_ids,     lambda: safe_data(lookupDB().table("data_types").select("id, name").in_("id", data_type_ids).execute(), [])),
+            fetch_if(source_ids,        lambda: safe_data(lookupDB().table("data_sources").select("id, name").in_("id", source_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("retention_policies").select("*").in_("activity_id", activity_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("international_transfers").select("*").in_("activity_id", activity_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("activity_legal_bases").select("*").in_("activity_id", activity_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("activity_departments").select("activity_id, department_id").in_("activity_id", activity_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("activity_data_categories").select("activity_id, data_categories_id").in_("activity_id", activity_ids).execute(), [])),
+            fetch_if(activity_ids,      lambda: safe_data(ropaDB().table("activity_acquisition").select("activity_id, acquisition_method_id").in_("activity_id", activity_ids).execute(), [])),
+        )
 
-        data_type_map = {}
-        if data_type_ids:
-            res = (
-                lookupDB().table("data_types")
-                .select("id, name")
-                .in_("id", data_type_ids)
-                .execute()
-            )
-            data_type_map = map_rows_by_id(safe_data(res, []), "id", "name")
+        activity_name_map = map_rows_by_id(_activity_names, "id", "name")
+        department_map    = map_rows_by_id(_departments, "id", "department_name")
+        data_type_map     = map_rows_by_id(_data_types, "id", "name")
+        source_map        = map_rows_by_id(_sources, "id", "name")
 
-        source_map = {}
-        if source_ids:
-            res = (
-                lookupDB().table("data_sources")
-                .select("id, name")
-                .in_("id", source_ids)
-                .execute()
-            )
-            source_map = map_rows_by_id(safe_data(res, []), "id", "name")
+        retention_map = {r["activity_id"]: r for r in _retentions if r.get("activity_id")}
+        transfer_map  = {r["activity_id"]: r for r in _transfers  if r.get("activity_id")}
 
-        retention_map = {}
-        if activity_ids:
-            res = (
-                ropaDB().table("retention_policies")
-                .select("*")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            for row in safe_data(res, []):
-                if row.get("activity_id"):
-                    retention_map[row.get("activity_id")] = row
+        legal_rows_map       = group_rows_by(_legal_rows,       "activity_id")
+        access_rows_map      = group_rows_by(_access_rows,      "activity_id")
+        category_rows_map    = group_rows_by(_category_rows,    "activity_id")
+        acquisition_rows_map = group_rows_by(_acquisition_rows, "activity_id")
 
-        transfer_map = {}
-        if activity_ids:
-            res = (
-                ropaDB().table("international_transfers")
-                .select("*")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            for row in safe_data(res, []):
-                if row.get("activity_id"):
-                    transfer_map[row.get("activity_id")] = row
+        all_legal_basis_ids  = unique_values([r.get("legal_bases_id")        for r in _legal_rows        if r.get("legal_bases_id")])
+        all_access_right_ids = unique_values([r.get("department_id")         for r in _access_rows       if r.get("department_id")])
+        all_category_ids     = unique_values([r.get("data_categories_id")    for r in _category_rows     if r.get("data_categories_id")])
+        all_acquisition_ids  = unique_values([r.get("acquisition_method_id") for r in _acquisition_rows  if r.get("acquisition_method_id")])
 
-        legal_rows_map = {}
-        all_legal_basis_ids = []
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_legal_bases")
-                .select("*")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            legal_rows = safe_data(res, [])
-            legal_rows_map = group_rows_by(legal_rows, "activity_id")
-            all_legal_basis_ids = unique_values([
-                row.get("legal_bases_id")
-                for row in legal_rows
-                if row.get("legal_bases_id")
-            ])
+        # รอบ 2: ดึง lookup names พร้อมกัน (5 queries)
+        (
+            _legal_bases_data,
+            _access_rights_data,
+            _categories_data,
+            _acquisitions_data,
+        ) = await asyncio.gather(
+            fetch_if(all_legal_basis_ids,  lambda: safe_data(lookupDB().table("legal_bases").select("id, name").in_("id", all_legal_basis_ids).execute(), [])),
+            fetch_if(all_access_right_ids, lambda: safe_data(lookupDB().table("access_rights").select("id, name").in_("id", all_access_right_ids).execute(), [])),
+            fetch_if(all_category_ids,     lambda: safe_data(lookupDB().table("data_categories").select("id, name").in_("id", all_category_ids).execute(), [])),
+            fetch_if(all_acquisition_ids,  lambda: safe_data(lookupDB().table("acquisition_method").select("id, name").in_("id", all_acquisition_ids).execute(), [])),
+        )
 
-        legal_basis_map = {}
-        if all_legal_basis_ids:
-            res = (
-                lookupDB().table("legal_bases")
-                .select("id, name")
-                .in_("id", all_legal_basis_ids)
-                .execute()
-            )
-            legal_basis_map = map_rows_by_id(safe_data(res, []), "id", "name")
-
-        access_rows_map = {}
-        all_access_right_ids = []
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_departments")
-                .select("activity_id, department_id")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            access_rows = safe_data(res, [])
-            access_rows_map = group_rows_by(access_rows, "activity_id")
-            all_access_right_ids = unique_values([
-                row.get("department_id")
-                for row in access_rows
-                if row.get("department_id")
-            ])
-
-        access_right_map = {}
-        if all_access_right_ids:
-            res = (
-                lookupDB().table("access_rights")
-                .select("id, name")
-                .in_("id", all_access_right_ids)
-                .execute()
-            )
-            access_right_map = map_rows_by_id(safe_data(res, []), "id", "name")
-
-        category_rows_map = {}
-        all_category_ids = []
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_data_categories")
-                .select("activity_id, data_categories_id")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            category_rows = safe_data(res, [])
-            category_rows_map = group_rows_by(category_rows, "activity_id")
-            all_category_ids = unique_values([
-                row.get("data_categories_id")
-                for row in category_rows
-                if row.get("data_categories_id")
-            ])
-
-        category_map = {}
-        if all_category_ids:
-            res = (
-                lookupDB().table("data_categories")
-                .select("id, name")
-                .in_("id", all_category_ids)
-                .execute()
-            )
-            category_map = map_rows_by_id(safe_data(res, []), "id", "name")
-
-        acquisition_rows_map = {}
-        all_acquisition_ids = []
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_acquisition")
-                .select("activity_id, acquisition_method_id")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            acquisition_rows = safe_data(res, [])
-            acquisition_rows_map = group_rows_by(acquisition_rows, "activity_id")
-            all_acquisition_ids = unique_values([
-                row.get("acquisition_method_id")
-                for row in acquisition_rows
-                if row.get("acquisition_method_id")
-            ])
-
-        acquisition_map = {}
-        if all_acquisition_ids:
-            res = (
-                lookupDB().table("acquisition_method")
-                .select("id, name")
-                .in_("id", all_acquisition_ids)
-                .execute()
-            )
-            acquisition_map = map_rows_by_id(safe_data(res, []), "id", "name")
-
-        minor_rows_map = {}
-        if activity_ids:
-            res = (
-                ropaDB().table("minor_consent")
-                .select("*")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            minor_rows_map = group_rows_by(safe_data(res, []), "activity_id")
-
-        security_rows_map = {}
-        all_measure_ids = []
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_security")
-                .select("*")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            security_rows = safe_data(res, [])
-            security_rows_map = group_rows_by(security_rows, "activity_id")
-            all_measure_ids = unique_values([
-                row.get("measures_id")
-                for row in security_rows
-                if row.get("measures_id")
-            ])
-
-        measure_map = {}
-        if all_measure_ids:
-            res = (
-                lookupDB().table("security_measures")
-                .select("id, name")
-                .in_("id", all_measure_ids)
-                .execute()
-            )
-            measure_map = map_rows_by_id(safe_data(res, []), "id", "name")
-
-        processor_rows_map = {}
-        if activity_ids:
-            res = (
-                ropaDB().table("activity_processors")
-                .select("*, processors (*), processor_security_measures (*)")
-                .in_("activity_id", activity_ids)
-                .execute()
-            )
-            processor_rows_map = group_rows_by(safe_data(res, []), "activity_id")
+        legal_basis_map  = map_rows_by_id(_legal_bases_data,   "id", "name")
+        access_right_map = map_rows_by_id(_access_rights_data, "id", "name")
+        category_map     = map_rows_by_id(_categories_data,    "id", "name")
+        acquisition_map  = map_rows_by_id(_acquisitions_data,  "id", "name")
 
         result = []
 
         for activity in activities:
             activity_id = activity.get("id")
 
-            activity_name = activity_name_map.get(activity.get("activity_name"), "-")
+            activity_name   = activity_name_map.get(activity.get("activity_name"), "-")
             department_name = department_map.get(activity.get("department_id"), "-")
 
-            retention = retention_map.get(activity_id)
-            transfer = transfer_map.get(activity_id)
-
-            legal_rows = legal_rows_map.get(activity_id, [])
-            minor_rows = minor_rows_map.get(activity_id, [])
-            security_rows = security_rows_map.get(activity_id, [])
-            processor_rows = processor_rows_map.get(activity_id, [])
+            retention      = retention_map.get(activity_id)
+            transfer       = transfer_map.get(activity_id)
+            legal_rows     = legal_rows_map.get(activity_id, [])
 
             status_raw = str(activity.get("approval_status") or "").lower()
             if status_raw in ["approved", "complete"]:
@@ -1692,56 +1713,35 @@ async def getRopaList(request: Request):
                 for row in legal_rows
                 if row.get("basis_type") == "primary" and row.get("legal_bases_id")
             ]
-
             supplementary_ids = [
                 row.get("legal_bases_id")
                 for row in legal_rows
                 if row.get("basis_type") == "supplementary" and row.get("legal_bases_id")
             ]
 
-            legal_names = names_from_ids(primary_ids, legal_basis_map)
+            legal_names        = names_from_ids(primary_ids, legal_basis_map)
             supplementary_names = names_from_ids(supplementary_ids, legal_basis_map)
+            minor_consent = {"under10": "", "age10to20": ""}
 
-            minor_consent = parse_minor_consent(minor_rows)
-
-            access_ids = [
-                row.get("department_id")
-                for row in access_rows_map.get(activity_id, [])
-                if row.get("department_id")
-            ]
+            access_ids   = [row.get("department_id") for row in access_rows_map.get(activity_id, []) if row.get("department_id")]
             access_names = names_from_ids(access_ids, access_right_map)
             access_names = [strip_department_prefix(name) for name in access_names]
 
-            category_ids = [
-                row.get("data_categories_id")
-                for row in category_rows_map.get(activity_id, [])
-                if row.get("data_categories_id")
-            ]
+            category_ids   = [row.get("data_categories_id") for row in category_rows_map.get(activity_id, []) if row.get("data_categories_id")]
             category_names = names_from_ids(category_ids, category_map)
 
-            acquisition_ids = [
-                row.get("acquisition_method_id")
-                for row in acquisition_rows_map.get(activity_id, [])
-                if row.get("acquisition_method_id")
-            ]
+            acquisition_ids   = [row.get("acquisition_method_id") for row in acquisition_rows_map.get(activity_id, []) if row.get("acquisition_method_id")]
             acquisition_names = names_from_ids(acquisition_ids, acquisition_map)
 
             data_type_name = data_type_map.get(activity.get("data_type_id"), "") or ""
-            source_name = source_map.get(activity.get("source_id"), "") or ""
-
-            security_with_names = [
-                {
-                    **row,
-                    "name": measure_map.get(row.get("measures_id"), ""),
-                }
-                for row in security_rows
-            ]
+            source_name    = source_map.get(activity.get("source_id"), "") or ""
+            
+            security_with_names = []
 
             created_by_display = activity.get("created_by") or "system"
             updated_by_display = activity.get("updated_by") or activity.get("created_by") or "system"
 
             history = []
-            
             if activity.get("updated_at"):
                 history.append({
                     "action": "edit",
@@ -1757,64 +1757,26 @@ async def getRopaList(request: Request):
             })
 
             storage_type_values = (
-                [
-                    x.strip()
-                    for x in str(retention.get("storage_type") or "").split(",")
-                    if x.strip()
-                ]
+                [x.strip() for x in str(retention.get("storage_type") or "").split(",") if x.strip()]
                 if retention else []
             )
-
             storage_method_values = (
-                [
-                    x.strip()
-                    for x in str(retention.get("storage_method") or "").split(",")
-                    if x.strip()
-                ]
+                [x.strip() for x in str(retention.get("storage_method") or "").split(",") if x.strip()]
                 if retention else []
             )
-
             transfer_exceptions = (
-                [
-                    x.strip()
-                    for x in str(transfer.get("exceptions") or "").split(",")
-                    if x.strip()
-                ]
+                [x.strip() for x in str(transfer.get("exceptions") or "").split(",") if x.strip()]
                 if transfer else []
             )
-            
-            processor_display_rows = [
-                {
-                    "id": p.get("id") or p.get("processor_id"),
-                    "processorId": p.get("processor_id"),
-                    "name": p["processors"]["name"] if p.get("processors") else "",
-                    "address": p["processors"]["address"] if p.get("processors") else "",
-                    "accessType": p.get("access_type"),
-                    "dataCategoryAccessed": p.get("data_category_accessed"),
-                    "note": p.get("note"),
-                    "securitySelected": {
-                        s["type"]: True
-                        for s in p.get("processor_security_measures", [])
-                    },
-                    "securityDetails": {
-                        s["type"]: s.get("detail") or ""
-                        for s in p.get("processor_security_measures", [])
-                    },
-                    "securityMeasures": p.get("processor_security_measures", []),
-                }
-                for p in processor_rows
-            ]     
-                  
+
+            processor_display_rows = []
+
             result.append({
                 "id": activity_id,
-
-                # Root fields for table/detail fallback
                 "activity": activity_name,
                 "purpose": activity.get("purpose") or "-",
                 "purposeDetail": activity.get("purpose") or "-",
                 "dataOwner": activity.get("owner_name") or "-",
-
-                # Step 2 root display fields
                 "dataClass": activity.get("data_main_type") or "-",
                 "otherText": activity.get("other_text") or "",
                 "description": activity.get("description") or "",
@@ -1826,8 +1788,6 @@ async def getRopaList(request: Request):
                 "methods": acquisition_names,
                 "dataSource": source_name or "-",
                 "parties": access_names,
-
-                # Step 1 detail
                 "step1": {
                     "dataOwner": activity.get("owner_name") or "",
                     "processActivity": activity.get("activity_name") or "",
@@ -1836,8 +1796,6 @@ async def getRopaList(request: Request):
                     "departmentId": activity.get("department_id") or "",
                     "departmentName": department_name,
                 },
-
-                # Step 2 detail: send display names for ROPA detail panel
                 "step2": {
                     "dataClass": activity.get("data_main_type") or "-",
                     "otherText": activity.get("other_text") or "",
@@ -1850,8 +1808,6 @@ async def getRopaList(request: Request):
                     "acquisitionMethods": acquisition_names,
                     "dataSource": source_name or "-",
                 },
-
-                # Step 3 / legal detail
                 "legal": {
                     "basis": legal_names,
                     "secondaryCategory": supplementary_names,
@@ -1862,8 +1818,6 @@ async def getRopaList(request: Request):
                     "supplementaryBases": supplementary_names,
                     "minorConsent": minor_consent,
                 },
-
-                # Step 4 / transfer detail
                 "transfer": {
                     "is_transfer": transfer.get("is_transfer") if transfer else None,
                     "destination_country": transfer.get("destination_country") if transfer else None,
@@ -1873,31 +1827,17 @@ async def getRopaList(request: Request):
                     "exceptions": transfer_exceptions,
                 },
                 "step4": {
-                    "hasTransferAbroad": (
-                        "มี" if transfer and transfer.get("is_transfer")
-                        else "ไม่มี" if transfer
-                        else ""
-                    ),
+                    "hasTransferAbroad": ("มี" if transfer and transfer.get("is_transfer") else "ไม่มี" if transfer else ""),
                     "transferCountry": transfer.get("destination_country") if transfer else "",
-                    "isToSubsidiary": (
-                        "ใช่" if transfer and transfer.get("affiliated_company")
-                        else "ไม่ใช่" if transfer
-                        else ""
-                    ),
+                    "isToSubsidiary": ("ใช่" if transfer and transfer.get("affiliated_company") else "ไม่ใช่" if transfer else ""),
                     "subsidiaryName": transfer.get("affiliated_company") if transfer else "",
                     "transferMethod": transfer.get("transfer_method") if transfer else "",
                     "dataProtectionStandard": (
-                        [
-                            x.strip()
-                            for x in str(transfer.get("protection_standard") or "").split(",")
-                            if x.strip()
-                        ]
+                        [x.strip() for x in str(transfer.get("protection_standard") or "").split(",") if x.strip()]
                         if transfer else []
                     ),
                     "legalExemption": transfer_exceptions,
                 },
-
-                # Step 5 / retention detail
                 "retention": {
                     "storageType": storage_type_values,
                     "storageMethod": storage_method_values,
@@ -1907,8 +1847,7 @@ async def getRopaList(request: Request):
                     "deletionMethod": retention.get("deletion_method") if retention else "",
                     "usage_purpose": (
                         [retention.get("usage_purpose")]
-                        if retention and retention.get("usage_purpose")
-                        else []
+                        if retention and retention.get("usage_purpose") else []
                     ),
                     "denialNote": retention.get("denial_note") if retention else None,
                 },
@@ -1926,28 +1865,15 @@ async def getRopaList(request: Request):
                     "usagePurpose": retention.get("usage_purpose") if retention else "",
                     "refusalNote": retention.get("denial_note") if retention else "",
                 },
-
-                # Step 6
                 "security": security_with_names,
                 "step6": {
-                    "selectedSecurity": {
-                        row.get("name"): True
-                        for row in security_with_names
-                        if row.get("name")
-                    },
-                    "securityDetails": {
-                        row.get("name"): row.get("detail") or ""
-                        for row in security_with_names
-                        if row.get("name")
-                    },
+                    "selectedSecurity": {row.get("name"): True for row in security_with_names if row.get("name")},
+                    "securityDetails": {row.get("name"): row.get("detail") or "" for row in security_with_names if row.get("name")},
                 },
-
-                # Step 7
                 "processors": processor_display_rows,
                 "step7": {
                     "processors": processor_display_rows,
                 },
-
                 "risk": calculate_risk_score(
                     data_type_name=data_type_name,
                     category_names=category_names,
@@ -1957,8 +1883,12 @@ async def getRopaList(request: Request):
                     retention_period=retention.get("retention_period") if retention else "",
                     storage_method=retention.get("storage_method") if retention else "",
                 ),
-
                 "status": status,
+                
+                "submitted_at": activity.get("submitted_at"),
+                "updated_at": activity.get("updated_at"),
+                "date": activity.get("updated_at") or activity.get("submitted_at"),
+                
                 "history": history,
             })
 

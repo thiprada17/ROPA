@@ -29,25 +29,27 @@ import {
 } from "lucide-react";
 import LoadingScreen from "../components/Loading";
 
-
 export default function RopaPage() {
   const [selectedItem, setSelectedItem] = useState<RopaItem | null>(null);
   const [data, setData] = useState<RopaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
   const [formOptions, setFormOptions] = useState<any>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const [role, setRole] = useState<"DPO" | "User" | "Admin" | "Viewer" | undefined>(undefined);
-  
-    useEffect(() => {
-      const storedRole = localStorage.getItem("role") as
-        | "DPO"
-        | "User"
-        | "Admin"
-        | "Viewer"
-        | null;
-      setRole(storedRole ?? undefined);
-    }, []);
+  const [role, setRole] = useState<
+    "DPO" | "User" | "Admin" | "Viewer" | undefined
+  >(undefined);
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role") as
+      | "DPO"
+      | "User"
+      | "Admin"
+      | "Viewer"
+      | null;
+    setRole(storedRole ?? undefined);
+  }, []);
 
   const breadcrumbItems = [
     { label: <ShieldAlert size={16} />, href: "/" },
@@ -72,14 +74,19 @@ export default function RopaPage() {
 
   const handleRowClick = async (item: RopaItem) => {
     setSelectedItem(item);
-
+    setLoadingDetail(true);
     try {
       const token = localStorage.getItem("token");
+
+      const userId = localStorage.getItem("user_id");
 
       const res = await fetch(
         `http://localhost:8000/api/form/activity/${item.id}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...(userId ? { "x-user-id": userId } : {}),
+          },
         },
       );
 
@@ -90,24 +97,41 @@ export default function RopaPage() {
       }
 
       setSelectedItem((prev) => ({
-        ...item,
-        ...(prev ?? {}),
-        ...detailData,
+  ...item,
+  ...(prev ?? {}),
+  ...detailData,
 
-        parties: detailData.parties?.length ? detailData.parties : item.parties,
+  parties: detailData.parties?.length ? detailData.parties : item.parties,
 
-        legal: detailData.legal ?? item.legal,
+  legal: detailData.legal ?? item.legal,
 
-        retention: detailData.retention ?? item.retention,
+  retention: detailData.retention ?? item.retention,
 
-        transfer: detailData.transfer ?? item.transfer,
+  transfer: detailData.transfer ?? item.transfer,
 
-        security: detailData.security ?? item.security,
+  security: detailData.security ?? item.security,
 
-        processors: detailData.processors ?? item.processors,
-      }));
+  processors:
+    detailData.processors ??
+    detailData.step7?.processors ??
+    item.processors ??
+    [],
+
+  step7: {
+    ...(item.step7 ?? {}),
+    ...(detailData.step7 ?? {}),
+    processors:
+      detailData.step7?.processors ??
+      detailData.processors ??
+      item.step7?.processors ??
+      item.processors ??
+      [],
+  },
+}));
     } catch (err) {
       console.error("fetch detail error:", err);
+    } finally {
+      setLoadingDetail(false);
     }
   };
   const ref = useRef<HTMLDivElement>(null);
@@ -116,32 +140,33 @@ export default function RopaPage() {
   useEffect(() => {
     const fetchRopa = async () => {
       try {
+        setLoading(true);
+        setApiError("");
+
         const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("user_id");
+
         if (!token) throw new Error("กรุณา login ก่อน");
 
-        const res = await fetch("http://localhost:8000/api/form/ropa", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        const res = await fetch(
+          "http://localhost:8000/api/form/ropa?page=1&pageSize=50",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              ...(userId ? { "x-user-id": userId } : {}),
+            },
           },
-        });
+        );
 
-        const text = await res.text();
-        let result: any;
-        try {
-          result = JSON.parse(text);
-        } catch {
-          throw new Error("Backend ไม่ได้ส่ง JSON");
-        }
+        const result = await res.json();
 
-        if (!res.ok)
+        if (!res.ok) {
           throw new Error(
             result.detail || result.error || "โหลดข้อมูล ROPA ไม่สำเร็จ",
           );
+        }
 
-        console.log("ROPA RAW TEXT:", text);
-        console.log("ROPA RESULT:", result);
-        console.log("IS ARRAY:", Array.isArray(result));
         setData(Array.isArray(result) ? result : []);
       } catch (err: any) {
         setApiError(err.message || "โหลดข้อมูลไม่สำเร็จ");
@@ -165,7 +190,15 @@ export default function RopaPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, selectedStatus, selectedRisks, selectedParties, retention]);
+  }, [
+    search,
+    selectedStatus,
+    selectedRisks,
+    selectedParties,
+    retention,
+    startDate,
+    endDate,
+  ]);
 
   // ================= FILTER =================
   const normalize = (text: string) => String(text || "").toLowerCase();
@@ -215,9 +248,38 @@ export default function RopaPage() {
       else if (minDays > 0) matchRetention = itemDays >= minDays;
       else if (maxDays > 0) matchRetention = itemDays <= maxDays;
     }
+    const hasDateFilter = startDate || endDate;
 
+    let matchDate = true;
+    if (hasDateFilter) {
+      const rawDate =
+        item.date || item.submitted_at || item.updated_at || item.created_at;
+
+      if (!rawDate) {
+        matchDate = false;
+      } else {
+        const itemTime = new Date(rawDate).setHours(0, 0, 0, 0);
+        const startTime = startDate
+          ? new Date(startDate).setHours(0, 0, 0, 0)
+          : null;
+        const endTime = endDate ? new Date(endDate).setHours(0, 0, 0, 0) : null;
+
+        if (startTime !== null && endTime !== null) {
+          matchDate = itemTime >= startTime && itemTime <= endTime;
+        } else if (startTime !== null) {
+          matchDate = itemTime >= startTime;
+        } else if (endTime !== null) {
+          matchDate = itemTime <= endTime;
+        }
+      }
+    }
     return (
-      matchSearch && matchStatus && matchRisk && matchRetention && matchParties
+      matchSearch &&
+      matchStatus &&
+      matchRisk &&
+      matchRetention &&
+      matchParties &&
+      matchDate
     );
   });
 
@@ -340,31 +402,73 @@ export default function RopaPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-  const fetchOptions = async () => {
+  const OPTIONS_CACHE_KEY = "ropa_form_options_cache";
+  const OPTIONS_CACHE_TTL = 10 * 60 * 1000;
+
+  const getCachedOptions = () => {
     try {
-      const token = localStorage.getItem("token");
+      const raw = sessionStorage.getItem(OPTIONS_CACHE_KEY);
+      if (!raw) return null;
 
-      const res = await fetch("http://localhost:8000/api/form/options", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const cached = JSON.parse(raw);
+      if (!cached?.data || !cached?.savedAt) return null;
 
-      const data = await res.json();
+      const isExpired = Date.now() - cached.savedAt > OPTIONS_CACHE_TTL;
+      if (isExpired) return null;
 
-      if (!res.ok) {
-        throw new Error(data.detail || "โหลด options ไม่สำเร็จ");
-      }
-
-      setFormOptions(data);
-    } catch (err) {
-      console.error("fetchOptions error:", err);
+      return cached.data;
+    } catch {
+      return null;
     }
   };
 
-  fetchOptions();
-}, []);
+  const setCachedOptions = (data: any) => {
+    try {
+      sessionStorage.setItem(
+        OPTIONS_CACHE_KEY,
+        JSON.stringify({
+          data,
+          savedAt: Date.now(),
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const cachedOptions = getCachedOptions();
+
+        if (cachedOptions) {
+          setFormOptions(cachedOptions);
+          return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:8000/api/form/options", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "โหลด options ไม่สำเร็จ");
+        }
+
+        setFormOptions(data);
+        setCachedOptions(data);
+      } catch (err) {
+        console.error("fetchOptions error:", err);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100 font-prompt overflow-hidden">
@@ -605,15 +709,16 @@ export default function RopaPage() {
               }}
             >
               <DetailCard
-  item={selectedItem}
-  onClose={() => setSelectedItem(null)}
-  role={role}
-  formOptions={formOptions}
-  onDelete={(itemId) => {
-    setData((prev) => prev.filter((x) => x.id !== itemId));
-    setSelectedItem(null);
-  }}
-/>
+                item={selectedItem}
+                onClose={() => setSelectedItem(null)}
+                role={role}
+                formOptions={formOptions}
+                loadingDetail={loadingDetail}
+                onDelete={(itemId) => {
+                  setData((prev) => prev.filter((x) => x.id !== itemId));
+                  setSelectedItem(null);
+                }}
+              />
             </div>
           )}
         </div>

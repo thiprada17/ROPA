@@ -6,10 +6,10 @@ import ActivityCard from "./components/ActivityCard";
 import OverallDonutCard from "./components/OverallDonutCard";
 import ComparisonBarChart from "./components/ComparisonBarChart";
 import TrendLineChart from "./components/TrendLineChart";
-import Sidebar from "../components/Sidebar";
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import DeptMultiSelect from "./components/DeptMultiSelect";
+import LoadingScreen from "../components/Loading";
 
 // ================= TYPE =================
 type Dept = {
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [deptOptions, setDeptOptions] = useState<
     { label: string; value: string }[]
   >([]);
+  const [loading, setLoading] = useState(true);
 
   // ================= FILTER STATE =================
   // เลือกช่วงเวลา
@@ -83,6 +84,8 @@ export default function DashboardPage() {
         setDeptOptions(rawJson.departments ?? []);
       } catch (err) {
         console.error("fetchDashboard error:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -91,12 +94,10 @@ export default function DashboardPage() {
   // ================= UI =================
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-
       <main className="flex-1 bg-[#F7F8FA] h-screen overflow-y-auto font-gabarito">
-        <div className="px-10 py-6 max-w-7xl ml-[180px] mr-[120px]">
+        <div className="px-6 py-6 max-w-7xl mx-auto">
           {/* ================= HEADER ================= */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-[24px] font-semibold">Dashboard</h1>
 
             <div className="flex gap-3 item-center">
@@ -118,7 +119,6 @@ export default function DashboardPage() {
               </div>
 
               {/* ================= DEPARTMENT MULTI FILTER ================= */}
-              {/* <div className="min-w-[180px] max-w-[600px] flex-shrink-0"> */}
               <div className="min-w-[180px] max-w-[800px]">
                 <DeptMultiSelect
                   options={deptOptions}
@@ -130,50 +130,56 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          {loading ? (
+            <LoadingScreen message="กำลังโหลด Dashboard..." fullScreen={false} />
+          ) : (
+            // {/* ================= CONTENT ================= */}
+            <div className="flex flex-col gap-6">
+              {/* TOP CARDS */}
+              <div className="grid grid-cols-12 gap-6 min-h-[307px]">
+                {/* Total + Approval */}
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
+                  <TotalRopaCard
+                    total={totalData.total}
+                    newCount={totalData.newCount}
+                  />
+                  <ApprovalCard
+                    total={approvalData.total}
+                    growth={approvalData.growth}
+                  />
+                </div>
 
-          {/* ================= CONTENT ================= */}
-          <div className="flex flex-col gap-6">
-            {/* TOP CARDS */}
-            {/* <div className="flex justify-between"> */}
-            <div className="flex justify-between items-stretch h-[307px]">
-              <div className="w-[240px] flex flex-col gap-[28px] flex-shrink-0">
-                <TotalRopaCard
-                  total={totalData.total}
-                  newCount={totalData.newCount}
-                />
-                <ApprovalCard
-                  total={approvalData.total}
-                  growth={approvalData.growth}
-                />
+                {/* Activity */}
+                <div className="col-span-12 md:col-span-3">
+                  <ActivityCard activities={activities} />
+                </div>
+
+                {/* Overall Donut */}
+                <div className="col-span-12 md:col-span-6">
+                  <OverallDonutCard
+                    dataSource={rawList}
+                    selectedDept={selectedDept}
+                  />
+                </div>
               </div>
 
-              <div className="w-[292px] flex-shrink-0">
-                <ActivityCard activities={activities} />
-              </div>
+              {/* CHARTS */}
+              <div className="grid grid-cols-12 gap-6">
+                <div className="col-span-12 lg:col-span-8">
+                  <ComparisonBarChart data={comparison} />
+                </div>
 
-              <div className="w-[509px] flex-shrink-0">
-                <OverallDonutCard
-                  dataSource={rawList}
-                  selectedDept={selectedDept}
-                />
+                {/* TrendLineChart — min-w ป้องกันบีบเกิน */}
+                <div className="col-span-12 lg:col-span-4 min-w-0">
+                  <TrendLineChart
+                    data={trend}
+                    selectedDept={selectedDept}
+                    deptOptions={deptOptions}
+                  />
+                </div>
               </div>
             </div>
-
-            {/* CHARTS */}
-            <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-8">
-                <ComparisonBarChart data={comparison} />
-              </div>
-
-              <div className="col-span-4">
-                <TrendLineChart
-                  data={trend}
-                  selectedDept={selectedDept}
-                  deptOptions={deptOptions}
-                />
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

@@ -9,7 +9,8 @@ type Props = {
 
 export default function TotalRopaCard({ total, newCount }: Props) {
     return (
-        <div className="bg-white rounded-2xl p-5 shadow-sm w-[240px] h-[139px] flex flex-col justify-between">
+        // <div className="bg-white rounded-2xl p-5 shadow-sm w-[240px] h-[139px] flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-5 shadow-sm w-full h-[139px] flex flex-col justify-between">
             {/* TOP ROW (title + icon) */}
             <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2 relative group">
