@@ -24,7 +24,7 @@ import {
   Trash2,
   Pencil,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import TabLegal from "./tabs/TabLegal";
 import TabDataDetails from "./tabs/TabDataDetails";
 import TabRetention from "./tabs/TabRetention";
@@ -222,12 +222,26 @@ export default function DetailCard({
     { username: string; text: string }[]
   >([]);
 
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabBarRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [loadingDetail]);
+
   const currentUser =
     typeof window !== "undefined"
       ? {
-          username: localStorage.getItem("username") ?? undefined,
-          email: localStorage.getItem("email") ?? undefined,
-        }
+        username: localStorage.getItem("username") ?? undefined,
+        email: localStorage.getItem("email") ?? undefined,
+      }
       : undefined;
 
   const handleDelete = async () => {
@@ -409,7 +423,7 @@ export default function DetailCard({
       </div>
 
       {/* scroll wrapper */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scroll-contain">
         {/* header */}
         <div className="px-5 pt-4 pb-3">
           <div className="flex items-start justify-between gap-2 mb-3">
@@ -432,197 +446,194 @@ export default function DetailCard({
             </span>
           </div>
         </div>
-    {loadingDetail ? (
-        <div className="flex items-center justify-center py-20">
+        {loadingDetail ? (
+          <div className="flex items-center justify-center py-20">
             <LoadingScreen message="กำลังโหลดรายละเอียด..." fullScreen={false} />
-        </div>
+          </div>
         ) : (
-        <>
-        {/* meta info */}
-        <div className="px-5 border-b border-gray-100 pb-3">
-          <InfoRow
-            icon={<Users size={14} className="text-[#656565]" />}
-            label="เจ้าของข้อมูลส่วนบุคคล"
-          >
-            {display(item.owner_name ?? item.dataOwner)}
-          </InfoRow>
-          <InfoRow
-            icon={<Clock size={14} className="text-[#656565]" />}
-            label="ระยะเวลาการเก็บรักษา"
-          >
-            <span className="text-[#1C1B1F]">
-              {formatRetention(item.retention?.retentionPeriod ?? "-")}
-            </span>
-          </InfoRow>
-          <InfoRow
-            icon={<Building2 size={14} className="text-[#656565]" />}
-            label="ฝ่ายที่เกี่ยวข้อง"
-          >
-            {Array.isArray(item.parties) && item.parties.length > 0 ? (
-              item.parties.length > 1 ? (
-                item.parties.map((p, i) => <Tag key={i} label={p} />)
-              ) : (
-                <span>{item.parties[0]}</span>
-              )
-            ) : (
-              <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
-            )}
-          </InfoRow>
-          <InfoRow
-            icon={<Scale size={14} className="text-[#656565]" />}
-            label="ฐานกฎหมาย"
-          >
-            {item.legal?.basis?.length ? (
-              item.legal.basis.length > 1 ? (
-                item.legal.basis.map((l, i) => (
-                  <Tag key={i} label={trimLegalBasis(l)} />
-                ))
-              ) : (
-                <span>{trimLegalBasis(item.legal.basis[0])}</span>
-              )
-            ) : (
-              <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
-            )}
-          </InfoRow>
-          <div className="flex items-start gap-3 py-2">
-            <div className="text-[#A6A6A6] mt-0.5 shrink-0">
-              <Book size={14} className="text-[#656565]" />
-            </div>
-            <p className="text-[11px] text-[#A6A6A6]">
-              วัตถุประสงค์ของการประมวลผล
-            </p>
-          </div>
-
-          <textarea
-            readOnly
-            value={item.purposeDetail ?? ""}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] leading-relaxed resize-y"
-          />
-        </div>
-
-        {/* tabs bar */}
-        <div className="border-b border-gray-100">
-          <div
-            className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none scroll-smooth"
-            onWheel={(e) => {
-              e.currentTarget.scrollLeft += e.deltaY;
-            }}
-          >
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`flex items-center gap-1.5 whitespace-nowrap pb-2.5 px-3 text-[11px] font-medium border-b-2 transition-colors ${
-                  activeTab === t.key
-                    ? "border-[#03369D] text-[#03369D]"
-                    : "border-transparent text-[#A6A6A6] hover:text-[#1C1B1F]"
-                }`}
+          <>
+            {/* meta info */}
+            <div className="px-5 border-b border-gray-100 pb-3">
+              <InfoRow
+                icon={<Users size={14} className="text-[#656565]" />}
+                label="เจ้าของข้อมูลส่วนบุคคล"
               >
-                {t.icon}
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+                {display(item.owner_name ?? item.dataOwner)}
+              </InfoRow>
+              <InfoRow
+                icon={<Clock size={14} className="text-[#656565]" />}
+                label="ระยะเวลาการเก็บรักษา"
+              >
+                <span className="text-[#1C1B1F]">
+                  {formatRetention(item.retention?.retentionPeriod ?? "-")}
+                </span>
+              </InfoRow>
+              <InfoRow
+                icon={<Building2 size={14} className="text-[#656565]" />}
+                label="ฝ่ายที่เกี่ยวข้อง"
+              >
+                {Array.isArray(item.parties) && item.parties.length > 0 ? (
+                  item.parties.length > 1 ? (
+                    item.parties.map((p, i) => <Tag key={i} label={p} />)
+                  ) : (
+                    <span>{item.parties[0]}</span>
+                  )
+                ) : (
+                  <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
+                )}
+              </InfoRow>
+              <InfoRow
+                icon={<Scale size={14} className="text-[#656565]" />}
+                label="ฐานกฎหมาย"
+              >
+                {item.legal?.basis?.length ? (
+                  item.legal.basis.length > 1 ? (
+                    item.legal.basis.map((l, i) => (
+                      <Tag key={i} label={trimLegalBasis(l)} />
+                    ))
+                  ) : (
+                    <span>{trimLegalBasis(item.legal.basis[0])}</span>
+                  )
+                ) : (
+                  <span className="text-[#A6A6A6]">ไม่มีข้อมูล</span>
+                )}
+              </InfoRow>
+              <div className="flex items-start gap-3 py-2">
+                <div className="text-[#A6A6A6] mt-0.5 shrink-0">
+                  <Book size={14} className="text-[#656565]" />
+                </div>
+                <p className="text-[11px] text-[#A6A6A6]">
+                  วัตถุประสงค์ของการประมวลผล
+                </p>
+              </div>
 
-        {/* tab content */}
-        <div className="px-5 py-4">
-          {activeTab === "dataDetails" && (
-            <TabDataDetails
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRowPlain={InfoRowPlain}
-              InfoRow={InfoRow}
-              formOptions={formOptions}
-            />
-          )}
-          {activeTab === "legal" && (
-            <TabLegal
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-            />
-          )}
-          {activeTab === "transfer" && (
-            <TabTransfer
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRow={InfoRow}
-            />
-          )}
-          {activeTab === "retention" && (
-            <TabRetention
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRow={InfoRow}
-              InfoRowPlain={InfoRowPlain}
-            />
-          )}
-          {activeTab === "security" && (
-            <TabSecurity
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRow={InfoRow}
-              InfoRowPlain={InfoRowPlain}
-            />
-          )}
-          {activeTab === "processor" && (
-            <TabProcessor
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRowPlain={InfoRowPlain}
-              InfoRow={InfoRow}
-            />
-          )}
-          {activeTab === "history" && (
-            <TabHistory
-              item={item}
-              RenderValue={RenderValue}
-              BulletRow={BulletRow}
-              InfoRowPlain={InfoRowPlain}
-              InfoRow={InfoRow}
-            />
-          )}
-          {activeTab === "approve" && role === "DPO" && (
-            <TabApprove
-              itemId={item.id}
-              currentStatus={approveStatus}
-              currentUser={currentUser}
-              existingComments={approveComments}
-              isEditingFromParent={isApprovingEdit}
-              onEditingChange={setIsApprovingEdit}
-              onAddComment={(itemId, comment) => {
-                setApproveComments((prev) => [...prev, comment]);
-                onAddComment?.(itemId, comment);
-              }}
-              onUpdateStatus={(status, comments) => {
-                fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
-                  method: "PUT",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                  },
-                  body: JSON.stringify({ status, comments }),
-                })
-                  .then(() => {
-                    setApproveStatus(status);
-                    if (comments) setApproveComments(comments);
-                    setIsApprovingEdit(false);
-                    onStatusChange?.(item.id, status);
-                    alert("อัปเดตสถานะเรียบร้อย");
-                  })
-                  .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
-              }}
-            />
-          )}
-        </div>
-        </>
-  )}
+              <textarea
+                readOnly
+                value={item.purposeDetail ?? ""}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 min-h-[80px] text-[#1C1B1F] bg-gray-50 text-[12px] leading-relaxed resize-y"
+              />
+            </div>
+
+            {/* tabs bar */}
+            <div className="border-b border-gray-100">
+              <div
+                ref={tabBarRef}
+                className="flex px-2 pt-2 gap-0 overflow-x-auto scrollbar-none scroll-contain"
+              >
+                {tabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`flex items-center gap-1.5 whitespace-nowrap pb-2.5 px-3 text-[11px] font-medium border-b-2 transition-colors ${activeTab === t.key
+                      ? "border-[#03369D] text-[#03369D]"
+                      : "border-transparent text-[#A6A6A6] hover:text-[#1C1B1F]"
+                      }`}
+                  >
+                    {t.icon}
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* tab content */}
+            <div className="px-5 py-4">
+              {activeTab === "dataDetails" && (
+                <TabDataDetails
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRowPlain={InfoRowPlain}
+                  InfoRow={InfoRow}
+                  formOptions={formOptions}
+                />
+              )}
+              {activeTab === "legal" && (
+                <TabLegal
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                />
+              )}
+              {activeTab === "transfer" && (
+                <TabTransfer
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRow={InfoRow}
+                />
+              )}
+              {activeTab === "retention" && (
+                <TabRetention
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRow={InfoRow}
+                  InfoRowPlain={InfoRowPlain}
+                />
+              )}
+              {activeTab === "security" && (
+                <TabSecurity
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRow={InfoRow}
+                  InfoRowPlain={InfoRowPlain}
+                />
+              )}
+              {activeTab === "processor" && (
+                <TabProcessor
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRowPlain={InfoRowPlain}
+                  InfoRow={InfoRow}
+                />
+              )}
+              {activeTab === "history" && (
+                <TabHistory
+                  item={item}
+                  RenderValue={RenderValue}
+                  BulletRow={BulletRow}
+                  InfoRowPlain={InfoRowPlain}
+                  InfoRow={InfoRow}
+                />
+              )}
+              {activeTab === "approve" && role === "DPO" && (
+                <TabApprove
+                  itemId={item.id}
+                  currentStatus={approveStatus}
+                  currentUser={currentUser}
+                  existingComments={approveComments}
+                  isEditingFromParent={isApprovingEdit}
+                  onEditingChange={setIsApprovingEdit}
+                  onAddComment={(itemId, comment) => {
+                    setApproveComments((prev) => [...prev, comment]);
+                    onAddComment?.(itemId, comment);
+                  }}
+                  onUpdateStatus={(status, comments) => {
+                    fetch(`http://localhost:8000/api/form/ropa/${item.id}/`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                      },
+                      body: JSON.stringify({ status, comments }),
+                    })
+                      .then(() => {
+                        setApproveStatus(status);
+                        if (comments) setApproveComments(comments);
+                        setIsApprovingEdit(false);
+                        onStatusChange?.(item.id, status);
+                        alert("อัปเดตสถานะเรียบร้อย");
+                      })
+                      .catch(() => alert("อัปเดตสถานะไม่สำเร็จ"));
+                  }}
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
