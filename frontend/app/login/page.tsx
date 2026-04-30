@@ -71,6 +71,7 @@ export default function LoginPage() {
       console.log(data.user);
       const role = data.user.role;
       localStorage.setItem("role", role);
+       localStorage.setItem("email", data.user.email);
 
       /*สำหรับคอมเมนต์ DPO */
       localStorage.setItem("username", data.user.username || data.user.email || "");
