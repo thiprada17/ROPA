@@ -34,6 +34,7 @@ def send_approve_email(
     activity_name: str = "",
     purpose: str = ""
 ):
+    
     comment_section = f"""
         <div style="background:#FFF3CD; padding:10px; border-radius:6px; margin-top:10px;">
             <b>ความคิดเห็น:</b> {comment}
@@ -57,7 +58,7 @@ def send_approve_email(
         <p style="color: #999;">กรุณาเข้าสู่ระบบเพื่อดูรายละเอียดเพิ่มเติม</p>
     </div>
     """
-
+    print("SENDING EMAIL TO:", to) 
     try:
         resend.Emails.send({
             "from": "onboarding@resend.dev",
